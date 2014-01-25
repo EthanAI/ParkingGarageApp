@@ -2,19 +2,21 @@
     Adapted from http://www.techrepublic.com/blog/software-engineer/a-quick-tutorial-on-coding-androids-accelerometer/#.
     Project to record accelerometer data.
     Goals:
-        Read sensors
-        Record sensors
+        xRead sensors
+        xRecord sensors
         Graphical View
         Run only when in parking garage
             Subgoals to achieve this:
                 Run in background
                 GPS/BT to trigger it on and off
-        Export data & pattern analyze
+        xExport data
+        Pattern analyze
             Is acc or jerk the best descriptor? Record both for now
  */
 
 package com.example.accelerometerapp;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.YuvImage;
@@ -22,17 +24,25 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -56,8 +66,10 @@ public class MainActivity extends Activity implements SensorEventListener {
     private ArrayList<Float> mArrayZJerk = new ArrayList<Float>();
     private ArrayList<Float> mArrayMagJerk = new ArrayList<Float>();
 
-    String dateString = "today"; //TODO add actual date call
-    String fileName = dateString + "sensorReadings.txt";
+
+    private final String DIRECTORY_NAME = "Documents";
+    File externalFile = null;
+    private final String HEADERS = "Time, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk";
 
     /** Called when the activity is first created. */
     @Override
@@ -68,6 +80,47 @@ public class MainActivity extends Activity implements SensorEventListener {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
+        Date date = new Date();
+        String dateString = date.toString(); //TODO neaten up the date
+        String fileName = dateString + "sensorReadings.txt";
+
+        externalFile = createExternalFile(DIRECTORY_NAME, fileName);
+
+        /*
+        Log.i("Test", date.toString());
+        Log.i("Test", getFilesDir().getPath());
+        File f = getStorageFile(fileName);
+        Log.i("Test", f.getAbsolutePath());
+        Log.i("Test", String.valueOf(isExternalStorageWritable()));
+        try {
+
+
+            // This is the file that should be written to
+            String sdCard = Environment.getExternalStorageDirectory().toString();
+            File dir = new File(sdCard + "/Download");
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+
+            File myFile = new File(dir.getAbsolutePath(), "savings.csv");
+
+            // if file doesn't exists, then create it
+            if (!myFile.exists()) {
+                myFile.createNewFile();
+            }
+            FileWriter fw2 = new FileWriter(myFile);
+            BufferedWriter bw2 = new BufferedWriter(fw2);
+            bw2.write("Hello world");
+            bw2.close();
+
+
+        } catch (FileNotFoundException e) {
+            Log.e("Test", e.toString());
+        } catch (IOException e) {
+            Log.e("Test", e.toString());
+        }
+        */
     }
 
 
@@ -89,8 +142,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        Calendar cal = Calendar.getInstance();
-        Date date = new Date();
+        Date changedDate = new Date();
 
         TextView tvX= (TextView)findViewById(R.id.x_axis);
         TextView tvXJerk= (TextView)findViewById(R.id.x_axis_jerk);
@@ -115,7 +167,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             mLastX = x;
             mLastY = y;
             mLastZ = z;
-            mLastMag = (float)Math.sqrt(x*x + y*y + z*z);
+            mLastMag = (float) Math.sqrt(x*x + y*y + z*z);
 
             for(int i = 0; i < LIST_LIMIT; i++) {
                 mArrayX.add((float) 0);
@@ -139,12 +191,15 @@ public class MainActivity extends Activity implements SensorEventListener {
             tvZJerk.setText("0.0");
             tvMagJerk.setText("0.0");
 
+            writeNewFile(externalFile, HEADERS + "\n");
+
+            /*
             writeToFile("Test data", fileName);
             String testRead = "";
             testRead = readFromFile(fileName);
             System.out.println(testRead);
             Log.i("Test", testRead);
-            Log.i("Test", date.toString());
+            */
 
             mInitialized = true;
         } else {
@@ -183,7 +238,17 @@ public class MainActivity extends Activity implements SensorEventListener {
             tvMagJerk.setText(toReverseVerticalList(mArrayMagJerk));
 
             //record in file
-            writeToFile(date.getTime() + "," + Float.toString(deltaMag), fileName);
+            Log.i("test", changedDate.toString());
+            appendToFile(externalFile,
+                    changedDate.toString() + ", " +
+                    Float.toString(x) + ", " +
+                    Float.toString(y) + ", " +
+                    Float.toString(z) + ", " +
+                    Float.toString(mag) + ", " +
+                    Float.toString(deltaX) + ", " +
+                    Float.toString(deltaY) + ", " +
+                    Float.toString(deltaZ) + ", " +
+                    Float.toString(deltaMag) + "\n");
 
             /* //I'm not messing around with pictures to indicate acceleration. Integers are sufficient.
             iv.setVisibility(View.VISIBLE);  // sets the iv - Image View
@@ -214,6 +279,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         return listText;
     }
 
+    /*
     // file IO adapted from http://stackoverflow.com/questions/14376807/how-to-read-write-string-from-a-file-in-android
     private void writeToFile(String data, String fileName) {
         try {
@@ -226,6 +292,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
+    */
 
 
     private String readFromFile(String fileName) {
@@ -257,6 +324,86 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         return ret;
     }
+
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read
+    * http://developer.android.com/guide/topics/data/data-storage.html#filesExternal
+    * */
+    public boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    public File createExternalFile(String directory, String fileName) {
+        File myFile = null;
+        try {
+            String sdCard = Environment.getExternalStorageDirectory().toString(); //get root of external storage
+            File dir = new File(sdCard, directory);
+            if (!dir.exists()) { //make directory if it doesnt exist
+                dir.mkdirs();  //make all parent directories even.
+            }
+
+            myFile = new File(dir.getAbsolutePath(), fileName); //add on the filename to the total path
+
+            // if file doesn't exists, then create it
+            if (!myFile.exists()) {
+                myFile.createNewFile();
+            }
+        } catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+        return myFile;
+    }
+
+    public void writeToFile(File file, String text, Boolean isAppend) {
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(file, isAppend);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(text);
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void writeNewFile(File file, String text) {
+        writeToFile(file, text, false);
+    }
+
+    public void appendToFile(File file, String text) {
+        if(file.exists())
+            writeToFile(file, text, true);
+        else
+            writeNewFile(file, text);
+    }
+
+
+    /*
+    public File getStorageFile(String fileName) {
+        File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File file = new File(path, fileName);
+
+        if (!file.mkdirs()) {
+            Log.e("accelerometer app", "Directory not created");
+        }
+        return file;
+    }
+    */
 
 
 }

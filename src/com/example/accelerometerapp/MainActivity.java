@@ -1,17 +1,7 @@
 /*
     Adapted from http://www.techrepublic.com/blog/software-engineer/a-quick-tutorial-on-coding-androids-accelerometer/#.
     Project to record accelerometer data.
-    Goals:
-        xRead sensors
-        xRecord sensors
-        Graphical View
-        Run only when in parking garage
-            Subgoals to achieve this:
-                Run in background
-                GPS/BT to trigger it on and off
-        xExport data
-        Pattern analyze
-            Is acc or jerk the best descriptor? Record both for now
+
  */
 
 package com.example.accelerometerapp;

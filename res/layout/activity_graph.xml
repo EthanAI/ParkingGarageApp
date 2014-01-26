@@ -6,7 +6,7 @@
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
-		android:text="Text"
+		android:text="TextView"
 		android:onClick="changeToMainActivity" />
 	<TextView
         android:paddingTop="10dip"
@@ -15,11 +15,12 @@
         android:textSize="10sp"
         android:gravity="center"
         android:id="@+id/testField" />
-    
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-              android:text="Hello"/>
-       
-    <LinearLayout android:id="@+id/chart" android:orientation="horizontal"
-                  android:layout_width="fill_parent" android:layout_height="0dip" android:layout_weight="1"/>
+           
+    <LinearLayout 
+        android:id="@+id/chart" 
+        android:orientation="horizontal"
+        android:layout_width="fill_parent" 
+        android:layout_height="0dip" 
+        android:layout_weight="1"/>
 
 </LinearLayout>

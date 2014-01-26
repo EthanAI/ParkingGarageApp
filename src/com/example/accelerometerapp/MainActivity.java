@@ -16,6 +16,7 @@
 
 package com.example.accelerometerapp;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -29,12 +30,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -57,11 +58,14 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 
     private final String DIRECTORY_NAME = "Documents";
+    String fileNameFullPath = null;
     File externalFile = null;
     private final String HEADERS = "Time, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk";
+	private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
 
     /** Called when the activity is first created. */
-    @Override
+    @SuppressLint("SimpleDateFormat")
+	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -70,11 +74,13 @@ public class MainActivity extends Activity implements SensorEventListener {
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         
-        Date date = new Date();
-        String dateString = date.toString(); //TODO neaten up the date
-        String fileName = dateString + "sensorReadings.csv";
+        Date date = new Date();        
+        String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date); 
+                
+        String fileName = dateString + " sensorReadings.csv";
 
         externalFile = createExternalFile(DIRECTORY_NAME, fileName);
+        fileNameFullPath = externalFile.toString();
     }
 
 
@@ -193,27 +199,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 
             //record in file
             Log.i("test", changedDate.toString());
-            appendToFile(externalFile,
-                    changedDate.toString() + ", " +
-                    Float.toString(x) + ", " +
-                    Float.toString(y) + ", " +
-                    Float.toString(z) + ", " +
-                    Float.toString(mag) + ", " +
-                    Float.toString(deltaX) + ", " +
-                    Float.toString(deltaY) + ", " +
-                    Float.toString(deltaZ) + ", " +
-                    Float.toString(deltaMag) + "\n");
-
-            /* //I'm not messing around with pictures to indicate acceleration. Integers are sufficient.
-            iv.setVisibility(View.VISIBLE);  // sets the iv - Image View
-            if (deltaX > deltaY) {
-                iv.setImageResource(R.drawable.horizontal);
-            } else if (deltaY > deltaX) {
-                iv.setImageResource(R.drawable.vertical);
-            } else {
-                iv.setVisibility(View.INVISIBLE);
-            }
-            */
+            
+            SensorReading myReading = new SensorReading(changedDate, x, y, z, mag, deltaX, deltaY, deltaZ, deltaMag);
+            appendToFile(externalFile, myReading.toString());
         }
     }
 
@@ -232,53 +220,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
         return listText;
     }
-
-    /*
-    // file IO adapted from http://stackoverflow.com/questions/14376807/how-to-read-write-string-from-a-file-in-android
-    private void writeToFile(String data, String fileName) {
-        try {
-            OutputStreamWriter outputStreamWriter;
-            outputStreamWriter = new OutputStreamWriter(openFileOutput(fileName, Context.MODE_APPEND));
-            outputStreamWriter.write(data);
-            outputStreamWriter.close();
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
-    }
-    */
-
-/*
-    private String readFromFile(String fileName) {
-
-        String ret = "";
-
-        try {
-            InputStream inputStream = openFileInput(fileName);
-
-            if ( inputStream != null ) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString = "";
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append(receiveString);
-                }
-
-                inputStream.close();
-                ret = stringBuilder.toString();
-            }
-        }
-        catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
-        } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
-        }
-
-        return ret;
-    }
-    */
 
     /* Checks if external storage is available for read and write */
     public boolean isExternalStorageWritable() {
@@ -332,7 +273,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             bw.write(text);
             bw.close();
         } catch (IOException e) {
-            e.printStackTrace();
+        	Log.e("Exception", e.toString());
         }
     }
 
@@ -352,7 +293,11 @@ public class MainActivity extends Activity implements SensorEventListener {
      * Function for the button
      */
     public void changeToGraphActivity(View view) {
-        Intent intent = new Intent(MainActivity.this, GraphActivity.class);
+        
+    	Intent intent = new Intent(MainActivity.this, GraphActivity.class);
+    	Bundle passBundle = new Bundle();
+        passBundle.putString("fileName", fileNameFullPath);
+        intent.putExtras(passBundle);
         startActivity(intent);
     }
 
@@ -403,6 +348,64 @@ public class MainActivity extends Activity implements SensorEventListener {
             // Perform action on click
         }
     });
+    */
+    
+    /*
+    // file IO adapted from http://stackoverflow.com/questions/14376807/how-to-read-write-string-from-a-file-in-android
+    private void writeToFile(String data, String fileName) {
+        try {
+            OutputStreamWriter outputStreamWriter;
+            outputStreamWriter = new OutputStreamWriter(openFileOutput(fileName, Context.MODE_APPEND));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+    }
+    */
+
+/*
+    private String readFromFile(String fileName) {
+
+        String ret = "";
+
+        try {
+            InputStream inputStream = openFileInput(fileName);
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
+    */
+    
+    /* //I'm not messing around with pictures to indicate acceleration. Integers are sufficient.
+    iv.setVisibility(View.VISIBLE);  // sets the iv - Image View
+    if (deltaX > deltaY) {
+        iv.setImageResource(R.drawable.horizontal);
+    } else if (deltaY > deltaX) {
+        iv.setImageResource(R.drawable.vertical);
+    } else {
+        iv.setVisibility(View.INVISIBLE);
+    }
     */
 
 }

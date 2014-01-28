@@ -3,11 +3,30 @@
               android:orientation="vertical" android:layout_width="fill_parent"
               android:layout_height="fill_parent">
      
-	<Button 
-		android:layout_height="wrap_content"
-		android:layout_width="wrap_content"
-		android:text="TextView"
-		android:onClick="changeToMainActivity" />
+    <TableLayout
+        android:paddingTop="10dip"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:stretchColumns="*">
+        <TableRow>
+			<Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="TextView"
+				android:onClick="changeToMainActivity" />
+			<Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="StartService"
+				android:onClick="startAccelerometerService" />
+			<Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="StopService"
+				android:onClick="stopAccelerometerService" />
+		</TableRow>
+	</TableLayout>
+	
 	<TextView
         android:paddingTop="10dip"
         android:layout_width="fill_parent"

@@ -27,6 +27,7 @@
         <activity 
             android:name="GraphActivity">
         </activity>
+        <service android:name=".AccelerometerService" />
     </application>
 
 </manifest>

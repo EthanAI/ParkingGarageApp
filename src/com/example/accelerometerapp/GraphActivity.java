@@ -116,8 +116,17 @@ public class GraphActivity extends Activity {
    * Function for the button
    */
 	public void changeToMainActivity(View view) {
-	    Intent intent = new Intent(GraphActivity.this, MainActivity.class);
-	    startActivity(intent);
+	    //Intent intent = new Intent(GraphActivity.this, MainActivity.class);
+	    //startActivity(intent);
+		this.finish();
+	}
+	
+	public void startAccelerometerService(View view) {
+		startService(new Intent(getBaseContext(), AccelerometerService.class)); //start Accelerometer Service. Pass it info
+	}
+	
+	public void stopAccelerometerService(View view) {
+		stopService(new Intent(getBaseContext(), AccelerometerService.class)); //start Accelerometer Service. Pass it info
 	}
   
 }

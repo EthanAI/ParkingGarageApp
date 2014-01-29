@@ -15,11 +15,8 @@ public class SensorReading {
 	public float xDel;
 	public float yDel;
 	public float zDel;
-	public float magDel;
-	
-	public Date date; // =  new Date();
-	public final String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
-	public String dateString;
+	public float magDel;	
+	public Date date; 
 	
 	SensorReading(String dataLine) throws NumberFormatException, ParseException {
 		this(new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(dataLine.split(",")[0]), 
@@ -32,7 +29,6 @@ public class SensorReading {
 	SensorReading(Date _date, float _x, float _y, float _z, float _mag,	
 			float _xDel, float _yDel, float _zDel, float _magDel) { 
 		date = _date;
-		dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);
 		x = _x;
 		y = _y;
 		z = _z;
@@ -43,7 +39,9 @@ public class SensorReading {
 		magDel = _magDel;
 	}
 		
-	public String toString() {
+	public String toFormattedString(String DATE_FORMAT_STRING) {
+		String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);
+
 		return dateString + ", " +
                 Float.toString(x) + ", " +
                 Float.toString(y) + ", " +

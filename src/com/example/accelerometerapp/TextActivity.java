@@ -18,11 +18,10 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class TextActivity extends Activity {
 	
-	private List<SensorReading> recentEntries;
+    RecentSensorData recentData = new RecentSensorData();
 	private final int LIST_LIMIT = 3;
     
 	//http://stackoverflow.com/questions/8802157/how-to-use-localbroadcastmanager
@@ -32,11 +31,18 @@ public class TextActivity extends Activity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// Get extra data included in the Intent
-		    String message = intent.getStringExtra("message");
-		    Log.d("TextActivityReciever", "Got message: " + message);
-		    recentEntries = (ArrayList<SensorReading>) intent.getSerializableExtra("recentEntries");
-		    recentEntries = recentEntries.subList(recentEntries.size() - LIST_LIMIT, recentEntries.size());
-			displayData(recentEntries);
+			String sensorType = intent.getStringExtra("sensorType");
+		    Log.d("GraphActivityReceiver", "Got message: " + sensorType);
+		    recentData = (RecentSensorData) intent.getSerializableExtra("recentData");
+		    if(sensorType.equals("accelerometer")) {
+		    	displayData(recentData);
+		    } else if (sensorType.equals("compass")) {
+		    	
+		    } else if (sensorType.equals("humidity")) {
+		    	
+		    } else if (sensorType.equals("pressure")) {
+		    	
+		    }
 
 		}
 	};
@@ -48,10 +54,13 @@ public class TextActivity extends Activity {
         setContentView(R.layout.activity_main);   
         
         //attach to the messages about the sensor data
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("sensorData"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("accelerometer"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("compass"));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("humidity"));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("pressure"));
     }
 	
-	private void displayData(List<SensorReading> recentEntries2) {
+	private void displayData(RecentSensorData recentData) {
 		TextView tvX= (TextView)findViewById(R.id.x_axis);
         TextView tvXJerk= (TextView)findViewById(R.id.x_axis_jerk);
 
@@ -64,6 +73,8 @@ public class TextActivity extends Activity {
         TextView tvMag = (TextView)findViewById(R.id.magnitude);
         TextView tvMagJerk = (TextView)findViewById(R.id.magnitude_jerk);
         
+        //make arrays to break apart each piece in the sensor reading
+        //so we can put them in reverse order and in each separate field
         ArrayList<Float> xArray = new ArrayList<Float>(); 
         ArrayList<Float> yArray = new ArrayList<Float>(); 
         ArrayList<Float> zArray = new ArrayList<Float>(); 
@@ -74,16 +85,16 @@ public class TextActivity extends Activity {
         ArrayList<Float> zJerkArray = new ArrayList<Float>(); 
         ArrayList<Float> magJerkArray = new ArrayList<Float>(); 
         
-        for(int i = 0; i < recentEntries2.size(); i++) {
-        	xArray.add(recentEntries2.get(i).x);
-        	yArray.add(recentEntries2.get(i).y);
-        	zArray.add(recentEntries2.get(i).z);
-        	magArray.add(recentEntries2.get(i).mag);
+        for(int i = recentData.accRecent.size() - LIST_LIMIT; i < recentData.accRecent.size(); i++) {
+        	xArray.add(recentData.accRecent.get(i).x);
+        	yArray.add(recentData.accRecent.get(i).y);
+        	zArray.add(recentData.accRecent.get(i).z);
+        	magArray.add(recentData.accRecent.get(i).mag);
         	
-        	xJerkArray.add(recentEntries2.get(i).xDel);
-        	yJerkArray.add(recentEntries2.get(i).yDel);
-        	zJerkArray.add(recentEntries2.get(i).zDel);
-        	magJerkArray.add(recentEntries2.get(i).magDel);
+        	xJerkArray.add(recentData.accRecent.get(i).xDel);
+        	yJerkArray.add(recentData.accRecent.get(i).yDel);
+        	zJerkArray.add(recentData.accRecent.get(i).zDel);
+        	magJerkArray.add(recentData.accRecent.get(i).magDel);
         }
 
         tvX.setText(toReverseVerticalList(xArray));

@@ -7,11 +7,12 @@ App to automatically determine the floor you parked out. GPS is not helpful, so 
         xRead sensors
         xRecord sensors
         /Graphical View
-          Also collect data while in the graph activity
+          Needs prettier graphing. achart needs studying
         Run only when in parking garage
             Subgoals to achieve this:
-                Run in background
+                xRun in background
                 GPS/BT to trigger it on and off
+                	reciever class to trigger this?
         xExport data
         Pattern analyze
             Is acc or jerk the best descriptor? Record both for now

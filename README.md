@@ -16,7 +16,7 @@ App to automatically determine the floor you parked out. GPS is not helpful, so 
         xExport data
         Pattern analyze
             Is acc or jerk the best descriptor? Record both for now
-            Try with compass data instead?
+            XTry with compass data instead?
         Hardcode the pattern
         Record history of parking location/times
         Widget to show most recent floor

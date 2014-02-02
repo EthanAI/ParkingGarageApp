@@ -1,4 +1,12 @@
-package com.example.accelerometerapp;
+/*
+ * Service to read the accelerometers and store data in a text file. 
+ * Allows human analysis of the data afterwards, allows multiple activites
+ * to access the data by reading the text file.
+ * 
+ * Advice from https://www.youtube.com/watch?v=GAOH7XTW7BU
+ */
+
+package com.ethanai.parkinggarageapp;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -8,12 +16,14 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.app.Service;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -27,13 +37,7 @@ import android.widget.Toast;
 
 //TODO task bar icon http://developer.android.com/guide/topics/ui/notifiers/notifications.html
 
-/*
- * Service to read the accelerometers and store data in a text file. 
- * Allows human analysis of the data afterwards, allows multiple activites
- * to access the data by reading the text file.
- * 
- * Advice from https://www.youtube.com/watch?v=GAOH7XTW7BU
- */
+
 
 @SuppressLint("SimpleDateFormat")
 public class AccelerometerService extends Service implements SensorEventListener {
@@ -42,21 +46,25 @@ public class AccelerometerService extends Service implements SensorEventListener
     
     private Sensor mAccelerometer;
     private Sensor mCompass;
-    private Sensor mHumidity;
     private Sensor mPressure;
     
     	
     private final String STORAGE_DIRECTORY_NAME = "Documents";
     private File accelerometerFile = null;
     private File compassFile = null;
-    private File humidityFile = null;
     private File pressureFile = null;
     
    
 	private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
 
-	private RecentSensorData recentData =  new RecentSensorData();
+	private int maxReadingHistoryCount = 1000;
+	private RecentSensorData recentData =  new RecentSensorData(maxReadingHistoryCount);
+	
+	private BroadcastReceiver receiver;
 
+	//testcode written while drunk
+	//private IntentFilter myFilter = new IntentFilter(Intent.)
+	
 	/* VERY temporary implementation. We will want the on/off triggered in other ways. 
 	 * 1. Want to have this guy hide in the background pretty much permenantly (upon app creation?)
 	 * 2. Want it to hide/sleep until connecting to bluetooth. Then checks decide if it's truly time 
@@ -65,6 +73,7 @@ public class AccelerometerService extends Service implements SensorEventListener
 	 */
 	public int onStartCommand(Intent intent, int flags, int startID) {
 		Toast.makeText(this, "Sensors Started", Toast.LENGTH_SHORT).show();
+		
         //get info from the calling Activity
         Bundle extras = intent.getExtras();
         if(extras != null){
@@ -74,21 +83,61 @@ public class AccelerometerService extends Service implements SensorEventListener
 	    String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);             
 	    accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " accelReadings.csv");
 	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " compassReadings.csv"); 
-	    humidityFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " humidityReadings.csv"); 
 	    pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " pressureReadings.csv"); 	    
 		
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         
         mCompass = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        mHumidity = mSensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
+        //mHumidity = mSensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
         mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+        
         
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
         
         mSensorManager.registerListener(this, mCompass, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(this, mHumidity, SensorManager.SENSOR_DELAY_NORMAL);
+        //mSensorManager.registerListener(this, mHumidity, SensorManager.SENSOR_DELAY_NORMAL); doesn't exist on Nexus 5
         mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
+        
+        // maybe try this structure in the future: http://stackoverflow.com/questions/9128103/broadcastreceiver-with-multiple-filters-or-multiple-broadcastreceivers
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d("TAG", "on or off");
+                Toast.makeText(context, intent.getAction(), Toast.LENGTH_SHORT).show();               
+            }
+        };
+        
+        IntentFilter testFilter = new IntentFilter();
+        IntentFilter btFilter = new IntentFilter();
+        
+        testFilter.addAction(Intent.ACTION_POWER_CONNECTED);
+        testFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+        btFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        btFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        
+        registerReceiver(receiver, testFilter);
+        registerReceiver(receiver, btFilter);
+
+        Log.d("TAG", "Register receiver");
+        
+        /*
+         *    try {
+            receiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    Log.d("TAG", "on or off");
+                }
+            };
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_SCREEN_OFF);
+            Log.d("TAG", "Register receiver");
+            registerReceiver(receiver, filter);
+
+        } catch (Exception e) {
+            Log.d("TAG", "Caught: " + e.getStackTrace());
+        }
+         */
         
         //Date date = new Date();        
         //String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);        
@@ -96,6 +145,7 @@ public class AccelerometerService extends Service implements SensorEventListener
 
         //Log.i("test", externalFile.toString());
         //Log.i("test", DATE_FORMAT_STRING);
+		//List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
                 				
 		return START_STICKY; //keep running until specifically stopped
 	}
@@ -104,6 +154,8 @@ public class AccelerometerService extends Service implements SensorEventListener
 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
 		super.onDestroy();		
 		mSensorManager.unregisterListener(this);
+		
+		unregisterReceiver(receiver);
 	}
 	
 	@Override
@@ -120,6 +172,7 @@ public class AccelerometerService extends Service implements SensorEventListener
         //Log.i("test", changedDate.toString());
     	
         Sensor sensor = event.sensor;        
+        //handle accelerometer update
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
         	Log.i("acc", dateString);
             String headers = "Time, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk";
@@ -148,19 +201,6 @@ public class AccelerometerService extends Service implements SensorEventListener
 	        }     	
         	
             notifyUpdate("compass");      
-
-        } else if (sensor.getType() == Sensor.TYPE_RELATIVE_HUMIDITY) {
-        	Log.i("humid", dateString);
-        	String header = "Date, Humidity\n";
-            float percentHumidity = event.values[0];
-            
-            if(!humidityFile.exists()) {
-        		writeNewFile(humidityFile, header + "\n");
-	        } else {
-	            appendToFile(humidityFile, dateString + "," + percentHumidity + "\n");
-	        }     
-            notifyUpdate("humidity");      
-
             
         } else if (sensor.getType() == Sensor.TYPE_PRESSURE) {
         	Log.i("pressure", dateString);

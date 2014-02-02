@@ -1,4 +1,4 @@
-package com.example.accelerometerapp;
+package com.ethanai.parkinggarageapp;
 
 import android.annotation.SuppressLint;
 import android.hardware.Sensor;

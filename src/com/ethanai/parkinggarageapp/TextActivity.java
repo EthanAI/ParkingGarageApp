@@ -4,7 +4,7 @@
 
  */
 
-package com.example.accelerometerapp;
+package com.ethanai.parkinggarageapp;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -85,7 +85,13 @@ public class TextActivity extends Activity {
         ArrayList<Float> zJerkArray = new ArrayList<Float>(); 
         ArrayList<Float> magJerkArray = new ArrayList<Float>(); 
         
-        for(int i = recentData.accRecent.size() - LIST_LIMIT; i < recentData.accRecent.size(); i++) {
+        if(recentData == null || recentData.accRecent.size() < 3)
+        	System.out.println("Flag");
+        
+        int i = recentData.accRecent.size() - LIST_LIMIT; //TODO inelegant solution. Streamline for practice
+        if(i < 0)
+        	i = 0;
+        for(; i < recentData.accRecent.size(); i++) {
         	xArray.add(recentData.accRecent.get(i).x);
         	yArray.add(recentData.accRecent.get(i).y);
         	zArray.add(recentData.accRecent.get(i).z);

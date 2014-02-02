@@ -1,8 +1,9 @@
-package com.example.accelerometerapp;
+package com.ethanai.parkinggarageapp;
 
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
+import org.achartengine.model.TimeSeries;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
@@ -16,7 +17,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,12 +28,14 @@ import android.widget.TextView;
 public class GraphActivity extends Activity {
 	
     private GraphicalView mChart;
+    
+    private TimeSeries mCurrentSeries;
     private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
-    private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
-    private XYSeries mCurrentSeries;
+    
     private XYSeriesRenderer mCurrentRenderer;
+    private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
        
-    int plotDataCount = 100;
+    int plotDataCount = 100000; //plot limited by size of recent data object. Not limited here
     RecentSensorData recentData = new RecentSensorData();
        	
 	//http://stackoverflow.com/questions/8802157/how-to-use-localbroadcastmanager
@@ -46,9 +51,7 @@ public class GraphActivity extends Activity {
 		    if(sensorType.equals("accelerometer")) {
 		    	updateChart();
 		    } else if (sensorType.equals("compass")) {
-		    	
-		    } else if (sensorType.equals("humidity")) {
-		    	
+		    			    	
 		    } else if (sensorType.equals("pressure")) {
 		    	
 		    }
@@ -67,7 +70,6 @@ public class GraphActivity extends Activity {
 			
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("accelerometer"));
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("compass"));
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("humidity"));
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("pressure"));
 	}
 	
@@ -80,14 +82,27 @@ public class GraphActivity extends Activity {
 	}
 	
     private void initChart() {
-        mCurrentSeries = new XYSeries("Sample Data");
+    	DisplayMetrics metrics = this.getResources().getDisplayMetrics();
+    	float MEDIUM_TEXT_SIZE = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 13, metrics);
+
+    	
+        mCurrentSeries = new TimeSeries("Accelerometer");
         mDataset.addSeries(mCurrentSeries);
         
         mCurrentRenderer = new XYSeriesRenderer();
-        mRenderer.addSeriesRenderer(mCurrentRenderer);
+        
+		mRenderer.setYTitle("gs of force");
+		mRenderer.addSeriesRenderer(mCurrentRenderer);
+		mRenderer.setAxisTitleTextSize(MEDIUM_TEXT_SIZE);
+		mRenderer.setLegendTextSize(MEDIUM_TEXT_SIZE);
+		
+    	//mCurrentRenderer.setChartValuesTextSize(val);
+
+
     }
 
-    private void addData() {
+    private void loadData() {
+    	mCurrentSeries.clear();
     	for(int i = 0; i < plotDataCount && i < recentData.accRecent.size(); i++) {
     		mCurrentSeries.add(i, recentData.accRecent.get(i).x);
     	}
@@ -98,17 +113,25 @@ public class GraphActivity extends Activity {
         updateChart();
     }
     
+    /*
+     * Deletes and reloads all the data. Runs really fast anyway, but could be optimized if needed. 
+     * (maybe if we plot 7 or 8 sensors at once it might be important?)
+     */
     private void updateChart() {
         LinearLayout layout = (LinearLayout) findViewById(R.id.chart);
         
-        if(mChart != null)
-        	layout.removeView(mChart);
-        
-        if(recentData.accRecent != null && recentData.accRecent.size() > 0) {
+        if(mChart == null) {
         	initChart();
-        	addData();
-        	mChart = ChartFactory.getCubeLineChartView(this, mDataset, mRenderer, 0.3f);
+        	loadData();
+        	mChart = ChartFactory.getLineChartView(this, mDataset, mRenderer);
         	layout.addView(mChart);
+        
+        } else if(recentData.accRecent != null && recentData.accRecent.size() > 0) {
+        	//initChart();
+        	loadData();
+        	//mChart = ChartFactory.getLineChartView(this, mDataset, mRenderer);
+        	//layout.addView(mChart);
+        	mChart.repaint();
         }
     }  
 

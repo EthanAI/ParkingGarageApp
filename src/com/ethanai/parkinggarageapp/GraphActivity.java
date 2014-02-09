@@ -5,7 +5,7 @@ import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.model.TimeSeries;
 import org.achartengine.model.XYMultipleSeriesDataset;
-import org.achartengine.model.XYSeries;
+//import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
@@ -57,7 +57,7 @@ public class GraphActivity extends Activity {
 		    }
 		}
 	};
-    
+	    
 	// Called when the activity is first created. 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -68,16 +68,20 @@ public class GraphActivity extends Activity {
 	    TextView tvTest = (TextView) findViewById(R.id.testField);
 	    tvTest.setText("0.0"); //recentEntries.get(recentEntries.size() - 1).toString());
 			
+	    
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("accelerometer"));
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("compass"));
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("pressure"));
+		
+
+
 	}
 	
 
 	@Override
 	protected void onDestroy() {
 	  // Unregister since the activity is about to be closed.
-	  LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
+	  //LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
 	  super.onDestroy();
 	}
 	
@@ -116,6 +120,7 @@ public class GraphActivity extends Activity {
     /*
      * Deletes and reloads all the data. Runs really fast anyway, but could be optimized if needed. 
      * (maybe if we plot 7 or 8 sensors at once it might be important?)
+     * Good demo here https://www.youtube.com/watch?v=E9fozQ5NlSo
      */
     private void updateChart() {
         LinearLayout layout = (LinearLayout) findViewById(R.id.chart);

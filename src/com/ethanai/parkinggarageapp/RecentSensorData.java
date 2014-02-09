@@ -3,18 +3,21 @@ package com.ethanai.parkinggarageapp;
 import android.annotation.SuppressLint;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
-import android.util.Log;
+//import android.util.Log;
 
 import java.io.Serializable;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+//import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+//import java.util.Date;
 
 @SuppressLint("SimpleDateFormat")
 public class RecentSensorData implements Serializable { //must specify serializable so it can be passed by our intents neatly
 	
-    public int historyLength = 100;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 5721779411217090251L;
+	public int historyLength = 100;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
 	public ArrayList<AccelerometerReading> accRecent = new ArrayList<AccelerometerReading>();
 	public ArrayList<CompassReading> magnRecent = new ArrayList<CompassReading>();

@@ -84,10 +84,7 @@ public class TextActivity extends Activity {
         ArrayList<Float> yJerkArray = new ArrayList<Float>(); 
         ArrayList<Float> zJerkArray = new ArrayList<Float>(); 
         ArrayList<Float> magJerkArray = new ArrayList<Float>(); 
-        
-        if(recentData == null || recentData.accRecent.size() < 3)
-        	System.out.println("Flag");
-        
+               
         int i = recentData.accRecent.size() - LIST_LIMIT; //TODO inelegant solution. Streamline for practice
         if(i < 0)
         	i = 0;

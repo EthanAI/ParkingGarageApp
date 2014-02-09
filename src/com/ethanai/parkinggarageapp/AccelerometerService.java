@@ -86,17 +86,13 @@ public class AccelerometerService extends Service implements SensorEventListener
 	    pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " pressureReadings.csv"); 	    
 		
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mCompass = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        //mHumidity = mSensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
         mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         
-        
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        
         mSensorManager.registerListener(this, mCompass, SensorManager.SENSOR_DELAY_NORMAL);
-        //mSensorManager.registerListener(this, mHumidity, SensorManager.SENSOR_DELAY_NORMAL); doesn't exist on Nexus 5
         mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
         
         // maybe try this structure in the future: http://stackoverflow.com/questions/9128103/broadcastreceiver-with-multiple-filters-or-multiple-broadcastreceivers
@@ -104,10 +100,11 @@ public class AccelerometerService extends Service implements SensorEventListener
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.d("TAG", "on or off");
-                Toast.makeText(context, intent.getAction(), Toast.LENGTH_SHORT).show();               
+                //Toast.makeText(context, intent.getAction(), Toast.LENGTH_SHORT).show();               
             }
         };
         
+        /*
         IntentFilter testFilter = new IntentFilter();
         IntentFilter btFilter = new IntentFilter();
         
@@ -120,31 +117,8 @@ public class AccelerometerService extends Service implements SensorEventListener
         registerReceiver(receiver, btFilter);
 
         Log.d("TAG", "Register receiver");
+        */
         
-        /*
-         *    try {
-            receiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    Log.d("TAG", "on or off");
-                }
-            };
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(Intent.ACTION_SCREEN_OFF);
-            Log.d("TAG", "Register receiver");
-            registerReceiver(receiver, filter);
-
-        } catch (Exception e) {
-            Log.d("TAG", "Caught: " + e.getStackTrace());
-        }
-         */
-        
-        //Date date = new Date();        
-        //String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);        
-        //String fileName = dateString + " sensorReadings.csv";
-
-        //Log.i("test", externalFile.toString());
-        //Log.i("test", DATE_FORMAT_STRING);
 		//List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
                 				
 		return START_STICKY; //keep running until specifically stopped
@@ -153,9 +127,9 @@ public class AccelerometerService extends Service implements SensorEventListener
 	public void onDestroy() {
 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
 		super.onDestroy();		
-		mSensorManager.unregisterListener(this);
 		
-		unregisterReceiver(receiver);
+		mSensorManager.unregisterListener(this);
+		//unregisterReceiver(receiver);
 	}
 	
 	@Override

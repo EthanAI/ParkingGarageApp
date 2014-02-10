@@ -1,6 +1,8 @@
 package com.ethanai.parkinggarageapp;
 
 
+import java.util.List;
+
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.model.TimeSeries;
@@ -15,6 +17,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.DisplayMetrics;
@@ -29,18 +35,33 @@ public class GraphActivity extends Activity {
 	
     private GraphicalView mChart;
     
-    private TimeSeries mCurrentSeries;
+    private TimeSeries mXSeries;
+    private TimeSeries mYSeries;
+    private TimeSeries mZSeries;
+    private TimeSeries mAngleSeries;
+
     private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
     
-    private XYSeriesRenderer mCurrentRenderer;
+    private XYSeriesRenderer mXRenderer;
+    private XYSeriesRenderer mYRenderer;
+    private XYSeriesRenderer mZRenderer;
+    private XYSeriesRenderer mAngleRenderer;
+
     private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
        
     int plotDataCount = 100000; //plot limited by size of recent data object. Not limited here
     RecentSensorData recentData = new RecentSensorData();
+    
+    
+	private LocationManager mLocationManager;
+	private LocationListener mLocationListener;
+    
+    
        	
 	//http://stackoverflow.com/questions/8802157/how-to-use-localbroadcastmanager
 	// Our handler for received Intents. This will be called whenever an Intent
 	// with an action named "custom-event-name" is broadcasted.
+    //TODO move this to another class or clean up
 	private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -49,9 +70,9 @@ public class GraphActivity extends Activity {
 		    Log.d("GraphActivityReceiver", "Got message: " + sensorType);
 		    recentData = (RecentSensorData) intent.getSerializableExtra("recentData");
 		    if(sensorType.equals("accelerometer")) {
-		    	updateChart();
+		    	
 		    } else if (sensorType.equals("compass")) {
-		    			    	
+		    	updateChart();		    	
 		    } else if (sensorType.equals("pressure")) {
 		    	
 		    }
@@ -68,13 +89,51 @@ public class GraphActivity extends Activity {
 	    TextView tvTest = (TextView) findViewById(R.id.testField);
 	    tvTest.setText("0.0"); //recentEntries.get(recentEntries.size() - 1).toString());
 			
-	    
+	    //listeners are so we can hear when the sensor service updates so we can update our graph view. A better way to communicate?
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("accelerometer"));
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("compass"));
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("pressure"));
 		
+		
+		
+		//location code trial
+		mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		
+		float minAccuracy = 500.0f;
+		long minTime = 1000 * 60 * 5;
+		Location mBestReading;
+		
+		Location bestResult = null;
+		float bestAccuracy = Float.MAX_VALUE;
+		long bestTime = Long.MIN_VALUE;
+		List<String> matchingProviders = mLocationManager.getAllProviders();
 
+		for (String provider : matchingProviders) {
 
+			Location location = mLocationManager.getLastKnownLocation(provider);
+
+			if (location != null) {
+
+				float accuracy = location.getAccuracy();
+				long time = location.getTime();
+
+				if (accuracy < bestAccuracy) {
+
+					bestResult = location;
+					bestAccuracy = accuracy;
+					bestTime = time;
+
+				}
+			}
+		}
+		if (bestAccuracy > minAccuracy || bestTime < minTime) {
+			bestResult = null;
+		}
+		//location.getAccuracy()
+		//location.getLongitude()
+		//location.getLatitude()
+		//end of location code
+		
 	}
 	
 
@@ -90,15 +149,44 @@ public class GraphActivity extends Activity {
     	float MEDIUM_TEXT_SIZE = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 13, metrics);
 
     	
-        mCurrentSeries = new TimeSeries("Accelerometer");
-        mDataset.addSeries(mCurrentSeries);
+        //mCurrentSeries = new TimeSeries("Accelerometer");
+        mXSeries = new TimeSeries("X");
+        mYSeries = new TimeSeries("Y");
+        mZSeries = new TimeSeries("Z");
+        mAngleSeries = new TimeSeries("Angle");
+
+        mDataset.addSeries(mXSeries);
+        mDataset.addSeries(mYSeries);
+        mDataset.addSeries(mZSeries);
+        mDataset.addSeries(mAngleSeries);
+
+        mXRenderer = new XYSeriesRenderer();
+        mXRenderer.setColor(Color.RED);
+        mYRenderer = new XYSeriesRenderer();
+        mYRenderer.setColor(Color.YELLOW);
+        mZRenderer = new XYSeriesRenderer();
+        mZRenderer.setColor(Color.GREEN);
+        mAngleRenderer = new XYSeriesRenderer();
+        mAngleRenderer.setColor(Color.WHITE);
+
+        mRenderer.addSeriesRenderer(mXRenderer);
+		mRenderer.addSeriesRenderer(mYRenderer);
+		mRenderer.addSeriesRenderer(mZRenderer);
+		mRenderer.addSeriesRenderer(mAngleRenderer);
         
-        mCurrentRenderer = new XYSeriesRenderer();
-        
-		mRenderer.setYTitle("gs of force");
-		mRenderer.addSeriesRenderer(mCurrentRenderer);
+		//mRenderer.setYTitle("gs of force");
+		mRenderer.setYTitle("Angle");
 		mRenderer.setAxisTitleTextSize(MEDIUM_TEXT_SIZE);
 		mRenderer.setLegendTextSize(MEDIUM_TEXT_SIZE);
+		
+		mRenderer.setShowGridX(true);
+		//TODO add button to restore view to following
+		
+		mRenderer.setLabelsTextSize(MEDIUM_TEXT_SIZE);
+		mRenderer.setXLabelsColor(Color.BLACK);
+		mRenderer.setApplyBackgroundColor(true);
+		mRenderer.setBackgroundColor(Color.BLACK);
+		//mRenderer.setMarginsColor(Color.RED);
 		
     	//mCurrentRenderer.setChartValuesTextSize(val);
 
@@ -106,9 +194,19 @@ public class GraphActivity extends Activity {
     }
 
     private void loadData() {
-    	mCurrentSeries.clear();
-    	for(int i = 0; i < plotDataCount && i < recentData.accRecent.size(); i++) {
-    		mCurrentSeries.add(i, recentData.accRecent.get(i).x);
+    	mXSeries.clear();
+    	mYSeries.clear();
+    	mZSeries.clear();
+    	mAngleSeries.clear();
+    	//for(int i = 0; i < plotDataCount && i < recentData.accRecent.size(); i++) {
+    	//	mCurrentSeries.add(i, recentData.accRecent.get(i).x);
+    	//}
+    	
+    	for(int i = 0; i < plotDataCount && i < recentData.magnRecent.size(); i++) {
+    		mXSeries.add(i, recentData.compassRecent.get(i).x);
+    		mYSeries.add(i, recentData.compassRecent.get(i).y);
+    		mZSeries.add(i, recentData.compassRecent.get(i).z);
+    		mAngleSeries.add(i, recentData.compassRecent.get(i).angle);
     	}
     }
 
@@ -131,7 +229,9 @@ public class GraphActivity extends Activity {
         	mChart = ChartFactory.getLineChartView(this, mDataset, mRenderer);
         	layout.addView(mChart);
         
-        } else if(recentData.accRecent != null && recentData.accRecent.size() > 0) {
+        //} else if(recentData.accRecent != null && recentData.accRecent.size() > 0) {
+
+        } else if(recentData.magnRecent != null && recentData.magnRecent.size() > 0) {
         	//initChart();
         	loadData();
         	//mChart = ChartFactory.getLineChartView(this, mDataset, mRenderer);
@@ -150,14 +250,14 @@ public class GraphActivity extends Activity {
 		//this.finish();
 	}
 	
-	public void startAccelerometerService(View view) { 
-		Intent intent = new Intent(getBaseContext(), AccelerometerService.class);
+	public void startSensorService(View view) { 
+		Intent intent = new Intent(getBaseContext(), SensorService.class);
 		intent.putExtra("maxReadingHistoryCount", plotDataCount);
 		startService(intent); //start Accelerometer Service. Pass it info
 	}
 	
-	public void stopAccelerometerService(View view) {
-		stopService(new Intent(getBaseContext(), AccelerometerService.class)); //start Accelerometer Service. Pass it info
+	public void stopSensorService(View view) {
+		stopService(new Intent(getBaseContext(), SensorService.class)); //start Accelerometer Service. Pass it info
 	}
   
 }

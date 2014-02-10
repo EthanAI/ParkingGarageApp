@@ -20,7 +20,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public int historyLength = 100;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
 	public ArrayList<AccelerometerReading> accRecent = new ArrayList<AccelerometerReading>();
-	public ArrayList<CompassReading> magnRecent = new ArrayList<CompassReading>();
+	public ArrayList<MagnetReading> magnRecent = new ArrayList<MagnetReading>();
+	public ArrayList<CompassReading> compassRecent = new ArrayList<CompassReading>();
 	public ArrayList<HumidityReading> humidRecent = new ArrayList<HumidityReading>();
 	public ArrayList<PressureReading> pressRecent = new ArrayList<PressureReading>();
 
@@ -42,8 +43,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
         	addUpToLimit(accRecent, new AccelerometerReading(dateString, event));
         	
         } else if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-        	addUpToLimit(magnRecent, new CompassReading(dateString, event));
-
+        	addUpToLimit(magnRecent, new MagnetReading(dateString, event));
+        	
+        } else if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+        	addUpToLimit(compassRecent, new CompassReading(dateString, event));
+        	
         } else if (sensor.getType() == Sensor.TYPE_RELATIVE_HUMIDITY) {
         	addUpToLimit(humidRecent, new HumidityReading(dateString, event));
 
@@ -60,17 +64,94 @@ public class RecentSensorData implements Serializable { //must specify serializa
     }	
 
 
+	class MagnetReading {
+		public String dateString;
+		public float x;
+		public float y;
+		public float z;
+		
+		MagnetReading(String dateString, SensorEvent event) {
+			this.dateString = dateString;
+			this.x = event.values[0];
+			this.y = event.values[1];
+			this.z = event.values[2];
+		}
+		
+		public String toFormattedString() {
+			return dateString + ", " +
+	                Float.toString(x) + "," + 
+	                Float.toString(y) + "," +
+	                Float.toString(z) + "," +
+	                "\n";
+		}
+		
+	}
+	
+	//http://developer.android.com/reference/android/hardware/SensorEvent.html#values
+	/*
+	 * http://developer.android.com/reference/android/hardware/SensorManager.html#getRotationMatrix(float[], float[], float[], float[])
+	 * float getInclination (float[] I)
+	 * float[] getOrientation (float[] R, float[] values)
+	 * 
+	 * 
+		//based on Coursera class
+		// Storage for Sensor readings
+		private float[] mGravity = null; //accelerometer
+		private float[] mGeomagnetic = null; //magnet meter
+		
+		private float inclination; 
+		private float orientationMatrix[] = new float[3];
+		private double mRotationInDegress;
+
+
+		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+			mGravity = new float[3];
+			System.arraycopy(event.values, 0, mGravity, 0, 3);
+		}		
+		else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+			mGeomagnetic = new float[3];
+			System.arraycopy(event.values, 0, mGeomagnetic, 0, 3);
+		}
+		
+		//merge and calculate the inclination and orientation (finally)
+		if (mGravity != null && mGeomagnetic != null) {
+
+			float rotationMatrix[] = new float[9];
+			float inclinationMatrix[] = new float[9];
+
+			boolean success = SensorManager.getRotationMatrix(rotationMatrix, inclinationMatrix, mGravity, mGeomagnetic);
+
+			if (success) {
+				
+				SensorManager.getOrientation(rotationMatrix, orientationMatrix);
+
+				float rotationInRadians = orientationMatrix[0];
+				// Convert from radians to degrees
+				mRotationInDegress = Math.toDegrees(rotationInRadians);
+				
+				inclination = getInclination(inclinationMatrix);
+				
+				// Reset sensor event data arrays
+				mGravity = mGeomagnetic = null;
+
+			}
+		}
+	 */
 	class CompassReading {
 		public String dateString;
 		public float x;
 		public float y;
 		public float z;
+		public float angle;
+		public float accuracy;
 		
 		CompassReading(String dateString, SensorEvent event) {
 			this.dateString = dateString;
 			this.x = event.values[0];
 			this.y = event.values[1];
 			this.z = event.values[2];
+			this.angle = event.values[3];
+			this.accuracy = event.values[4];
 		}
 		
 		public String toFormattedString() {

@@ -18,12 +18,12 @@
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
 				android:text="StartService"
-				android:onClick="startAccelerometerService" />
+				android:onClick="startSensorService" />
 			<Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
 				android:text="StopService"
-				android:onClick="stopAccelerometerService" />
+				android:onClick="stopSensorService" />
 		</TableRow>
 	</TableLayout>
 	

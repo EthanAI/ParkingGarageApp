@@ -37,31 +37,28 @@ import android.widget.Toast;
 
 //TODO task bar icon http://developer.android.com/guide/topics/ui/notifiers/notifications.html
 
-
-
 @SuppressLint("SimpleDateFormat")
-public class AccelerometerService extends Service implements SensorEventListener {
+public class SensorService extends Service implements SensorEventListener {
 	
     private SensorManager mSensorManager;
     
     private Sensor mAccelerometer;
+    private Sensor mMagn;
     private Sensor mCompass;
     private Sensor mPressure;
     
     	
     private final String STORAGE_DIRECTORY_NAME = "Documents";
     private File accelerometerFile = null;
+    private File magnFile = null;
     private File compassFile = null;
     private File pressureFile = null;
-    
    
 	private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
 
 	private int maxReadingHistoryCount = 1000;
 	private RecentSensorData recentData =  new RecentSensorData(maxReadingHistoryCount);
 	
-	private BroadcastReceiver receiver;
-
 	//testcode written while drunk
 	//private IntentFilter myFilter = new IntentFilter(Intent.)
 	
@@ -80,47 +77,25 @@ public class AccelerometerService extends Service implements SensorEventListener
             //maxReadingHistoryCount = extras.getInt("maxReadingHistoryCount");
         }
 		Date date = new Date();        
-	    String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);             
-	    accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " accelReadings.csv");
-	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " compassReadings.csv"); 
-	    pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " pressureReadings.csv"); 	    
+	    String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);   
+	    String locationString = "";
+	    accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " accelReadings.csv");
+	    magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " magReadings.csv"); 
+	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " compassReadings.csv"); 
+	    pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " pressureReadings.csv"); 	    
 		
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mCompass = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mMagn = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD); //TODO break out into its own listener 
+        mCompass = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
         mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mMagn, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mCompass, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
-        
-        // maybe try this structure in the future: http://stackoverflow.com/questions/9128103/broadcastreceiver-with-multiple-filters-or-multiple-broadcastreceivers
-        receiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.d("TAG", "on or off");
-                //Toast.makeText(context, intent.getAction(), Toast.LENGTH_SHORT).show();               
-            }
-        };
-        
-        /*
-        IntentFilter testFilter = new IntentFilter();
-        IntentFilter btFilter = new IntentFilter();
-        
-        testFilter.addAction(Intent.ACTION_POWER_CONNECTED);
-        testFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
-        btFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
-        btFilter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        
-        registerReceiver(receiver, testFilter);
-        registerReceiver(receiver, btFilter);
-
-        Log.d("TAG", "Register receiver");
-        */
-        
-		//List<Sensor> deviceSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-                				
+                        				
 		return START_STICKY; //keep running until specifically stopped
 	}
 	
@@ -168,10 +143,25 @@ public class AccelerometerService extends Service implements SensorEventListener
 
         	recentData.addUpToLimit(dateString, event);
             
+        	if(!magnFile.exists()) {
+        		writeNewFile(magnFile, header + "\n");
+	        } else {
+	            appendToFile(magnFile, recentData.magnRecent.get(recentData.magnRecent.size() - 1).toFormattedString());
+	        }     	
+        	
+            notifyUpdate("mag");      
+            
+        } else if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+        	Log.i("compass", dateString);
+        	        	
+        	String header = "Date, x, y, z, total, accuracy\n";
+
+        	recentData.addUpToLimit(dateString, event);
+            
         	if(!compassFile.exists()) {
         		writeNewFile(compassFile, header + "\n");
 	        } else {
-	            appendToFile(compassFile, recentData.magnRecent.get(recentData.magnRecent.size() - 1).toFormattedString());
+	            appendToFile(compassFile, recentData.compassRecent.get(recentData.compassRecent.size() - 1).toFormattedString());
 	        }     	
         	
             notifyUpdate("compass");      

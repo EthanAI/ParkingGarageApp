@@ -23,6 +23,12 @@ public class TextActivity extends Activity {
 	
     RecentSensorData recentData = new RecentSensorData();
 	private final int LIST_LIMIT = 3;
+	
+	private final String ACCELEROMETER_TAG 	= "accelerometer";
+	private final String MAGNETIC_TAG 		= "magnetic";
+	private final String ORIENTATION_TAG 	= "orientation";
+	private final String COMPASS_TAG 		= "compass";
+	private final String PRESSURE_TAG 		= "pressure";
     
 	//http://stackoverflow.com/questions/8802157/how-to-use-localbroadcastmanager
 	// Our handler for received Intents. This will be called whenever an Intent
@@ -32,7 +38,7 @@ public class TextActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			// Get extra data included in the Intent
 			String sensorType = intent.getStringExtra("sensorType");
-		    Log.d("GraphActivityReceiver", "Got message: " + sensorType);
+		    Log.d("TextActivityReceiver", "Got message: " + sensorType);
 		    recentData = (RecentSensorData) intent.getSerializableExtra("recentData");
 		    if(sensorType.equals("accelerometer")) {
 		    	displayData(recentData);
@@ -54,10 +60,11 @@ public class TextActivity extends Activity {
         setContentView(R.layout.activity_main);   
         
         //attach to the messages about the sensor data
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("accelerometer"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("compass"));
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("humidity"));
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("pressure"));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(ACCELEROMETER_TAG));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(MAGNETIC_TAG));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(ORIENTATION_TAG));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(COMPASS_TAG));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(PRESSURE_TAG));	
     }
 	
 	private void displayData(RecentSensorData recentData) {

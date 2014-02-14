@@ -30,22 +30,29 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+//TODO add reciever for orientation also add that graph, probably our important one
 @SuppressLint("SimpleDateFormat")
 public class GraphActivity extends Activity {
 	
     private GraphicalView mChart;
     
+    private TimeSeries rotationCountSeries;
+    /*
     private TimeSeries mXSeries;
     private TimeSeries mYSeries;
     private TimeSeries mZSeries;
     private TimeSeries mAngleSeries;
+    */
 
     private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
     
+    private XYSeriesRenderer rotationCountRenderer;
+    /*
     private XYSeriesRenderer mXRenderer;
     private XYSeriesRenderer mYRenderer;
     private XYSeriesRenderer mZRenderer;
     private XYSeriesRenderer mAngleRenderer;
+    */
 
     private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
        
@@ -56,6 +63,11 @@ public class GraphActivity extends Activity {
 	private LocationManager mLocationManager;
 	private LocationListener mLocationListener;
     
+	private final String ACCELEROMETER_TAG 	= "accelerometer";
+	private final String MAGNETIC_TAG 		= "magnetic";
+	private final String ORIENTATION_TAG 	= "orientation";
+	private final String COMPASS_TAG 		= "compass";
+	private final String PRESSURE_TAG 		= "pressure";
     
        	
 	//http://stackoverflow.com/questions/8802157/how-to-use-localbroadcastmanager
@@ -67,15 +79,22 @@ public class GraphActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			// Get extra data included in the Intent
 		    String sensorType = intent.getStringExtra("sensorType");
-		    Log.d("GraphActivityReceiver", "Got message: " + sensorType);
+		    Log.i("GraphActivityReceiver", "Got message: " + sensorType);
 		    recentData = (RecentSensorData) intent.getSerializableExtra("recentData");
-		    if(sensorType.equals("accelerometer")) {
+		    
+		    if(sensorType.equals(ACCELEROMETER_TAG)) {
+ 
+		    } else if (sensorType.equals(MAGNETIC_TAG)) {
+		    		    	
+		    } else if (sensorType.equals(ORIENTATION_TAG)) {
+		    	TextView tvTest = (TextView) findViewById(R.id.testField);
+		    	tvTest.setText("Floor: " + recentData.parkedFloor);
+		    	updateChart();	
+		    } else if (sensorType.equals(COMPASS_TAG)) {
 		    	
-		    } else if (sensorType.equals("compass")) {
-		    	updateChart();		    	
-		    } else if (sensorType.equals("pressure")) {
-		    	
+		    } else if (sensorType.equals(PRESSURE_TAG)) {	
 		    }
+		    
 		}
 	};
 	    
@@ -90,10 +109,12 @@ public class GraphActivity extends Activity {
 	    tvTest.setText("0.0"); //recentEntries.get(recentEntries.size() - 1).toString());
 			
 	    //listeners are so we can hear when the sensor service updates so we can update our graph view. A better way to communicate?
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("accelerometer"));
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("compass"));
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter("pressure"));
-		
+	    //need to list each term we are listening for here
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(ACCELEROMETER_TAG));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(MAGNETIC_TAG));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(ORIENTATION_TAG));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(COMPASS_TAG));
+		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(PRESSURE_TAG));	
 		
 		
 		//location code trial
@@ -148,7 +169,25 @@ public class GraphActivity extends Activity {
     	DisplayMetrics metrics = this.getResources().getDisplayMetrics();
     	float MEDIUM_TEXT_SIZE = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 13, metrics);
 
+    	rotationCountSeries = new TimeSeries("Turns"); //add better time element?
+    	mDataset.addSeries(rotationCountSeries);
+    	rotationCountRenderer = new XYSeriesRenderer();
+    	rotationCountRenderer.setColor(Color.RED);
+    	mRenderer.addSeriesRenderer(rotationCountRenderer);
     	
+		mRenderer.setYTitle("Quarter Turns");
+		mRenderer.setAxisTitleTextSize(MEDIUM_TEXT_SIZE);
+		mRenderer.setLegendTextSize(MEDIUM_TEXT_SIZE);
+		
+		mRenderer.setShowGridX(true);
+		//TODO add button to restore view to following
+		
+		mRenderer.setLabelsTextSize(MEDIUM_TEXT_SIZE);
+		mRenderer.setXLabelsColor(Color.BLACK);
+		mRenderer.setApplyBackgroundColor(true);
+		mRenderer.setBackgroundColor(Color.BLACK);
+		
+    	/*
         //mCurrentSeries = new TimeSeries("Accelerometer");
         mXSeries = new TimeSeries("X");
         mYSeries = new TimeSeries("Y");
@@ -189,24 +228,31 @@ public class GraphActivity extends Activity {
 		//mRenderer.setMarginsColor(Color.RED);
 		
     	//mCurrentRenderer.setChartValuesTextSize(val);
-
+		*/
 
     }
 
     private void loadData() {
+    	rotationCountSeries.clear();
+    	/*
     	mXSeries.clear();
     	mYSeries.clear();
     	mZSeries.clear();
     	mAngleSeries.clear();
+    	*/
     	//for(int i = 0; i < plotDataCount && i < recentData.accRecent.size(); i++) {
     	//	mCurrentSeries.add(i, recentData.accRecent.get(i).x);
     	//}
     	
-    	for(int i = 0; i < plotDataCount && i < recentData.magnRecent.size(); i++) {
-    		mXSeries.add(i, recentData.compassRecent.get(i).x);
-    		mYSeries.add(i, recentData.compassRecent.get(i).y);
-    		mZSeries.add(i, recentData.compassRecent.get(i).z);
-    		mAngleSeries.add(i, recentData.compassRecent.get(i).angle);
+    	for(int i = 0; i < plotDataCount && i < recentData.orientRecent.size(); i++) {
+    		rotationCountSeries.add(i, recentData.orientRecent.get(i).totalTurnDegrees / 90);
+    		/*
+    		mXSeries.add(i, recentData.orientRecent.get(i).azimuthInDegrees);
+    		mYSeries.add(i, recentData.orientRecent.get(i).pitchInDegrees);
+    		mZSeries.add(i, recentData.orientRecent.get(i).rollInDegrees);
+    		//mAngleSeries.add(i, recentData.orientRecent.get(i).inclinationInDegrees);
+    		mAngleSeries.add(i, recentData.orientRecent.get(i).totalTurnDegrees);
+    		*/
     	}
     }
 

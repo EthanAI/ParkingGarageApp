@@ -19,11 +19,8 @@ import java.util.Date;
 
 import android.annotation.SuppressLint;
 import android.app.Service;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -53,14 +50,25 @@ public class SensorService extends Service implements SensorEventListener {
     private File magnFile = null;
     private File compassFile = null;
     private File pressureFile = null;
+    private File orientFile = null; //hold orientation derived from accelerometer and magnetic fields
    
 	private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
 
 	private int maxReadingHistoryCount = 1000;
 	private RecentSensorData recentData =  new RecentSensorData(maxReadingHistoryCount);
 	
-	//testcode written while drunk
-	//private IntentFilter myFilter = new IntentFilter(Intent.)
+    private String accHeader = "Time, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
+    private String magnHeader = "Date, x, y, z\n";
+    private String orientHeader = "Time, azimuth, pitch, roll, inclination\n";
+    private String compassHeader = "Date, x, y, z, total, accuracy\n";
+	private String pressureHeader = "Date, Pressure(millibars)\n";
+
+	private final String ACCELEROMETER_TAG 	= "accelerometer";
+	private final String MAGNETIC_TAG 		= "magnetic";
+	private final String ORIENTATION_TAG 	= "orientation";
+	private final String COMPASS_TAG 		= "compass";
+	private final String PRESSURE_TAG 		= "pressure";
+
 	
 	/* VERY temporary implementation. We will want the on/off triggered in other ways. 
 	 * 1. Want to have this guy hide in the background pretty much permenantly (upon app creation?)
@@ -82,7 +90,8 @@ public class SensorService extends Service implements SensorEventListener {
 	    accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " accelReadings.csv");
 	    magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " magReadings.csv"); 
 	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " compassReadings.csv"); 
-	    pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " pressureReadings.csv"); 	    
+	    pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " pressureReadings.csv"); 	
+	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " orientationReadings.csv"); 	
 		
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         
@@ -102,9 +111,20 @@ public class SensorService extends Service implements SensorEventListener {
 	public void onDestroy() {
 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
 		super.onDestroy();		
+		reportParkedFloor();
 		
 		mSensorManager.unregisterListener(this);
 		//unregisterReceiver(receiver);
+	}
+	
+	/*
+	 * Should update some local stored data so later we can retrieve it. 
+	 * Also update widget or notification icon
+	 */
+	public void reportParkedFloor() {
+		//TODO
+		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
+
 	}
 	
 	@Override
@@ -117,80 +137,115 @@ public class SensorService extends Service implements SensorEventListener {
 	//OK that takes care of initializing & closing this service. Now we have the meat for what it does while alive
     //@Override
     public void onSensorChanged(SensorEvent event) {
+    	//This could use some refactoring
     	String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date());
-        //Log.i("test", changedDate.toString());
-    	
         Sensor sensor = event.sensor;        
         //handle accelerometer update
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-        	Log.i("acc", dateString);
-            String headers = "Time, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk";
+        	//Log.i(ACCELEROMETER_TAG, dateString);
+            int initialOrientationReadingCount = 0;
+            String oldFloor = "";
+            String newFloor = "";
+            if(recentData != null && recentData.orientRecent != null) {
+            	initialOrientationReadingCount = recentData.orientRecent.size();
+            	oldFloor = recentData.parkedFloor;
+            }
 
             recentData.addUpToLimit(dateString, event);
             if(!accelerometerFile.exists()) {
-                writeNewFile(accelerometerFile, headers + "\n");
+                writeNewFile(accelerometerFile, accHeader + "\n");
             } else {
                 appendToFile(accelerometerFile, recentData.accRecent.get(recentData.accRecent.size() - 1).toFormattedString());
-                
-              //notify activities they should update based on the new data 
-                notifyUpdate("accelerometer");      
+                //notify activities they should update based on the new data 
+                notifyUpdate(ACCELEROMETER_TAG);      
+            }
+            
+            //also update the orientation records if new one was generated
+            if(recentData != null && recentData.orientRecent != null && initialOrientationReadingCount < recentData.orientRecent.size()) {
+                if(!orientFile.exists()) {
+                    writeNewFile(orientFile, orientHeader + "\n");
+                } else {
+                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
+                    //temporary graphic to report floor changes when they happen. good for testing
+                    newFloor = recentData.parkedFloor;
+                    if(!newFloor.equalsIgnoreCase(oldFloor)) {
+                    	//Toast.makeText(this, newFloor, Toast.LENGTH_SHORT).show();
+                    }
+                    //notify activities they should update based on the new data 
+                    notifyUpdate(ORIENTATION_TAG);   //important this happens last i think
+                }
             }
             
         } else if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-        	Log.i("magn", dateString);
-        	        	
-        	String header = "Date, x, y, z\n";
-
+        	//Log.i(MAGNETIC_TAG, dateString);
+            int initialOrientationReadingCount = 0;
+            String oldFloor = "";
+            String newFloor = "";
+            if(recentData != null && recentData.orientRecent != null) {
+            	initialOrientationReadingCount = recentData.orientRecent.size();
+            	oldFloor = recentData.parkedFloor;
+            }
+            
         	recentData.addUpToLimit(dateString, event);
             
         	if(!magnFile.exists()) {
-        		writeNewFile(magnFile, header + "\n");
+        		writeNewFile(magnFile, magnHeader + "\n");
 	        } else {
 	            appendToFile(magnFile, recentData.magnRecent.get(recentData.magnRecent.size() - 1).toFormattedString());
 	        }     	
         	
-            notifyUpdate("mag");      
+            notifyUpdate(MAGNETIC_TAG);    //seem only able to send one update 
+            
+          //also update the orientation records if new one was generated
+            if(recentData != null && recentData.orientRecent != null && initialOrientationReadingCount < recentData.orientRecent.size()) {
+                if(!orientFile.exists()) {
+                    writeNewFile(orientFile, orientHeader + "\n");
+                } else {
+                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
+                    //temporary graphic to report floor changes when they happen. good for testing
+                    newFloor = recentData.parkedFloor;
+                    if(!newFloor.equalsIgnoreCase(oldFloor)) {
+                    	//Toast.makeText(this, newFloor, Toast.LENGTH_SHORT).show();
+                    }
+                    //notify activities they should update based on the new data 
+                    notifyUpdate(ORIENTATION_TAG);   //important this happens last i think
+                }
+            }
             
         } else if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
-        	Log.i("compass", dateString);
-        	        	
-        	String header = "Date, x, y, z, total, accuracy\n";
+        	//Log.i(COMPASS_TAG, dateString);
 
         	recentData.addUpToLimit(dateString, event);
             
         	if(!compassFile.exists()) {
-        		writeNewFile(compassFile, header + "\n");
+        		writeNewFile(compassFile, compassHeader + "\n");
 	        } else {
 	            appendToFile(compassFile, recentData.compassRecent.get(recentData.compassRecent.size() - 1).toFormattedString());
 	        }     	
         	
-            notifyUpdate("compass");      
+            notifyUpdate(COMPASS_TAG);      
             
         } else if (sensor.getType() == Sensor.TYPE_PRESSURE) {
-        	Log.i("pressure", dateString);
-        	String header = "Date, Pressure(millibars)\n";
+        	//Log.i(PRESSURE_TAG, dateString);
             float millibars = event.values[0];
             
             if(!pressureFile.exists()) {
-        		writeNewFile(pressureFile, header + "\n");
+        		writeNewFile(pressureFile, pressureHeader + "\n");
 	        } else {
 	            appendToFile(pressureFile, dateString + "," + millibars + "\n");
 	        }     
-            notifyUpdate("pressure");    
+            notifyUpdate(PRESSURE_TAG);    
         }
     }
     
-
-    
-	 // Send an Intent with an action named "custom-event-name". The Intent sent should 
-	 // be received by the ReceiverActivity.
+	 // broadcast notice that this sensor has updated. Also give the updated recent data 
 	 private void notifyUpdate(String sensorName) {
-		 //Log.d("sender", "Broadcasting message");
-		 Intent intent = new Intent(sensorName);
-		 // You can also include some extra data.
-		 intent.putExtra("sensorType", sensorName);
-		 intent.putExtra("recentData", (Serializable)recentData);
-		 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+		 //Log.i("sender", "Broadcasting message " + sensorName);
+		 Intent brIntent = new Intent(sensorName);
+		 // Include data & label with the intent we send
+		 brIntent.putExtra("sensorType", sensorName);
+		 brIntent.putExtra("recentData", (Serializable)recentData);
+		 LocalBroadcastManager.getInstance(this).sendBroadcast(brIntent);
 	 }
 
     /* Checks if external storage is available for read and write */

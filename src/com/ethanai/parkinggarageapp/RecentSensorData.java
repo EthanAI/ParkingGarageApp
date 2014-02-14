@@ -5,10 +5,14 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 //import android.util.Log;
 
+import android.hardware.SensorManager;
+
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 //import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 //import java.util.Date;
+import java.util.Date;
 
 @SuppressLint("SimpleDateFormat")
 public class RecentSensorData implements Serializable { //must specify serializable so it can be passed by our intents neatly
@@ -19,14 +23,29 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	private static final long serialVersionUID = 5721779411217090251L;
 	public int historyLength = 100;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
+    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm"; //implement this eventually for pretty date recording
+    
+    public Date initialDate; //date this structure initialized. 
 	public ArrayList<AccelerometerReading> accRecent = new ArrayList<AccelerometerReading>();
 	public ArrayList<MagnetReading> magnRecent = new ArrayList<MagnetReading>();
 	public ArrayList<CompassReading> compassRecent = new ArrayList<CompassReading>();
 	public ArrayList<HumidityReading> humidRecent = new ArrayList<HumidityReading>();
 	public ArrayList<PressureReading> pressRecent = new ArrayList<PressureReading>();
+	public ArrayList<DerivedOrientation> orientRecent = new ArrayList<DerivedOrientation>(); //will be dated with the time the two sensor readings got merged (here)
+	
+	//parts needed to be collected before creating a new DerivedOrientation
+	private SensorEvent accRecentEvent = null;
+	private SensorEvent magnRecentEvent = null;
+	
+	//absolute final result... what floor we parked on!
+	public String parkedFloor = "";
 
 	RecentSensorData() {
-		
+		initialDate = new Date();  //date this structure initialized. Caller needs to be careful so this is close to the start of sensor polling   
+	}
+	
+	RecentSensorData(Date manualInitialDate) {
+		initialDate = manualInitialDate;
 	}
 	
 	RecentSensorData(int newHistoryLength) {
@@ -40,10 +59,28 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public <E> void addUpToLimit(String dateString, SensorEvent event) {
 		Sensor sensor = event.sensor;        
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-        	addUpToLimit(accRecent, new AccelerometerReading(dateString, event));
+        	addUpToLimit(accRecent, new AccelerometerReading(dateString, event));  
         	
+        	//also try to create an orientation data record
+        	accRecentEvent = event; //add this sensor event or overwrite stale data
+        	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we not have both parts, build an orientation record and add it
+        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date())));
+        		accRecentEvent = null; // require new readings for both sensors before building another
+        		magnRecentEvent = null;
+        		
+        	}
+        		        	
         } else if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
         	addUpToLimit(magnRecent, new MagnetReading(dateString, event));
+        	
+        	//also try to create an orientation data record
+        	magnRecentEvent = event; //add this sensor event or overwrite stale data
+        	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we not have both parts, build an orientation record and add it
+        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date())));
+        		accRecentEvent = null; // require new readings for both sensors before building another
+        		magnRecentEvent = null;
+        		
+        	}
         	
         } else if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
         	addUpToLimit(compassRecent, new CompassReading(dateString, event));
@@ -55,6 +92,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
         	addUpToLimit(pressRecent, new PressureReading(dateString, event));
 
         }		
+        
     }	
 	
 	public <E> void addUpToLimit(ArrayList<E> arrayList, E newEntry) {
@@ -62,8 +100,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
         	arrayList.remove(0);
         arrayList.add(newEntry);
     }	
-
-
+	
 	class MagnetReading {
 		public String dateString;
 		public float x;
@@ -75,6 +112,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			this.x = event.values[0];
 			this.y = event.values[1];
 			this.z = event.values[2];
+			
 		}
 		
 		public String toFormattedString() {
@@ -87,56 +125,111 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 	}
 	
-	//http://developer.android.com/reference/android/hardware/SensorEvent.html#values
-	/*
-	 * http://developer.android.com/reference/android/hardware/SensorManager.html#getRotationMatrix(float[], float[], float[], float[])
-	 * float getInclination (float[] I)
-	 * float[] getOrientation (float[] R, float[] values)
-	 * 
-	 * 
-		//based on Coursera class
-		// Storage for Sensor readings
-		private float[] mGravity = null; //accelerometer
-		private float[] mGeomagnetic = null; //magnet meter
+	// Derived from coursera Class example CompassActivity
+		//Also contains turn history. this will evolve to be more than just an angle. Might want to force unlimited length in recording?
+		//or have final step be read the full data from the stored file? Break out into a separate object?
+	class DerivedOrientation {
+		public String dateString;
 		
-		private float inclination; 
-		private float orientationMatrix[] = new float[3];
-		private double mRotationInDegress;
-
-
-		if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-			mGravity = new float[3];
-			System.arraycopy(event.values, 0, mGravity, 0, 3);
-		}		
-		else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-			mGeomagnetic = new float[3];
-			System.arraycopy(event.values, 0, mGeomagnetic, 0, 3);
-		}
+		//Values we want:
+			//http://developer.android.com/reference/android/hardware/SensorManager.html#getOrientation(float[], float[])
+		public double azimuthInDegrees;
+		public double pitchInDegrees;
+		public double rollInDegrees;
+			//http://developer.android.com/reference/android/hardware/SensorManager.html#getInclination(float[])
+		public double inclinationInDegrees; 
 		
-		//merge and calculate the inclination and orientation (finally)
-		if (mGravity != null && mGeomagnetic != null) {
-
+		public double totalTurnDegrees; //naive implementation, will evolve into turn counts. 
+		
+		//create empty record
+		DerivedOrientation(String dateString) {
+			this.dateString = dateString;
+			
+			// Storage for Sensor readings. Need both present before orientation can be derived
+			float[] mGravity = new float[3]; //accelerometer
+			float[] mGeomagnetic = new float[3]; //magnet meter
+			// additional storage for intermediary steps in calculation
 			float rotationMatrix[] = new float[9];
 			float inclinationMatrix[] = new float[9];
-
+			float orientationMatrix[] = new float[3];
+						
+			System.arraycopy(accRecentEvent.values, 0, mGravity, 0, 3);
+			System.arraycopy(magnRecentEvent.values, 0, mGeomagnetic, 0, 3);
+			
+			//merge and calculate the inclination and orientation (finally)
+				//feed the sensor events, and function call will fill in the two Matrices
 			boolean success = SensorManager.getRotationMatrix(rotationMatrix, inclinationMatrix, mGravity, mGeomagnetic);
-
 			if (success) {
-				
-				SensorManager.getOrientation(rotationMatrix, orientationMatrix);
-
-				float rotationInRadians = orientationMatrix[0];
-				// Convert from radians to degrees
-				mRotationInDegress = Math.toDegrees(rotationInRadians);
-				
-				inclination = getInclination(inclinationMatrix);
-				
-				// Reset sensor event data arrays
-				mGravity = mGeomagnetic = null;
-
+				SensorManager.getOrientation(rotationMatrix, orientationMatrix); //
+				// Convert from radians to degrees and store in our target values
+				azimuthInDegrees = Math.toDegrees(orientationMatrix[0]);
+				pitchInDegrees = Math.toDegrees(orientationMatrix[1]);
+				rollInDegrees = Math.toDegrees(orientationMatrix[2]);
+				inclinationInDegrees = Math.toDegrees(SensorManager.getInclination(inclinationMatrix));
+				updateTurnHistory(azimuthInDegrees);
+				updateCurrentFloor();
 			}
 		}
-	 */
+		
+		public void updateTurnHistory(double azimuthInDegrees) {
+			if(orientRecent == null || orientRecent.size() == 0) { //if we're the first record, initialize at zero
+				totalTurnDegrees = 0;
+			} else {
+				totalTurnDegrees = orientRecent.get(orientRecent.size() - 1).totalTurnDegrees; //initialize with previous total
+				double previousAzimuth = orientRecent.get(orientRecent.size() - 1).azimuthInDegrees;
+				//compensate for possible crossing the South line (-180 to +180)
+				if((azimuthInDegrees - previousAzimuth) < -180) {
+					azimuthInDegrees += 360;
+				} else if ((azimuthInDegrees - previousAzimuth) > 180) {
+					azimuthInDegrees -= 360;
+				}
+				totalTurnDegrees += azimuthInDegrees - previousAzimuth;
+				
+				/*
+				 * case 1. go from 0 to -10. now - old = -10 good
+				 * case 2. go from 0 to 10. now - old = 10 good
+				 * case 3. go from 175 to -170. now - old = -345 baaaad. should be +15
+				 * 	if delta < -180 degrees,    add 360 to the new number. 360 - 170 = 190. 190-175 = 15
+				 * case 4. go from -175 to 170. now - old = 345 baaad. should be -15
+				 *  if delta > 180 degrees, subtract 360 from the new number. 170 - 360 = -190. -190 - -175 = -15
+				 */
+			}
+		}
+		
+		public void updateCurrentFloor() {
+			float quarterTurnCount = (float) (totalTurnDegrees / 90);
+			//TODO create array of pairs with border of turns to reach that floor and that floor's name. In future make this adaptable
+			//peel off final parking the car turn (could be left or right, but doesn't change your floor any)
+				//hardcoded for now. My building only lets compact cars park on the right
+			quarterTurnCount -= 1;
+			if(quarterTurnCount < -1) {
+				parkedFloor = "1?";
+			} else if (quarterTurnCount < 1) {
+				parkedFloor = "1";
+			} else if (quarterTurnCount < 3) {
+				parkedFloor = "2";
+			} else if (quarterTurnCount < 5) {
+				parkedFloor = "2B";
+			} else if (quarterTurnCount < 7) {
+				parkedFloor = "3";
+			} else if (quarterTurnCount < 9) {
+				parkedFloor = "3B";
+			} else if (quarterTurnCount < 11) {
+				parkedFloor = "4";
+			}
+		}
+		
+		public String toFormattedString() {
+			return dateString + ", " +
+	                Double.toString(azimuthInDegrees) + "," + 
+	                Double.toString(pitchInDegrees) + "," +
+	                Double.toString(rollInDegrees) + "," +
+	                Double.toString(inclinationInDegrees) + "," +
+	                "\n";
+		}
+		
+	}
+	
 	class CompassReading {
 		public String dateString;
 		public float x;
@@ -252,47 +345,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	                Float.toString(zDel) + ", " +
 	                Float.toString(magDel) + 
 	                "\n";
-		}
-		
-		
-		/*
-		@SuppressLint("SimpleDateFormat")
-		AccelerometerReading(String dataLine) throws NumberFormatException, ParseException {
-			this(new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(dataLine.split(",")[0]), 
-					Float.parseFloat(dataLine.split(",")[1]), Float.parseFloat(dataLine.split(",")[2]), 
-					Float.parseFloat(dataLine.split(",")[3]), Float.parseFloat(dataLine.split(",")[4]), 
-					Float.parseFloat(dataLine.split(",")[5]), Float.parseFloat(dataLine.split(",")[6]), 
-					Float.parseFloat(dataLine.split(",")[7]), Float.parseFloat(dataLine.split(",")[8]) );
-		}
-		
-		AccelerometerReading(Date _date, float _x, float _y, float _z, float _mag,	
-				float _xDel, float _yDel, float _zDel, float _magDel) { 
-			date = _date;
-			x = _x;
-			y = _y;
-			z = _z;
-			mag = _mag;
-			xDel = _xDel;
-			yDel = _yDel;
-			zDel = _zDel;
-			magDel = _magDel;
-		}
-			
-		public String toFormattedString(String DATE_FORMAT_STRING) {
-			String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);
-	
-			return dateString + ", " +
-	                Float.toString(x) + ", " +
-	                Float.toString(y) + ", " +
-	                Float.toString(z) + ", " +
-	                Float.toString(mag) + ", " +
-	                Float.toString(xDel) + ", " +
-	                Float.toString(yDel) + ", " +
-	                Float.toString(zDel) + ", " +
-	                Float.toString(magDel) + 
-	                "\n";
-		}
-		*/
-	}//end of accelerometerReading class
+		}		
+	}
 
 }

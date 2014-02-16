@@ -8,11 +8,15 @@
 
 package com.ethanai.parkinggarageapp;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,6 +29,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -86,12 +92,12 @@ public class SensorService extends Service implements SensorEventListener {
         }
 		Date date = new Date();        
 	    String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);   
-	    String locationString = "";
-	    accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " accelReadings.csv");
-	    magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " magReadings.csv"); 
-	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " compassReadings.csv"); 
-	    pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " pressureReadings.csv"); 	
-	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + locationString + " orientationReadings.csv"); 	
+	    String locationString = getLocationName();
+	    //accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " accelReadings.csv");
+	    //magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " magReadings.csv"); 
+	    //compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " compassReadings.csv"); 
+	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
+	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " orientationReadings.csv"); 	
 		
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         
@@ -108,9 +114,63 @@ public class SensorService extends Service implements SensorEventListener {
 		return START_STICKY; //keep running until specifically stopped
 	}
 	
+	private String getLocationName() {
+		Location newLocation = getLocation();
+		String locationName = "";
+		//need to store home/target location, then test for distance from that point. assign a label string like HOME if close
+		//How to do preferences properly. Ill just hardcode something for now to test. 
+		Location homeLocation = new Location("hardcoded");
+		homeLocation.setLatitude(21.3474357); //21.3474357
+		homeLocation.setLongitude(-157.9035183); //-157.9035183		
+		
+		if(newLocation.distanceTo(homeLocation) < 100) { //if within 100 meters of home
+			locationName += "Home";
+		} else {
+			locationName += " " + newLocation.getLatitude() + " " + newLocation.getLongitude();
+		}
+		
+		Log.i("GarageAppGPS", Float.toString(newLocation.distanceTo(homeLocation)));
+		Log.i("GarageAppGPS", locationName);
+		
+		return locationName;
+	}
+	
+	private Location getLocation() {
+		Location bestLocation;
+		//seems to work without location listener. needs field testing
+
+		LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		
+		//LocationListener locationListener = new LocationListener();
+		//do i need to define any functions for a locationlistener?
+		
+		// Register the listener with the Location Manager to receive location updates
+		//locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+		//locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+
+		String locationProvider = LocationManager.NETWORK_PROVIDER;
+		// Or, use GPS location data:
+		// String locationProvider = LocationManager.GPS_PROVIDER;
+		Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
+		
+		//insert kung fu here to check different providers and times to make sure we have an accurate location
+		bestLocation = lastKnownLocation;
+
+		return bestLocation;
+	}
+	
+	private String getLocationCoordinates() {
+		Location myLocation = getLocation();
+		String locationString = myLocation.getLatitude() + " " + myLocation.getLongitude();
+		Log.i("GarageAppGPS", locationString);
+		return locationString;
+	}
+
 	public void onDestroy() {
 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
 		super.onDestroy();		
+		
+		storeFinalLocation();
 		reportParkedFloor();
 		
 		mSensorManager.unregisterListener(this);
@@ -126,6 +186,11 @@ public class SensorService extends Service implements SensorEventListener {
 		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
 
 	}
+	
+	public void storeFinalLocation() {
+		insertAtFileTop(orientFile, getLocationName() + ", " +getLocationCoordinates() + "\n");
+	}
+	
 	
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -152,6 +217,7 @@ public class SensorService extends Service implements SensorEventListener {
             }
 
             recentData.addUpToLimit(dateString, event);
+            /* temporarily disabled
             if(!accelerometerFile.exists()) {
                 writeNewFile(accelerometerFile, accHeader + "\n");
             } else {
@@ -159,13 +225,14 @@ public class SensorService extends Service implements SensorEventListener {
                 //notify activities they should update based on the new data 
                 notifyUpdate(ACCELEROMETER_TAG);      
             }
+            */
             
             //also update the orientation records if new one was generated
             if(recentData != null && recentData.orientRecent != null && initialOrientationReadingCount < recentData.orientRecent.size()) {
                 if(!orientFile.exists()) {
                     writeNewFile(orientFile, orientHeader + "\n");
                 } else {
-                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
+                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString() + "\n");   
                     //temporary graphic to report floor changes when they happen. good for testing
                     newFloor = recentData.parkedFloor;
                     if(!newFloor.equalsIgnoreCase(oldFloor)) {
@@ -188,11 +255,13 @@ public class SensorService extends Service implements SensorEventListener {
             
         	recentData.addUpToLimit(dateString, event);
             
+        	/*
         	if(!magnFile.exists()) {
         		writeNewFile(magnFile, magnHeader + "\n");
 	        } else {
 	            appendToFile(magnFile, recentData.magnRecent.get(recentData.magnRecent.size() - 1).toFormattedString());
 	        }     	
+	        */
         	
             notifyUpdate(MAGNETIC_TAG);    //seem only able to send one update 
             
@@ -201,7 +270,7 @@ public class SensorService extends Service implements SensorEventListener {
                 if(!orientFile.exists()) {
                     writeNewFile(orientFile, orientHeader + "\n");
                 } else {
-                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
+                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString() + "\n");   
                     //temporary graphic to report floor changes when they happen. good for testing
                     newFloor = recentData.parkedFloor;
                     if(!newFloor.equalsIgnoreCase(oldFloor)) {
@@ -217,23 +286,27 @@ public class SensorService extends Service implements SensorEventListener {
 
         	recentData.addUpToLimit(dateString, event);
             
+        	/*
         	if(!compassFile.exists()) {
         		writeNewFile(compassFile, compassHeader + "\n");
 	        } else {
 	            appendToFile(compassFile, recentData.compassRecent.get(recentData.compassRecent.size() - 1).toFormattedString());
-	        }     	
+	        }     
+	        */	
         	
             notifyUpdate(COMPASS_TAG);      
             
         } else if (sensor.getType() == Sensor.TYPE_PRESSURE) {
         	//Log.i(PRESSURE_TAG, dateString);
-            float millibars = event.values[0];
             
+            recentData.addUpToLimit(dateString, event);
+            /*
             if(!pressureFile.exists()) {
         		writeNewFile(pressureFile, pressureHeader + "\n");
 	        } else {
-	            appendToFile(pressureFile, dateString + "," + millibars + "\n");
+	            appendToFile(pressureFile, recentData.pressureRecent.get(recentData.pressureRecent.size() - 1).toFormattedString());
 	        }     
+	        */
             notifyUpdate(PRESSURE_TAG);    
         }
     }
@@ -291,6 +364,28 @@ public class SensorService extends Service implements SensorEventListener {
         else
             writeNewFile(file, text);
     }
+    
+    public void insertAtFileTop(File file, String text) {
+    	FileReader fr;
+		try {
+			fr = new FileReader(file);
+	    	BufferedReader br = new BufferedReader(fr);
+	    	String newText = text;
+	    	String line = "";
+	    	while((line = br.readLine()) != null){
+	    		newText = newText + line; 
+	    	}
+
+	    	file.delete();
+	    	appendToFile(file, newText);
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}    	
+    }
 
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -321,22 +416,4 @@ public class SensorService extends Service implements SensorEventListener {
         return myFile;
     }
 
-
-
-
-
-	
-	/* Possibly irrelevent now that this is a service vs activity
-	 *     
-	//stops the sensor (by stopping the sensor listener) if this activity goes in the background
-    //Resumes when activity is restored
-    protected void onResume() {
-        super.onResume();
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-    }
-    protected void onPause() {
-        super.onPause();
-        mSensorManager.unregisterListener(this);
-    }
-	 */
 }

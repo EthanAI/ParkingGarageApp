@@ -11,17 +11,16 @@ package com.ethanai.parkinggarageapp;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -34,6 +33,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -58,7 +58,8 @@ public class SensorService extends Service implements SensorEventListener {
     private File pressureFile = null;
     private File orientFile = null; //hold orientation derived from accelerometer and magnetic fields
    
-	private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
+    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
+	private String FILE_DATE_FORMAT_STRING = "yyyy-MM-dd HH.mm";
 
 	private int maxReadingHistoryCount = 1000;
 	private RecentSensorData recentData =  new RecentSensorData(maxReadingHistoryCount);
@@ -74,7 +75,9 @@ public class SensorService extends Service implements SensorEventListener {
 	private final String ORIENTATION_TAG 	= "orientation";
 	private final String COMPASS_TAG 		= "compass";
 	private final String PRESSURE_TAG 		= "pressure";
-
+	// Sets an ID for the notification
+	final int RUN_STATE_NOTIFICATION_ID = 001;
+	final int FLOOR_NOTIFICATION_ID 	= 002;
 	
 	/* VERY temporary implementation. We will want the on/off triggered in other ways. 
 	 * 1. Want to have this guy hide in the background pretty much permenantly (upon app creation?)
@@ -84,6 +87,7 @@ public class SensorService extends Service implements SensorEventListener {
 	 */
 	public int onStartCommand(Intent intent, int flags, int startID) {
 		Toast.makeText(this, "Sensors Started", Toast.LENGTH_SHORT).show();
+		sensorRunningNotification();
 		
         //get info from the calling Activity
         Bundle extras = intent.getExtras();
@@ -91,13 +95,17 @@ public class SensorService extends Service implements SensorEventListener {
             //maxReadingHistoryCount = extras.getInt("maxReadingHistoryCount");
         }
 		Date date = new Date();        
-	    String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(date);   
+	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(date);   
 	    String locationString = getLocationName();
 	    //accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " accelReadings.csv");
 	    //magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " magReadings.csv"); 
 	    //compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " compassReadings.csv"); 
 	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
-	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " orientationReadings.csv"); 	
+	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " orientationReadings.csv"); 
+	    
+		appendToFile(orientFile, "Departed from: " + getLocationName() + ", " + getLocationCoordinates() + "\n");
+		appendToFile(orientFile, orientHeader);
+
 		
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         
@@ -170,6 +178,7 @@ public class SensorService extends Service implements SensorEventListener {
 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
 		super.onDestroy();		
 		
+		cancelNotifications();
 		storeFinalLocation();
 		reportParkedFloor();
 		
@@ -184,11 +193,14 @@ public class SensorService extends Service implements SensorEventListener {
 	public void reportParkedFloor() {
 		//TODO
 		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
+		//TODO store on file
+		//TODO update widget?
+		floorNotification();
 
 	}
 	
 	public void storeFinalLocation() {
-		insertAtFileTop(orientFile, getLocationName() + ", " +getLocationCoordinates() + "\n");
+		insertAtFileTop(orientFile, "Parked at: " + getLocationName() + ", " + getLocationCoordinates() + ",");
 	}
 	
 	
@@ -230,9 +242,9 @@ public class SensorService extends Service implements SensorEventListener {
             //also update the orientation records if new one was generated
             if(recentData != null && recentData.orientRecent != null && initialOrientationReadingCount < recentData.orientRecent.size()) {
                 if(!orientFile.exists()) {
-                    writeNewFile(orientFile, orientHeader + "\n");
+                    writeNewFile(orientFile, orientHeader);
                 } else {
-                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString() + "\n");   
+                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
                     //temporary graphic to report floor changes when they happen. good for testing
                     newFloor = recentData.parkedFloor;
                     if(!newFloor.equalsIgnoreCase(oldFloor)) {
@@ -268,9 +280,9 @@ public class SensorService extends Service implements SensorEventListener {
           //also update the orientation records if new one was generated
             if(recentData != null && recentData.orientRecent != null && initialOrientationReadingCount < recentData.orientRecent.size()) {
                 if(!orientFile.exists()) {
-                    writeNewFile(orientFile, orientHeader + "\n");
+                    writeNewFile(orientFile, orientHeader);
                 } else {
-                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString() + "\n");   
+                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
                     //temporary graphic to report floor changes when they happen. good for testing
                     newFloor = recentData.parkedFloor;
                     if(!newFloor.equalsIgnoreCase(oldFloor)) {
@@ -373,7 +385,7 @@ public class SensorService extends Service implements SensorEventListener {
 	    	String newText = text;
 	    	String line = "";
 	    	while((line = br.readLine()) != null){
-	    		newText = newText + line; 
+	    		newText = newText + line + "\n"; 
 	    	}
 
 	    	file.delete();
@@ -415,5 +427,53 @@ public class SensorService extends Service implements SensorEventListener {
         }
         return myFile;
     }
+    
+	public void sensorRunningNotification() {
+		//modify notification http://developer.android.com/training/notify-user/managing.html
+		NotificationManager mNotifyMgr = 
+		        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		
+		NotificationCompat.Builder mBuilder =
+			    new NotificationCompat.Builder(this)
+				.setSmallIcon(R.drawable.icon_notification_sensors_on_hdpi)
+			    .setContentTitle("My notification")
+			    .setContentText("Hello World!");
+		
+		mBuilder.setContentText("Modified")
+        .setNumber(7);
+	    // Because the ID remains unchanged, the existing notification is
+	    // updated.
+		mNotifyMgr.notify(
+				RUN_STATE_NOTIFICATION_ID,
+				mBuilder.build());
+	}
+	
+	public void floorNotification() {
+		//modify notification http://developer.android.com/training/notify-user/managing.html
+		NotificationManager mNotifyMgr = 
+		        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		
+		NotificationCompat.Builder mBuilder =
+			    new NotificationCompat.Builder(this)
+				.setSmallIcon(R.drawable.icon_notification_floor_posted_hdpi)
+			    .setContentTitle("You are parked on floor " + recentData.parkedFloor)
+			    .setContentText("You parked there on: " + recentData.parkedDateString)
+			    .setNumber(9);
+		
+		//mBuilder.setContentText("Modified")
+        //.setNumber(2);
+	    // Because the ID remains unchanged, the existing notification is
+	    // updated.
+		mNotifyMgr.notify(
+				FLOOR_NOTIFICATION_ID,
+				mBuilder.build());
+	}
+	
+	public void cancelNotifications() {
+		//delete notification http://developer.android.com/reference/android/app/NotificationManager.html#cancel(int)
+		NotificationManager mNotifyMgr = 
+		        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		mNotifyMgr.cancelAll();
+	}
 
 }

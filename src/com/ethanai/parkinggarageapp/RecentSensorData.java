@@ -39,6 +39,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	
 	//absolute final result... what floor we parked on!
 	public String parkedFloor = "";
+	public String parkedDateString ="";
 
 	RecentSensorData() {
 		initialDate = new Date();  //date this structure initialized. Caller needs to be careful so this is close to the start of sensor polling   
@@ -217,6 +218,9 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			} else if (quarterTurnCount < 11) {
 				parkedFloor = "4";
 			}
+			
+			//set the parking time too
+			parkedDateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date());
 		}
 		
 		public String toFormattedString() {

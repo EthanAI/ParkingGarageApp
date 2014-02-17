@@ -6,6 +6,7 @@ import android.hardware.SensorEvent;
 //import android.util.Log;
 
 import android.hardware.SensorManager;
+import android.location.Location;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -33,9 +34,17 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public ArrayList<PressureReading> pressRecent = new ArrayList<PressureReading>();
 	public ArrayList<DerivedOrientation> orientRecent = new ArrayList<DerivedOrientation>(); //will be dated with the time the two sensor readings got merged (here)
 	
+	//headers for each data type:
+    public String orientHeader = "Time, location, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
+    public String accHeader = "Time, location, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
+    public String magnHeader = "Date, location, x, y, z\n";
+    public String compassHeader = "Date, location, x, y, z, total, accuracy\n";
+	public String pressureHeader = "Date, location, Pressure(millibars)\n";
+
 	//parts needed to be collected before creating a new DerivedOrientation
 	private SensorEvent accRecentEvent = null;
 	private SensorEvent magnRecentEvent = null;
+	
 	
 	//absolute final result... what floor we parked on!
 	public String parkedFloor = "";
@@ -57,15 +66,15 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	 * Call the constructor for whatever sensor type made this, build a sensor reading object
 	 * Store object in the appropriate ArrayList
 	 */
-	public <E> void addUpToLimit(String dateString, SensorEvent event) {
+	public <E> void addUpToLimit(String dateString, Location location, SensorEvent event) {
 		Sensor sensor = event.sensor;        
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-        	addUpToLimit(accRecent, new AccelerometerReading(dateString, event));  
+        	addUpToLimit(accRecent, new AccelerometerReading(dateString, location, event));  
         	
         	//also try to create an orientation data record
         	accRecentEvent = event; //add this sensor event or overwrite stale data
         	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we not have both parts, build an orientation record and add it
-        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date())));
+        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()), location));
         		//flag that this most recent accelerometer reading was used for calculating a new orientation reading
         		accRecent.get(accRecent.size() - 1).createdOrientationReading = true; 
         		accRecentEvent = null; // require new readings for both sensors before building another
@@ -74,12 +83,12 @@ public class RecentSensorData implements Serializable { //must specify serializa
         	}
         		        	
         } else if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-        	addUpToLimit(magnRecent, new MagnetReading(dateString, event));
+        	addUpToLimit(magnRecent, new MagnetReading(dateString, location, event));
         	
         	//also try to create an orientation data record
         	magnRecentEvent = event; //add this sensor event or overwrite stale data
         	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we not have both parts, build an orientation record and add it
-        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date())));
+        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()), location));
         		//flag that this most recent magnet reading was used for calculating a new orientation reading
         		magnRecent.get(magnRecent.size() - 1).createdOrientationReading = true; 
         		accRecentEvent = null; // require new readings for both sensors before building another
@@ -108,14 +117,19 @@ public class RecentSensorData implements Serializable { //must specify serializa
     }	
 	
 	class MagnetReading {
+		
 		public String dateString;
+		public Location location;
+		public String locationString;
 		public boolean createdOrientationReading = false;
 		public float x;
 		public float y;
 		public float z;
 		
-		MagnetReading(String dateString, SensorEvent event) {
+		MagnetReading(String dateString, Location location, SensorEvent event) {
 			this.dateString = dateString;
+			this.location = location;
+			this.locationString = location.getLongitude() + " " + location.getLatitude();
 			this.x = event.values[0];
 			this.y = event.values[1];
 			this.z = event.values[2];
@@ -124,6 +138,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public String toFormattedString() {
 			return dateString + ", " +
+					locationString + ", " +
 	                Float.toString(x) + "," + 
 	                Float.toString(y) + "," +
 	                Float.toString(z) + "," +
@@ -137,6 +152,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//or have final step be read the full data from the stored file? Break out into a separate object?
 	class DerivedOrientation {
 		public String dateString;
+		public Location location;
+		public String locationString;
 		
 		//Values we want:
 			//http://developer.android.com/reference/android/hardware/SensorManager.html#getOrientation(float[], float[])
@@ -149,8 +166,10 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public double totalTurnDegrees; //naive implementation, will evolve into turn counts. 
 		
 		//create empty record
-		DerivedOrientation(String dateString) {
+		DerivedOrientation(String dateString, Location location) {
 			this.dateString = dateString;
+			this.location = location;
+			this.locationString = location.getLongitude() + " " + location.getLatitude();
 			
 			// Storage for Sensor readings. Need both present before orientation can be derived
 			float[] mGravity = new float[3]; //accelerometer
@@ -229,18 +248,23 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			parkedDateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date());
 		}
 		
+		//Output converts degrees into quarter turns. Easier to eyeball. 
 		public String toFormattedString() {
 			return dateString + ", " +
+					locationString + ", " +
 	                Double.toString(azimuthInDegrees) + "," + 
 	                Double.toString(pitchInDegrees) + "," +
 	                Double.toString(rollInDegrees) + "," +
 	                Double.toString(inclinationInDegrees) + "," +
+	                Double.toString(totalTurnDegrees) + "," +
+	                Double.toString(totalTurnDegrees / 90) +
 	                "\n";
 		}
 		
 	}
 	
 	class CompassReading {
+	    
 		public String dateString;
 		public float x;
 		public float y;
@@ -285,6 +309,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	}
 	
 	class PressureReading {
+		
 		public String dateString;
 		public float pressure;
 		
@@ -305,6 +330,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	class AccelerometerReading {
 		//public Date date; //might be nice to return this someday so I can do math, but probably not in the near future
 		public String dateString;
+		public Location location;
+		public String locationString;
 		public boolean createdOrientationReading = false;
 		public float x;
 		public float y;
@@ -316,8 +343,10 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public float magDel;	
 			
 		
-		AccelerometerReading(String dateString, SensorEvent event) {
+		AccelerometerReading(String dateString, Location location, SensorEvent event) {
 			this.dateString = dateString;
+			this.location = location;
+			this.locationString = location.getLongitude() + " " + location.getLatitude();
 			x = event.values[0];
 	        y = event.values[1];
 	        z = event.values[2];
@@ -347,6 +376,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public String toFormattedString() {
 			return dateString + ", " +
+					locationString + ", " +
 	                Float.toString(x) + ", " +
 	                Float.toString(y) + ", " +
 	                Float.toString(z) + ", " +

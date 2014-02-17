@@ -38,7 +38,7 @@ public class DaemonReceiver extends BroadcastReceiver {
 		} else if (intent.getAction() == Intent.ACTION_BOOT_COMPLETED){
 			myNotifier.daemonNotification();
 		} else {
-			Toast.makeText(context, "Unused Broadcast: " + intent.getAction(), Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, "Unused Broadcast: " + intent.getAction(), Toast.LENGTH_SHORT).show();
 		}
 		
 	}
@@ -54,7 +54,7 @@ public class DaemonReceiver extends BroadcastReceiver {
 	    
 	    //temp for debugging. Also turn on graph activity so I can watch/confirm working
 	    Intent activityIntent = new Intent(context, GraphActivity.class);
-	    context.startActivity(activityIntent);
+	    context.startService(activityIntent);
 	}
 	
 	public void stopSensors(Context context) {

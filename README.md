@@ -45,9 +45,13 @@ App to automatically determine the floor you parked out. GPS is not helpful, so 
         	Organize somehow
         /Notification Icon
         	Make better art
+        	stronger test that broadcastReceiver is actually running
         Widget to show most recent floor
         Confirm battery usage is minimal
         	xCurrently less than AndroidOS usage
         	Confirm low as I can go
+        	Remove location recording for each data point. Its helpful for design but wastes a lot of battery
+        	
+    	
         
         

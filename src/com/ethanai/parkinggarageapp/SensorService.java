@@ -51,20 +51,14 @@ public class SensorService extends Service implements SensorEventListener {
     private File accelerometerFile = null;
     private File magnFile = null;
     private File compassFile = null;
-    private File pressureFile = null;
+    //private File pressureFile = null;
     private File orientFile = null; //hold orientation derived from accelerometer and magnetic fields
    
     private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
 	private String FILE_DATE_FORMAT_STRING = "yyyy-MM-dd HH.mm";
 
-	private int maxReadingHistoryCount = 10;
+	private int maxReadingHistoryCount = 100;
 	private RecentSensorData recentData; 
-	
-    private String accHeader = "Time, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
-    private String magnHeader = "Date, x, y, z\n";
-    private String orientHeader = "Time, azimuth, pitch, roll, inclination\n";
-    private String compassHeader = "Date, x, y, z, total, accuracy\n";
-	private String pressureHeader = "Date, Pressure(millibars)\n";
 
 	private final String ACCELEROMETER_TAG 	= "accelerometer";
 	private final String MAGNETIC_TAG 		= "magnetic";
@@ -108,14 +102,18 @@ public class SensorService extends Service implements SensorEventListener {
 		Date date = new Date();        
 	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(date);   
 	    String locationString = getLocationName();
-	    //accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " accelReadings.csv");
-	    //magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " magReadings.csv"); 
-	    //compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " compassReadings.csv"); 
+	    accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " accelReadings.csv");
+	    magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " magReadings.csv"); 
+	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " compassReadings.csv"); 
 	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
 	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " orientationReadings.csv"); 
 	    
 		appendToFile(orientFile, "Departed from: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + getDistance() + "\n");
-		appendToFile(orientFile, orientHeader);
+		appendToFile(orientFile, recentData.orientHeader);
+		appendToFile(accelerometerFile, "Departed from: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + getDistance() + "\n");
+		appendToFile(accelerometerFile, recentData.accHeader);
+		appendToFile(magnFile, "Departed from: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + getDistance() + "\n");
+		appendToFile(magnFile, recentData.magnHeader);
 
 		
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -139,7 +137,7 @@ public class SensorService extends Service implements SensorEventListener {
 		//need to store home/target location, then test for distance from that point. assign a label string like HOME if close
 		//How to do preferences properly. Ill just hardcode something for now to test. 	
 		
-		if(getDistance() < 100) { //if within 100 meters of home
+		if(getDistance() < 150) { //if within 100 meters of home
 			locationName += "Home";
 		} else {
 			locationName += " " + newLocation.getLatitude() + " " + newLocation.getLongitude();
@@ -168,6 +166,7 @@ public class SensorService extends Service implements SensorEventListener {
 		// Or, use GPS location data:
 		// String locationProvider = LocationManager.GPS_PROVIDER;
 		Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
+		Log.i("GarageAppGPS", lastKnownLocation.toString());
 		
 		//insert kung fu here to check different providers and times to make sure we have an accurate location
 		bestLocation = lastKnownLocation;
@@ -176,6 +175,8 @@ public class SensorService extends Service implements SensorEventListener {
 	}
 	
 	private float getDistance() {
+		//if(getLocation())
+		//Log.i("GarageAppGPS", locationString);
 		return getLocation().distanceTo(homeLocation);
 	}
 	
@@ -213,7 +214,8 @@ public class SensorService extends Service implements SensorEventListener {
 	}
 	
 	public void storeFinalLocation() {
-		insertAtFileTop(orientFile, "Parked at: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + Float.toString(getDistance()) + ", ");
+		insertAtFileTop(orientFile, "Parked at: " + getLocationName() + ", " + getLocationCoordinates() 
+				+ ", Distance: " + Float.toString(getDistance()) + ", Parked Floor: " + recentData.parkedFloor + ", ");
 	}
 	
 	
@@ -239,23 +241,22 @@ public class SensorService extends Service implements SensorEventListener {
             	oldFloor = recentData.parkedFloor;
             }
 
-            recentData.addUpToLimit(dateString, event);
-            /* temporarily disabled
+            recentData.addUpToLimit(dateString, getLocation(), event);
+            
             if(!accelerometerFile.exists()) {
-                writeNewFile(accelerometerFile, accHeader + "\n");
+                writeNewFile(accelerometerFile, recentData.accHeader + "\n");
             } else {
                 appendToFile(accelerometerFile, recentData.accRecent.get(recentData.accRecent.size() - 1).toFormattedString());
                 //notify activities they should update based on the new data 
                 notifyUpdate(ACCELEROMETER_TAG);      
             }
-            */
+            
             
             //also update the orientation records if new one was generated
-            //BUG ahh, this is biting me. We want to check that there is a new orientation reading, but the array size doesn't change after it hits max buffer size.s
             if(recentData != null && recentData.orientRecent != null && recentData.accRecent.get(recentData.accRecent.size() - 1).createdOrientationReading) {
             	Log.i(ORIENTATION_TAG, dateString);
             	if(!orientFile.exists()) {
-                    writeNewFile(orientFile, orientHeader);
+                    writeNewFile(orientFile, recentData.orientHeader);
                 } else {
                     appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
                     //temporary graphic to report floor changes when they happen. good for testing
@@ -276,22 +277,22 @@ public class SensorService extends Service implements SensorEventListener {
             	oldFloor = recentData.parkedFloor;
             }
             
-        	recentData.addUpToLimit(dateString, event);
+        	recentData.addUpToLimit(dateString, getLocation(), event);
             
-        	/*
+        	
         	if(!magnFile.exists()) {
-        		writeNewFile(magnFile, magnHeader + "\n");
+        		writeNewFile(magnFile, recentData.magnHeader + "\n");
 	        } else {
 	            appendToFile(magnFile, recentData.magnRecent.get(recentData.magnRecent.size() - 1).toFormattedString());
 	        }     	
-	        */
+	        
         	
             notifyUpdate(MAGNETIC_TAG);    //seem only able to send one update 
             
           //also update the orientation records if new one was generated
             if(recentData != null && recentData.orientRecent != null && recentData.magnRecent.get(recentData.magnRecent.size() - 1).createdOrientationReading) {
                 if(!orientFile.exists()) {
-                    writeNewFile(orientFile, orientHeader);
+                    writeNewFile(orientFile, recentData.orientHeader);
                 } else {
                     appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
                     //temporary graphic to report floor changes when they happen. good for testing
@@ -307,30 +308,31 @@ public class SensorService extends Service implements SensorEventListener {
         } else if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
         	//Log.i(COMPASS_TAG, dateString);
 
-        	recentData.addUpToLimit(dateString, event);
+        	recentData.addUpToLimit(dateString, getLocation(), event);
             
-        	/*
+        	
         	if(!compassFile.exists()) {
-        		writeNewFile(compassFile, compassHeader + "\n");
+        		writeNewFile(compassFile, recentData.compassHeader + "\n");
 	        } else {
 	            appendToFile(compassFile, recentData.compassRecent.get(recentData.compassRecent.size() - 1).toFormattedString());
 	        }     
-	        */	
+	        	
         	
             notifyUpdate(COMPASS_TAG);      
             
-        } else if (sensor.getType() == Sensor.TYPE_PRESSURE) {
+        /*} else if (sensor.getType() == Sensor.TYPE_PRESSURE) {
         	//Log.i(PRESSURE_TAG, dateString);
             
             recentData.addUpToLimit(dateString, event);
-            /*
+            
             if(!pressureFile.exists()) {
         		writeNewFile(pressureFile, pressureHeader + "\n");
 	        } else {
 	            appendToFile(pressureFile, recentData.pressureRecent.get(recentData.pressureRecent.size() - 1).toFormattedString());
 	        }     
-	        */
-            notifyUpdate(PRESSURE_TAG);    
+	        
+            notifyUpdate(PRESSURE_TAG);   
+            */ 
         }
     }
     

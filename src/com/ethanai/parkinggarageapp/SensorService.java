@@ -20,8 +20,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -34,12 +32,9 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
-
-//TODO task bar icon http://developer.android.com/guide/topics/ui/notifiers/notifications.html
 
 @SuppressLint("SimpleDateFormat")
 public class SensorService extends Service implements SensorEventListener {
@@ -76,13 +71,11 @@ public class SensorService extends Service implements SensorEventListener {
 	private final String ORIENTATION_TAG 	= "orientation";
 	private final String COMPASS_TAG 		= "compass";
 	private final String PRESSURE_TAG 		= "pressure";
-	// Sets an ID for the notification
-	final int RUN_STATE_NOTIFICATION_ID = 001;
-	final int FLOOR_NOTIFICATION_ID 	= 002;
-	
+
 	//temp hardcoded home location
 	Location homeLocation = new Location("hardcoded");
 	
+	ParkingNotificationManager myNotifier;
 	
 	/* VERY temporary implementation. We will want the on/off triggered in other ways. 
 	 * 1. Want to have this guy hide in the background pretty much permenantly (upon app creation?)
@@ -92,7 +85,7 @@ public class SensorService extends Service implements SensorEventListener {
 	 */
 	public int onStartCommand(Intent intent, int flags, int startID) {
 		Toast.makeText(this, "Sensors Started", Toast.LENGTH_SHORT).show();
-		sensorRunningNotification();
+
 		
         //get info from the calling Activity
         Bundle extras = intent.getExtras();
@@ -104,6 +97,14 @@ public class SensorService extends Service implements SensorEventListener {
         }
         recentData =  new RecentSensorData(maxReadingHistoryCount);
         
+        //create notifier and notify sensors running
+		myNotifier = new ParkingNotificationManager(this, recentData);
+		myNotifier.sensorRunningNotification();
+		
+        //temporarily hardcoded the home/target garage location
+        homeLocation.setLatitude(21.3474357); //21.3474357
+    	homeLocation.setLongitude(-157.9035183); //-157.9035183	
+        
 		Date date = new Date();        
 	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(date);   
 	    String locationString = getLocationName();
@@ -113,7 +114,7 @@ public class SensorService extends Service implements SensorEventListener {
 	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
 	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " orientationReadings.csv"); 
 	    
-		appendToFile(orientFile, "Departed from: " + getLocationName() + ", " + getLocationCoordinates() + "\n");
+		appendToFile(orientFile, "Departed from: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + getDistance() + "\n");
 		appendToFile(orientFile, orientHeader);
 
 		
@@ -128,10 +129,6 @@ public class SensorService extends Service implements SensorEventListener {
         mSensorManager.registerListener(this, mMagn, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mCompass, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
-        
-        //temporarily hardcoded
-        homeLocation.setLatitude(21.3474357); //21.3474357
-    	homeLocation.setLongitude(-157.9035183); //-157.9035183	
                         				
 		return START_STICKY; //keep running until specifically stopped
 	}
@@ -142,7 +139,7 @@ public class SensorService extends Service implements SensorEventListener {
 		//need to store home/target location, then test for distance from that point. assign a label string like HOME if close
 		//How to do preferences properly. Ill just hardcode something for now to test. 	
 		
-		if(newLocation.distanceTo(homeLocation) < 100) { //if within 100 meters of home
+		if(getDistance() < 100) { //if within 100 meters of home
 			locationName += "Home";
 		} else {
 			locationName += " " + newLocation.getLatitude() + " " + newLocation.getLongitude();
@@ -193,8 +190,8 @@ public class SensorService extends Service implements SensorEventListener {
 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
 		super.onDestroy();		
 		
-		cancelNotification(RUN_STATE_NOTIFICATION_ID); //turn off sensor notification
-		daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
+		myNotifier.cancelRunStateNotification(); //turn off sensor notification
+		myNotifier.daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
 		storeFinalLocation();
 		reportParkedFloor();
 		
@@ -211,12 +208,12 @@ public class SensorService extends Service implements SensorEventListener {
 		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
 		//TODO store on file
 		//TODO update widget?
-		floorNotification();
+		myNotifier.floorNotification();
 
 	}
 	
 	public void storeFinalLocation() {
-		insertAtFileTop(orientFile, "Parked at: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + getDistance() + ", ");
+		insertAtFileTop(orientFile, "Parked at: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + Float.toString(getDistance()) + ", ");
 	}
 	
 	
@@ -444,75 +441,4 @@ public class SensorService extends Service implements SensorEventListener {
         return myFile;
     }
     
-	public void sensorRunningNotification() {
-		//modify notification http://developer.android.com/training/notify-user/managing.html
-		NotificationManager mNotifyMgr = 
-		        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		
-		NotificationCompat.Builder mBuilder =
-			    new NotificationCompat.Builder(this)
-				.setSmallIcon(R.drawable.icon_notification_sensors_on_hdpi)
-			    .setContentTitle("Sensors Running")
-			    .setContentText("Recording possible parking actions");
-		
-		//mBuilder.setContentText("Modified")
-        //.setNumber(7);
-	    // Because the ID remains unchanged, the existing notification is
-	    // updated.
-		mNotifyMgr.notify(
-				RUN_STATE_NOTIFICATION_ID,
-				mBuilder.build());
-	}
-	
-	public void floorNotification() {
-		//modify notification http://developer.android.com/training/notify-user/managing.html
-		NotificationManager mNotifyMgr = 
-		        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		
-		NotificationCompat.Builder mBuilder =
-			    new NotificationCompat.Builder(this)
-				.setSmallIcon(R.drawable.icon_notification_floor_posted_hdpi)
-			    .setContentTitle("You are parked on floor " + recentData.parkedFloor)
-			    .setContentText("You parked there on: " + recentData.parkedDateString);
-			    //.setNumber(9.5);
-		
-		//mBuilder.setContentText("Modified")
-        //.setNumber(2);
-	    // Because the ID remains unchanged, the existing notification is
-	    // updated.
-		mNotifyMgr.notify(
-				FLOOR_NOTIFICATION_ID,
-				mBuilder.build());
-	}
-	
-	public void daemonNotification() {
-		//http://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#setContentText(java.lang.CharSequence)
-		NotificationCompat.Builder mBuilder =
-			    new NotificationCompat.Builder(this)
-			    .setSmallIcon(R.drawable.icon_notification_receiver_listening_hdpi)
-			    .setContentTitle("Parking Garage App is Active")
-			    .setContentText("Not using sensors. Minimal battery usage.");
-		
-		Intent resultIntent = new Intent(this, GraphActivity.class);
-		// Because clicking the notification opens a new ("special") activity, there's
-		// no need to create an artificial back stack.
-		PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-		
-		//set click behavior
-		mBuilder.setContentIntent(resultPendingIntent);
-		
-		// Gets an instance of the NotificationManager service
-		NotificationManager mNotifyMgr = 
-		        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		// Builds the notification and issues it.
-		mNotifyMgr.notify(RUN_STATE_NOTIFICATION_ID, mBuilder.build());
-	}
-	
-	public void cancelNotification(int notificationLabel) {
-		//delete notification http://developer.android.com/reference/android/app/NotificationManager.html#cancel(int)
-		NotificationManager mNotifyMgr = 
-		        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		mNotifyMgr.cancel(notificationLabel);;
-	}
-
 }

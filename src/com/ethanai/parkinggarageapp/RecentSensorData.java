@@ -66,6 +66,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
         	accRecentEvent = event; //add this sensor event or overwrite stale data
         	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we not have both parts, build an orientation record and add it
         		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date())));
+        		//flag that this most recent accelerometer reading was used for calculating a new orientation reading
+        		accRecent.get(accRecent.size() - 1).createdOrientationReading = true; 
         		accRecentEvent = null; // require new readings for both sensors before building another
         		magnRecentEvent = null;
         		
@@ -78,6 +80,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
         	magnRecentEvent = event; //add this sensor event or overwrite stale data
         	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we not have both parts, build an orientation record and add it
         		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date())));
+        		//flag that this most recent magnet reading was used for calculating a new orientation reading
+        		magnRecent.get(magnRecent.size() - 1).createdOrientationReading = true; 
         		accRecentEvent = null; // require new readings for both sensors before building another
         		magnRecentEvent = null;
         		
@@ -97,13 +101,15 @@ public class RecentSensorData implements Serializable { //must specify serializa
     }	
 	
 	public <E> void addUpToLimit(ArrayList<E> arrayList, E newEntry) {
-        if(arrayList != null && arrayList.size() == historyLength)
+        if(arrayList != null && arrayList.size() == historyLength) {
         	arrayList.remove(0);
+        }
         arrayList.add(newEntry);
     }	
 	
 	class MagnetReading {
 		public String dateString;
+		public boolean createdOrientationReading = false;
 		public float x;
 		public float y;
 		public float z;
@@ -299,6 +305,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	class AccelerometerReading {
 		//public Date date; //might be nice to return this someday so I can do math, but probably not in the near future
 		public String dateString;
+		public boolean createdOrientationReading = false;
 		public float x;
 		public float y;
 		public float z;

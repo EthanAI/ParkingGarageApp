@@ -41,12 +41,12 @@ public class TextActivity extends Activity {
 		    Log.d("TextActivityReceiver", "Got message: " + sensorType);
 		    recentData = (RecentSensorData) intent.getSerializableExtra("recentData");
 		    if(sensorType.equals("accelerometer")) {
-		    	displayData(recentData);
+		    	
 		    } else if (sensorType.equals("compass")) {
 		    	
-		    } else if (sensorType.equals("humidity")) {
-		    	
-		    } else if (sensorType.equals("pressure")) {
+		    } else if (sensorType.equals(ORIENTATION_TAG)) {
+		    	displayData(recentData);
+		    } else if (sensorType.equals(COMPASS_TAG)) {
 		    	
 		    }
 
@@ -92,19 +92,19 @@ public class TextActivity extends Activity {
         ArrayList<Float> zJerkArray = new ArrayList<Float>(); 
         ArrayList<Float> magJerkArray = new ArrayList<Float>(); 
                
-        int i = recentData.accRecent.size() - LIST_LIMIT; //TODO inelegant solution. Streamline for practice
+        int i = recentData.orientRecent.size() - LIST_LIMIT; //TODO inelegant solution. Streamline for practice
         if(i < 0)
         	i = 0;
-        for(; i < recentData.accRecent.size(); i++) {
-        	xArray.add(recentData.accRecent.get(i).x);
-        	yArray.add(recentData.accRecent.get(i).y);
-        	zArray.add(recentData.accRecent.get(i).z);
-        	magArray.add(recentData.accRecent.get(i).mag);
+        for(; i < recentData.orientRecent.size(); i++) {
+        	xArray.add((float) recentData.orientRecent.get(i).azimuthInDegrees);
+        	yArray.add((float) recentData.orientRecent.get(i).pitchInDegrees);
+        	zArray.add((float) recentData.orientRecent.get(i).rollInDegrees);
+        	magArray.add((float) recentData.orientRecent.get(i).inclinationInDegrees);
         	
-        	xJerkArray.add(recentData.accRecent.get(i).xDel);
-        	yJerkArray.add(recentData.accRecent.get(i).yDel);
-        	zJerkArray.add(recentData.accRecent.get(i).zDel);
-        	magJerkArray.add(recentData.accRecent.get(i).magDel);
+        	xJerkArray.add((float) recentData.orientRecent.get(i).totalTurnDegrees);
+        	//yJerkArray.add(recentData.orientRecent.get(i).yDel);
+        	//zJerkArray.add(recentData.orientRecent.get(i).zDel);
+        	//magJerkArray.add(recentData.orientRecent.get(i).magDel);
         }
 
         tvX.setText(toReverseVerticalList(xArray));

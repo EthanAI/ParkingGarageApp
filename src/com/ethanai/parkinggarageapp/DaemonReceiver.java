@@ -75,14 +75,18 @@ public class DaemonReceiver extends BroadcastReceiver {
 
 	public void startSensors(Context context) {
 		//Toast.makeText(context, "bCast in", Toast.LENGTH_SHORT).show();
-		Intent service = new Intent(context, SensorService.class);
-	    context.startService(service);
+		Intent serviceIntent = new Intent(context, SensorService.class);
+	    context.startService(serviceIntent);
+	    
+	    //temp for debugging. Also turn on graph activity so I can watch/confirm working
+	    Intent activityIntent = new Intent(context, GraphActivity.class);
+	    context.startActivity(activityIntent);
 	}
 	
 	public void stopSensors(Context context) {
 		//Toast.makeText(context, "bCast out", Toast.LENGTH_SHORT).show();
-		Intent service = new Intent(context, SensorService.class);
-		context.stopService(service);
+		Intent serviceIntent = new Intent(context, SensorService.class);
+		context.stopService(serviceIntent);
 	}
 	
 }

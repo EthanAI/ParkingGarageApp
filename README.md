@@ -18,6 +18,8 @@ App to automatically determine the floor you parked out. GPS is not helpful, so 
                 		store in options
             	Check GPS for start daemon
             		Check GPS for near home
+            		Check gps travel speed?
+            		Turn on when GPS accuracy goes down?
         xExport data
         	xStore locally in a way accessible by pc via usb
         	-Button export via internet/wifi

@@ -21,6 +21,7 @@ import java.util.Date;
 
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -61,8 +62,8 @@ public class SensorService extends Service implements SensorEventListener {
     private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
 	private String FILE_DATE_FORMAT_STRING = "yyyy-MM-dd HH.mm";
 
-	private int maxReadingHistoryCount = 1000;
-	private RecentSensorData recentData =  new RecentSensorData(maxReadingHistoryCount);
+	private int maxReadingHistoryCount = 10;
+	private RecentSensorData recentData; 
 	
     private String accHeader = "Time, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
     private String magnHeader = "Date, x, y, z\n";
@@ -79,6 +80,10 @@ public class SensorService extends Service implements SensorEventListener {
 	final int RUN_STATE_NOTIFICATION_ID = 001;
 	final int FLOOR_NOTIFICATION_ID 	= 002;
 	
+	//temp hardcoded home location
+	Location homeLocation = new Location("hardcoded");
+	
+	
 	/* VERY temporary implementation. We will want the on/off triggered in other ways. 
 	 * 1. Want to have this guy hide in the background pretty much permenantly (upon app creation?)
 	 * 2. Want it to hide/sleep until connecting to bluetooth. Then checks decide if it's truly time 
@@ -92,8 +97,13 @@ public class SensorService extends Service implements SensorEventListener {
         //get info from the calling Activity
         Bundle extras = intent.getExtras();
         if(extras != null){
-            //maxReadingHistoryCount = extras.getInt("maxReadingHistoryCount");
+        	int newMax = extras.getInt("maxReadingHistoryCount");
+        	if(newMax > 0) {
+        		maxReadingHistoryCount = newMax;
+        	}
         }
+        recentData =  new RecentSensorData(maxReadingHistoryCount);
+        
 		Date date = new Date();        
 	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(date);   
 	    String locationString = getLocationName();
@@ -118,6 +128,10 @@ public class SensorService extends Service implements SensorEventListener {
         mSensorManager.registerListener(this, mMagn, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mCompass, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
+        
+        //temporarily hardcoded
+        homeLocation.setLatitude(21.3474357); //21.3474357
+    	homeLocation.setLongitude(-157.9035183); //-157.9035183	
                         				
 		return START_STICKY; //keep running until specifically stopped
 	}
@@ -126,10 +140,7 @@ public class SensorService extends Service implements SensorEventListener {
 		Location newLocation = getLocation();
 		String locationName = "";
 		//need to store home/target location, then test for distance from that point. assign a label string like HOME if close
-		//How to do preferences properly. Ill just hardcode something for now to test. 
-		Location homeLocation = new Location("hardcoded");
-		homeLocation.setLatitude(21.3474357); //21.3474357
-		homeLocation.setLongitude(-157.9035183); //-157.9035183		
+		//How to do preferences properly. Ill just hardcode something for now to test. 	
 		
 		if(newLocation.distanceTo(homeLocation) < 100) { //if within 100 meters of home
 			locationName += "Home";
@@ -167,6 +178,10 @@ public class SensorService extends Service implements SensorEventListener {
 		return bestLocation;
 	}
 	
+	private float getDistance() {
+		return getLocation().distanceTo(homeLocation);
+	}
+	
 	private String getLocationCoordinates() {
 		Location myLocation = getLocation();
 		String locationString = myLocation.getLatitude() + " " + myLocation.getLongitude();
@@ -178,7 +193,8 @@ public class SensorService extends Service implements SensorEventListener {
 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
 		super.onDestroy();		
 		
-		cancelNotifications();
+		cancelNotification(RUN_STATE_NOTIFICATION_ID); //turn off sensor notification
+		daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
 		storeFinalLocation();
 		reportParkedFloor();
 		
@@ -200,7 +216,7 @@ public class SensorService extends Service implements SensorEventListener {
 	}
 	
 	public void storeFinalLocation() {
-		insertAtFileTop(orientFile, "Parked at: " + getLocationName() + ", " + getLocationCoordinates() + ",");
+		insertAtFileTop(orientFile, "Parked at: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + getDistance() + ", ");
 	}
 	
 	
@@ -220,11 +236,9 @@ public class SensorService extends Service implements SensorEventListener {
         //handle accelerometer update
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
         	//Log.i(ACCELEROMETER_TAG, dateString);
-            int initialOrientationReadingCount = 0;
             String oldFloor = "";
             String newFloor = "";
             if(recentData != null && recentData.orientRecent != null) {
-            	initialOrientationReadingCount = recentData.orientRecent.size();
             	oldFloor = recentData.parkedFloor;
             }
 
@@ -240,8 +254,10 @@ public class SensorService extends Service implements SensorEventListener {
             */
             
             //also update the orientation records if new one was generated
-            if(recentData != null && recentData.orientRecent != null && initialOrientationReadingCount < recentData.orientRecent.size()) {
-                if(!orientFile.exists()) {
+            //BUG ahh, this is biting me. We want to check that there is a new orientation reading, but the array size doesn't change after it hits max buffer size.s
+            if(recentData != null && recentData.orientRecent != null && recentData.accRecent.get(recentData.accRecent.size() - 1).createdOrientationReading) {
+            	Log.i(ORIENTATION_TAG, dateString);
+            	if(!orientFile.exists()) {
                     writeNewFile(orientFile, orientHeader);
                 } else {
                     appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
@@ -257,11 +273,9 @@ public class SensorService extends Service implements SensorEventListener {
             
         } else if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
         	//Log.i(MAGNETIC_TAG, dateString);
-            int initialOrientationReadingCount = 0;
             String oldFloor = "";
             String newFloor = "";
             if(recentData != null && recentData.orientRecent != null) {
-            	initialOrientationReadingCount = recentData.orientRecent.size();
             	oldFloor = recentData.parkedFloor;
             }
             
@@ -278,7 +292,7 @@ public class SensorService extends Service implements SensorEventListener {
             notifyUpdate(MAGNETIC_TAG);    //seem only able to send one update 
             
           //also update the orientation records if new one was generated
-            if(recentData != null && recentData.orientRecent != null && initialOrientationReadingCount < recentData.orientRecent.size()) {
+            if(recentData != null && recentData.orientRecent != null && recentData.magnRecent.get(recentData.magnRecent.size() - 1).createdOrientationReading) {
                 if(!orientFile.exists()) {
                     writeNewFile(orientFile, orientHeader);
                 } else {
@@ -387,6 +401,8 @@ public class SensorService extends Service implements SensorEventListener {
 	    	while((line = br.readLine()) != null){
 	    		newText = newText + line + "\n"; 
 	    	}
+	    	br.close();
+	    	fr.close();
 
 	    	file.delete();
 	    	appendToFile(file, newText);
@@ -436,11 +452,11 @@ public class SensorService extends Service implements SensorEventListener {
 		NotificationCompat.Builder mBuilder =
 			    new NotificationCompat.Builder(this)
 				.setSmallIcon(R.drawable.icon_notification_sensors_on_hdpi)
-			    .setContentTitle("My notification")
-			    .setContentText("Hello World!");
+			    .setContentTitle("Sensors Running")
+			    .setContentText("Recording possible parking actions");
 		
-		mBuilder.setContentText("Modified")
-        .setNumber(7);
+		//mBuilder.setContentText("Modified")
+        //.setNumber(7);
 	    // Because the ID remains unchanged, the existing notification is
 	    // updated.
 		mNotifyMgr.notify(
@@ -457,8 +473,8 @@ public class SensorService extends Service implements SensorEventListener {
 			    new NotificationCompat.Builder(this)
 				.setSmallIcon(R.drawable.icon_notification_floor_posted_hdpi)
 			    .setContentTitle("You are parked on floor " + recentData.parkedFloor)
-			    .setContentText("You parked there on: " + recentData.parkedDateString)
-			    .setNumber(9);
+			    .setContentText("You parked there on: " + recentData.parkedDateString);
+			    //.setNumber(9.5);
 		
 		//mBuilder.setContentText("Modified")
         //.setNumber(2);
@@ -469,11 +485,34 @@ public class SensorService extends Service implements SensorEventListener {
 				mBuilder.build());
 	}
 	
-	public void cancelNotifications() {
+	public void daemonNotification() {
+		//http://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#setContentText(java.lang.CharSequence)
+		NotificationCompat.Builder mBuilder =
+			    new NotificationCompat.Builder(this)
+			    .setSmallIcon(R.drawable.icon_notification_receiver_listening_hdpi)
+			    .setContentTitle("Parking Garage App is Active")
+			    .setContentText("Not using sensors. Minimal battery usage.");
+		
+		Intent resultIntent = new Intent(this, GraphActivity.class);
+		// Because clicking the notification opens a new ("special") activity, there's
+		// no need to create an artificial back stack.
+		PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		
+		//set click behavior
+		mBuilder.setContentIntent(resultPendingIntent);
+		
+		// Gets an instance of the NotificationManager service
+		NotificationManager mNotifyMgr = 
+		        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		// Builds the notification and issues it.
+		mNotifyMgr.notify(RUN_STATE_NOTIFICATION_ID, mBuilder.build());
+	}
+	
+	public void cancelNotification(int notificationLabel) {
 		//delete notification http://developer.android.com/reference/android/app/NotificationManager.html#cancel(int)
 		NotificationManager mNotifyMgr = 
-		        (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		mNotifyMgr.cancelAll();
+		        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotifyMgr.cancel(notificationLabel);;
 	}
 
 }

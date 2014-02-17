@@ -56,7 +56,7 @@ public class GraphActivity extends Activity {
 
     private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
        
-    int plotDataCount = 100000; //plot limited by size of recent data object. Not limited here
+    int plotDataCount = 100; //passed to sensor service then to recentsensordata. if we want to overrride defaults in sensorservice
     RecentSensorData recentData = new RecentSensorData();
     
     
@@ -234,6 +234,7 @@ public class GraphActivity extends Activity {
 
     private void loadData() {
     	rotationCountSeries.clear();
+
     	/*
     	mXSeries.clear();
     	mYSeries.clear();
@@ -244,7 +245,10 @@ public class GraphActivity extends Activity {
     	//	mCurrentSeries.add(i, recentData.accRecent.get(i).x);
     	//}
     	
-    	for(int i = 0; i < plotDataCount && i < recentData.orientRecent.size(); i++) {
+    	for(int i = 0; i < recentData.orientRecent.size(); i++) {
+    		//if(rotationCountSeries.getItemCount() > plotDataCount) { //limit size of what we want to plot
+    		//	rotationCountSeries.remove(0); //remove oldest item
+    		//}
     		rotationCountSeries.add(i, recentData.orientRecent.get(i).totalTurnDegrees / 90);
     		/*
     		mXSeries.add(i, recentData.orientRecent.get(i).azimuthInDegrees);
@@ -298,7 +302,7 @@ public class GraphActivity extends Activity {
 	
 	public void startSensorService(View view) { 
 		Intent intent = new Intent(getBaseContext(), SensorService.class);
-		intent.putExtra("maxReadingHistoryCount", plotDataCount);
+		intent.putExtra("maxReadingHistoryCount", plotDataCount); //later restore this so we can control the graph view easily
 		startService(intent); //start Accelerometer Service. Pass it info
 	}
 	

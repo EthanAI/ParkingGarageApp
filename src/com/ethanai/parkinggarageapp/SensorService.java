@@ -65,9 +65,6 @@ public class SensorService extends Service implements SensorEventListener {
 	private final String ORIENTATION_TAG 	= "orientation";
 	private final String COMPASS_TAG 		= "compass";
 	private final String PRESSURE_TAG 		= "pressure";
-
-	//temp hardcoded home location
-	Location homeLocation = new Location("hardcoded");
 	
 	ParkingNotificationManager myNotifier;
 	
@@ -94,25 +91,26 @@ public class SensorService extends Service implements SensorEventListener {
         //create notifier and notify sensors running
 		myNotifier = new ParkingNotificationManager(this, recentData);
 		myNotifier.sensorRunningNotification();
-		
-        //temporarily hardcoded the home/target garage location
-        homeLocation.setLatitude(21.3474357); //21.3474357
-    	homeLocation.setLongitude(-157.9035183); //-157.9035183	
         
 		Date date = new Date();        
-	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(date);   
-	    String locationString = getLocationName();
-	    accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " accelReadings.csv");
-	    magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " magReadings.csv"); 
-	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " compassReadings.csv"); 
+	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(date);  
+	    if(!UserLocationManager.isInitialized()) {
+	    	UserLocationManager.initialize(this);
+	    }
+	    String locationName = UserLocationManager.getLocationName();
+	    String locationCoords = UserLocationManager.getLocationCoordinates();
+	    Float distanceFromHome = UserLocationManager.getDistanceFromHome();
+	    accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " accelReadings.csv");
+	    magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " magReadings.csv"); 
+	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " compassReadings.csv"); 
 	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
-	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " orientationReadings.csv"); 
+	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " orientationReadings.csv"); 
 	    
-		appendToFile(orientFile, "Departed from: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + getDistance() + "\n");
+		appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
 		appendToFile(orientFile, recentData.orientHeader);
-		appendToFile(accelerometerFile, "Departed from: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + getDistance() + "\n");
+		appendToFile(accelerometerFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
 		appendToFile(accelerometerFile, recentData.accHeader);
-		appendToFile(magnFile, "Departed from: " + getLocationName() + ", " + getLocationCoordinates() + ", Distance: " + getDistance() + "\n");
+		appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
 		appendToFile(magnFile, recentData.magnHeader);
 
 		
@@ -130,62 +128,7 @@ public class SensorService extends Service implements SensorEventListener {
                         				
 		return START_STICKY; //keep running until specifically stopped
 	}
-	
-	private String getLocationName() {
-		Location newLocation = getLocation();
-		String locationName = "";
-		//need to store home/target location, then test for distance from that point. assign a label string like HOME if close
-		//How to do preferences properly. Ill just hardcode something for now to test. 	
-		
-		if(getDistance() < 150) { //if within 100 meters of home
-			locationName += "Home";
-		} else {
-			locationName += " " + newLocation.getLatitude() + " " + newLocation.getLongitude();
-		}
-		
-		Log.i("GarageAppGPS", Float.toString(newLocation.distanceTo(homeLocation)));
-		Log.i("GarageAppGPS", locationName);
-		
-		return locationName;
-	}
-	
-	private Location getLocation() {
-		Location bestLocation;
-		//seems to work without location listener. needs field testing
 
-		LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		
-		//LocationListener locationListener = new LocationListener();
-		//do i need to define any functions for a locationlistener?
-		
-		// Register the listener with the Location Manager to receive location updates
-		//locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-		//locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-
-		String locationProvider = LocationManager.NETWORK_PROVIDER;
-		// Or, use GPS location data:
-		// String locationProvider = LocationManager.GPS_PROVIDER;
-		Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
-		Log.i("GarageAppGPS", lastKnownLocation.toString());
-		
-		//insert kung fu here to check different providers and times to make sure we have an accurate location
-		bestLocation = lastKnownLocation;
-
-		return bestLocation;
-	}
-	
-	private float getDistance() {
-		//if(getLocation())
-		//Log.i("GarageAppGPS", locationString);
-		return getLocation().distanceTo(homeLocation);
-	}
-	
-	private String getLocationCoordinates() {
-		Location myLocation = getLocation();
-		String locationString = myLocation.getLatitude() + " " + myLocation.getLongitude();
-		Log.i("GarageAppGPS", locationString);
-		return locationString;
-	}
 
 	public void onDestroy() {
 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
@@ -214,8 +157,8 @@ public class SensorService extends Service implements SensorEventListener {
 	}
 	
 	public void storeFinalLocation() {
-		insertAtFileTop(orientFile, "Parked at: " + getLocationName() + ", " + getLocationCoordinates() 
-				+ ", Distance: " + Float.toString(getDistance()) + ", Parked Floor: " + recentData.parkedFloor + ", ");
+		insertAtFileTop(orientFile, "Parked at: " + UserLocationManager.getLocationName() + ", " + UserLocationManager.getLocationCoordinates() 
+				+ ", Distance: " + Float.toString(UserLocationManager.getDistanceFromHome()) + ", Parked Floor: " + recentData.parkedFloor + ", ");
 	}
 	
 	
@@ -241,7 +184,7 @@ public class SensorService extends Service implements SensorEventListener {
             	oldFloor = recentData.parkedFloor;
             }
 
-            recentData.addUpToLimit(dateString, getLocation(), event);
+            recentData.addUpToLimit(dateString, UserLocationManager.getLocation(), event);
             
             if(!accelerometerFile.exists()) {
                 writeNewFile(accelerometerFile, recentData.accHeader + "\n");
@@ -277,7 +220,7 @@ public class SensorService extends Service implements SensorEventListener {
             	oldFloor = recentData.parkedFloor;
             }
             
-        	recentData.addUpToLimit(dateString, getLocation(), event);
+        	recentData.addUpToLimit(dateString, UserLocationManager.getLocation(), event);
             
         	
         	if(!magnFile.exists()) {
@@ -308,7 +251,7 @@ public class SensorService extends Service implements SensorEventListener {
         } else if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
         	//Log.i(COMPASS_TAG, dateString);
 
-        	recentData.addUpToLimit(dateString, getLocation(), event);
+        	recentData.addUpToLimit(dateString, UserLocationManager.getLocation(), event);
             
         	
         	if(!compassFile.exists()) {

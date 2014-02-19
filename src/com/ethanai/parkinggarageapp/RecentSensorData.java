@@ -24,7 +24,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	private static final long serialVersionUID = 5721779411217090251L;
 	public int historyLength = 100;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
-    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm"; //implement this eventually for pretty date recording
+    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss"; //implement this eventually for pretty date recording
     
     public Date initialDate; //date this structure initialized. 
 	public ArrayList<AccelerometerReading> accRecent = new ArrayList<AccelerometerReading>();
@@ -35,7 +35,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public ArrayList<DerivedOrientation> orientRecent = new ArrayList<DerivedOrientation>(); //will be dated with the time the two sensor readings got merged (here)
 	
 	//headers for each data type:
-    public String orientHeader = "Time, location, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
+    public String orientHeader = "Time, location, distance, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
     public String accHeader = "Time, location, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
     public String magnHeader = "Date, location, x, y, z\n";
     public String compassHeader = "Date, location, x, y, z, total, accuracy\n";
@@ -129,7 +129,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		MagnetReading(String dateString, Location location, SensorEvent event) {
 			this.dateString = dateString;
 			this.location = location;
-			this.locationString = location.getLongitude() + " " + location.getLatitude();
+			this.locationString = location.getLatitude() + " " + location.getLongitude();
 			this.x = event.values[0];
 			this.y = event.values[1];
 			this.z = event.values[2];
@@ -154,6 +154,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public String dateString;
 		public Location location;
 		public String locationString;
+		public float distance; //distance from labeled target for debugging
 		
 		//Values we want:
 			//http://developer.android.com/reference/android/hardware/SensorManager.html#getOrientation(float[], float[])
@@ -169,7 +170,9 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		DerivedOrientation(String dateString, Location location) {
 			this.dateString = dateString;
 			this.location = location;
-			this.locationString = location.getLongitude() + " " + location.getLatitude();
+			this.locationString = location.getLatitude() + " " + location.getLongitude();
+	    	
+			this.distance = location.distanceTo(UserLocationManager.homeLocation);
 			
 			// Storage for Sensor readings. Need both present before orientation can be derived
 			float[] mGravity = new float[3]; //accelerometer
@@ -210,7 +213,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 					azimuthInDegrees -= 360;
 				}
 				totalTurnDegrees += azimuthInDegrees - previousAzimuth;
-				
+								
 				/*
 				 * case 1. go from 0 to -10. now - old = -10 good
 				 * case 2. go from 0 to 10. now - old = 10 good
@@ -252,6 +255,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public String toFormattedString() {
 			return dateString + ", " +
 					locationString + ", " +
+					Float.toString(distance) +
 	                Double.toString(azimuthInDegrees) + "," + 
 	                Double.toString(pitchInDegrees) + "," +
 	                Double.toString(rollInDegrees) + "," +
@@ -346,7 +350,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		AccelerometerReading(String dateString, Location location, SensorEvent event) {
 			this.dateString = dateString;
 			this.location = location;
-			this.locationString = location.getLongitude() + " " + location.getLatitude();
+			this.locationString = location.getLatitude() + " " + location.getLongitude();
 			x = event.values[0];
 	        y = event.values[1];
 	        z = event.values[2];

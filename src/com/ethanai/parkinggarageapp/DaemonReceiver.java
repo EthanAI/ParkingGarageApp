@@ -8,8 +8,10 @@ import android.location.Location;
 import android.util.Log;
 import android.widget.Toast;
 
-public class DaemonReceiver extends BroadcastReceiver {
-	Location homeLocation = null;
+public class DaemonReceiver extends BroadcastReceiver {	
+	//Temp hardcoding of my car's BT description to test with. Will need to be settable/changable in the future
+	String carBTName = "XPLOD";
+	String carBTMac = "54:42:49:B0:7A:C6";
 	
 	ParkingNotificationManager myNotifier;
 
@@ -17,19 +19,30 @@ public class DaemonReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) { //maybe not final. create new context Context getBaseContext() and pass it
 		Log.i("BootReceiver", "Recieved something. " + intent.getAction());
 		myNotifier = new ParkingNotificationManager(context, null);
-		if(homeLocation == null) {
-			homeLocation = getHomeLocation();
+		if(!UserLocationManager.isInitialized) {
+			UserLocationManager.initialize(context);
 		}
+
 		if(intent.getAction() == Intent.ACTION_POWER_CONNECTED) {
 			Toast.makeText(context, "Power On!", Toast.LENGTH_SHORT).show();
 		} else if(intent.getAction() == Intent.ACTION_POWER_DISCONNECTED) {
 			Toast.makeText(context, "Power Off!", Toast.LENGTH_SHORT).show();
 		} else if(intent.getAction() == BluetoothDevice.ACTION_ACL_CONNECTED) {
-			Toast.makeText(context, "BT Connect!", Toast.LENGTH_SHORT).show();
+			//http://stackoverflow.com/questions/9459680/how-identify-which-bluetooth-device-causes-an-action-acl-connected-broadcast
 			//TODO 
 				//Make 2nd deamon? Activate sensors when near home
 				//check GPS is not home
-			startSensors(context); //possibly this getting triggered multiple times by multiple bluetooth devices (if rebooted in the car?)
+			if(isCarDevice(intent)) {
+				Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
+				if(!UserLocationManager.isAtHome()) {
+					Toast.makeText(context, "At home, no need", Toast.LENGTH_LONG).show();
+				} else {
+					Toast.makeText(context, "Start Sensors", Toast.LENGTH_LONG).show();
+					startSensors(context); //possibly this getting triggered multiple times by multiple bluetooth devices (if rebooted in the car?)
+				}
+			} else {
+				Toast.makeText(context, "Other BT Connection", Toast.LENGTH_SHORT).show();
+			}
 		} else if(intent.getAction() == BluetoothDevice.ACTION_ACL_DISCONNECTED) {
 			Toast.makeText(context, "BT Disconnect!", Toast.LENGTH_SHORT).show();
 			stopSensors(context);
@@ -43,8 +56,11 @@ public class DaemonReceiver extends BroadcastReceiver {
 		
 	}
 	
-	public Location getHomeLocation() {
-		return null; //TODO
+	private boolean isCarDevice(Intent intent) {
+		BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+		String deviceName = device.getName(); 
+		String macAddress = device.getAddress();
+		return (deviceName.equalsIgnoreCase(carBTName) && macAddress.equalsIgnoreCase(carBTMac));
 	}
 
 	public void startSensors(Context context) {

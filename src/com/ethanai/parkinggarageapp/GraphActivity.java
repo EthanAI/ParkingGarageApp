@@ -1,8 +1,5 @@
 package com.ethanai.parkinggarageapp;
 
-
-import java.util.List;
-
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.model.TimeSeries;
@@ -18,9 +15,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.DisplayMetrics;
@@ -58,11 +52,7 @@ public class GraphActivity extends Activity {
        
     int plotDataCount = 1000; //passed to sensor service then to recentsensordata. if we want to overrride defaults in sensorservice
     RecentSensorData recentData = new RecentSensorData();
-    
-    
-	private LocationManager mLocationManager;
-	private LocationListener mLocationListener;
-    
+        
 	private final String ACCELEROMETER_TAG 	= "accelerometer";
 	private final String MAGNETIC_TAG 		= "magnetic";
 	private final String ORIENTATION_TAG 	= "orientation";
@@ -115,45 +105,6 @@ public class GraphActivity extends Activity {
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(ORIENTATION_TAG));
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(COMPASS_TAG));
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(PRESSURE_TAG));	
-		
-		
-		//location code trial
-		mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		
-		float minAccuracy = 500.0f;
-		long minTime = 1000 * 60 * 5;
-		Location mBestReading;
-		
-		Location bestResult = null;
-		float bestAccuracy = Float.MAX_VALUE;
-		long bestTime = Long.MIN_VALUE;
-		List<String> matchingProviders = mLocationManager.getAllProviders();
-
-		for (String provider : matchingProviders) {
-
-			Location location = mLocationManager.getLastKnownLocation(provider);
-
-			if (location != null) {
-
-				float accuracy = location.getAccuracy();
-				long time = location.getTime();
-
-				if (accuracy < bestAccuracy) {
-
-					bestResult = location;
-					bestAccuracy = accuracy;
-					bestTime = time;
-
-				}
-			}
-		}
-		if (bestAccuracy > minAccuracy || bestTime < minTime) {
-			bestResult = null;
-		}
-		//location.getAccuracy()
-		//location.getLongitude()
-		//location.getLatitude()
-		//end of location code
 		
 	}
 	

@@ -27,12 +27,13 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
+import android.telephony.PhoneStateListener;
+import android.telephony.SignalStrength;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -53,8 +54,9 @@ public class SensorService extends Service implements SensorEventListener {
     private File compassFile = null;
     //private File pressureFile = null;
     private File orientFile = null; //hold orientation derived from accelerometer and magnetic fields
+    private File signalFile = null;
    
-    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm";
+    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
 	private String FILE_DATE_FORMAT_STRING = "yyyy-MM-dd HH.mm";
 
 	private int maxReadingHistoryCount = 100;
@@ -64,9 +66,9 @@ public class SensorService extends Service implements SensorEventListener {
 	private final String MAGNETIC_TAG 		= "magnetic";
 	private final String ORIENTATION_TAG 	= "orientation";
 	private final String COMPASS_TAG 		= "compass";
-	private final String PRESSURE_TAG 		= "pressure";
 	
 	ParkingNotificationManager myNotifier;
+	
 	
 	/* VERY temporary implementation. We will want the on/off triggered in other ways. 
 	 * 1. Want to have this guy hide in the background pretty much permenantly (upon app creation?)
@@ -105,6 +107,7 @@ public class SensorService extends Service implements SensorEventListener {
 	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " compassReadings.csv"); 
 	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
 	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " orientationReadings.csv"); 
+	    signalFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " signalStrength.csv");
 	    
 		appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
 		appendToFile(orientFile, recentData.orientHeader);
@@ -125,6 +128,10 @@ public class SensorService extends Service implements SensorEventListener {
         mSensorManager.registerListener(this, mMagn, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mCompass, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
+        
+        ((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS); //register the phone state listener
+        
+        
                         				
 		return START_STICKY; //keep running until specifically stopped
 	}
@@ -142,6 +149,25 @@ public class SensorService extends Service implements SensorEventListener {
 		mSensorManager.unregisterListener(this);
 		//unregisterReceiver(receiver);
 	}
+	
+	//Override phone state listener to add code to react to signal strength changing
+	//http://mfarhan133.wordpress.com/2010/10/15/manipulating-incoming-ougoing-calls-tutorial-for-android/
+	private final PhoneStateListener psListener = new PhoneStateListener() {
+        @Override
+        public void onSignalStrengthsChanged (SignalStrength signalStrength) {
+        	Log.i("CellSignal", signalStrength.toString());
+        	String signalString = "";
+        	signalString = 	signalStrength.getCdmaDbm() + ", " +
+        					signalStrength.getCdmaEcio() + ", " +
+        					signalStrength.getEvdoDbm() + ", " +
+           					signalStrength.getEvdoEcio() + ", " +
+           					signalStrength.getEvdoSnr() + ", " +
+           					signalStrength.getEvdoSnr() + ", " +
+           					signalStrength.getGsmBitErrorRate() + ", " +
+           					signalStrength.getGsmSignalStrength() + "\n";
+        	appendToFile(signalFile, new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()) +"," + UserLocationManager.getLocationCoordinates() + "," + signalString);
+        }
+	};	
 	
 	/*
 	 * Should update some local stored data so later we can retrieve it. 

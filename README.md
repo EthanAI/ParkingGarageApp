@@ -34,7 +34,13 @@ App to automatically determine the floor you parked out. GPS is not helpful, so 
         			Pick up on which direction you turned into the stall
         				Angled stalls
     				+Identify direction of turn, size of turn and sequence of turn (High priority, this makes it useful for more than just my garage)
-    					Learn / initial map a users garage.
+    				+Maybe identify entry/exit of garage is most critical. How to do this?
+    					-Learn / initial map a users garage. No. What if we find parking on the first floor?
+    					While near target GPS location: *2 rings. 1 for proximity-start sensors 2 for match-check/analyze if this is garage.
+    						Coming to a stop for gate? Only I have a gate?
+    						Loosing gps connection? Just less accurate?
+    						Loosing cell connection?
+    					
     					Maybe just report 'hey, what floor are we on?' 'Was this guess correct?' and learn
 					Identify start of garage behavior. (GPS, speed etc. Signals to detect this)
 	        xHardcode the pattern
@@ -61,7 +67,7 @@ App to automatically determine the floor you parked out. GPS is not helpful, so 
     		Subtract out gravity from accelerometer, build cumulative values. See if we can ID stopping
         	
 	Bugs:
-		GraphActivity freezes after long 10min+ time Sensors seem to be unaffected.
+		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
         	
     	
         

@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -22,7 +21,7 @@ public class DaemonReceiver extends BroadcastReceiver {
 		if(!UserLocationManager.isInitialized) {
 			UserLocationManager.initialize(context);
 		}
-
+		
 		if(intent.getAction() == Intent.ACTION_POWER_CONNECTED) {
 			Toast.makeText(context, "Power On!", Toast.LENGTH_SHORT).show();
 		} else if(intent.getAction() == Intent.ACTION_POWER_DISCONNECTED) {
@@ -33,11 +32,11 @@ public class DaemonReceiver extends BroadcastReceiver {
 				//Make 2nd deamon? Activate sensors when near home
 				//check GPS is not home
 			if(isCarDevice(intent)) {
-				Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
-				if(!UserLocationManager.isAtHome()) {
+				//Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
+				if(UserLocationManager.isAtHome()) {
 					Toast.makeText(context, "At home, no need", Toast.LENGTH_LONG).show();
 				} else {
-					Toast.makeText(context, "Start Sensors", Toast.LENGTH_LONG).show();
+					Toast.makeText(context, "Outside, Start Sensors", Toast.LENGTH_LONG).show();
 					startSensors(context); //possibly this getting triggered multiple times by multiple bluetooth devices (if rebooted in the car?)
 				}
 			} else {
@@ -46,8 +45,6 @@ public class DaemonReceiver extends BroadcastReceiver {
 		} else if(intent.getAction() == BluetoothDevice.ACTION_ACL_DISCONNECTED) {
 			Toast.makeText(context, "BT Disconnect!", Toast.LENGTH_SHORT).show();
 			stopSensors(context);
-		//} else if(intent.getAction() == BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED) { //this doesnt seem to work and is overly complicated to implement
-		//	Toast.makeText(context, "BT Change! " + "" + " " + (BluetoothA2dp.STATE_CONNECTED), Toast.LENGTH_SHORT).show();
 		} else if (intent.getAction() == Intent.ACTION_BOOT_COMPLETED){
 			myNotifier.daemonNotification();
 		} else {

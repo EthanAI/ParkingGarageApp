@@ -35,7 +35,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public ArrayList<DerivedOrientation> orientRecent = new ArrayList<DerivedOrientation>(); //will be dated with the time the two sensor readings got merged (here)
 	
 	//headers for each data type:
-    public String orientHeader = "Time, location, distance, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
+    public String orientHeader = "Time, location, acc, distance, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
     public String accHeader = "Time, location, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
     public String magnHeader = "Date, location, x, y, z\n";
     public String compassHeader = "Date, location, x, y, z, total, accuracy\n";
@@ -154,6 +154,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public String dateString;
 		public Location location;
 		public String locationString;
+		public float gpsAccuracy;
 		public float distance; //distance from labeled target for debugging
 		
 		//Values we want:
@@ -166,12 +167,12 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public double totalTurnDegrees; //naive implementation, will evolve into turn counts. 
 		
-		//create empty record
 		DerivedOrientation(String dateString, Location location) {
 			this.dateString = dateString;
 			this.location = location;
 			this.locationString = location.getLatitude() + " " + location.getLongitude();
 	    	
+			this.gpsAccuracy = location.getAccuracy();
 			this.distance = location.distanceTo(UserLocationManager.homeLocation);
 			
 			// Storage for Sensor readings. Need both present before orientation can be derived
@@ -251,17 +252,18 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			parkedDateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date());
 		}
 		
-		//Output converts degrees into quarter turns. Easier to eyeball. 
+		//Output converts degrees into quarter turns. Easier to eyeball. Also turn convention switched to my preference
 		public String toFormattedString() {
 			return dateString + ", " +
 					locationString + ", " +
-					Float.toString(distance) +
+					Float.toString(gpsAccuracy) + "," +
+					Float.toString(distance) + "," +
 	                Double.toString(azimuthInDegrees) + "," + 
 	                Double.toString(pitchInDegrees) + "," +
 	                Double.toString(rollInDegrees) + "," +
 	                Double.toString(inclinationInDegrees) + "," +
-	                Double.toString(totalTurnDegrees) + "," +
-	                Double.toString(totalTurnDegrees / 90) +
+	                Double.toString(totalTurnDegrees * -1) + "," +
+	                Double.toString(totalTurnDegrees / -90) +
 	                "\n";
 		}
 		

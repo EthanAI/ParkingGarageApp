@@ -98,7 +98,47 @@ public class UserLocationManager {
 	}
 	
 	public static boolean isAtHome() {
-		return getLocation().distanceTo(homeLocation) < matchDistance;
+		return (getLocation().distanceTo(homeLocation) < matchDistance);
 	}
 
 }
+
+/* legacy code
+ * 		//location code trial
+		mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		
+		float minAccuracy = 500.0f;
+		long minTime = 1000 * 60 * 5;
+		Location mBestReading;
+		
+		Location bestResult = null;
+		float bestAccuracy = Float.MAX_VALUE;
+		long bestTime = Long.MIN_VALUE;
+		List<String> matchingProviders = mLocationManager.getAllProviders();
+
+		for (String provider : matchingProviders) {
+
+			Location location = mLocationManager.getLastKnownLocation(provider);
+
+			if (location != null) {
+
+				float accuracy = location.getAccuracy();
+				long time = location.getTime();
+
+				if (accuracy < bestAccuracy) {
+
+					bestResult = location;
+					bestAccuracy = accuracy;
+					bestTime = time;
+
+				}
+			}
+		}
+		if (bestAccuracy > minAccuracy || bestTime < minTime) {
+			bestResult = null;
+		}
+		//location.getAccuracy()
+		//location.getLongitude()
+		//location.getLatitude()
+		//end of location code
+		 */

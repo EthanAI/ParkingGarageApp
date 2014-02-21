@@ -59,10 +59,9 @@ App to automatically determine the floor you parked out. GPS is not helpful, so 
         	Remove location recording for each data point. Its helpful for design but wastes a lot of battery
         	
     	//patern notes
-    		Work backwards from end
-    		Cut off last 90 degrees regardless of direction (turn into stall)
+    		xWork backwards from end
+    		+Cut off last 90 degrees regardless of direction (turn into stall)
     		Check accelerometer for possible speed indications? Enter the gate?
-    		Subtract out the final result to zero it, so we can eliminate any weird partial turning done before then
     		-Ignore weird phone movements since working backwards. 
     		Subtract out gravity from accelerometer, build cumulative values. See if we can ID stopping
     		+use compass bearing to identify entry to garage (can we manage varying phone positions?)

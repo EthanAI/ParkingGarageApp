@@ -7,17 +7,27 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
+
 /*
  * Eventually I'd like to let the user drive in their structure to the top floor. Record the path. Use that as a pattern to match
  * For now, just let them select 'Right Turn structure' 'Left turn structure' or 'Split' and have split go to TBC screen
  */
 public class DataAnalyzer {
 	ArrayList<Float> turnDegreesArray = new ArrayList<Float>();
-	//float quarterTurnCount = 0;
+
+	//for testing from csvs
+	private final int DEGREE_COL = 10;
 	
 	DataAnalyzer(RecentSensorData recentData) { 
 		for(int i = 0; i < recentData.orientRecent.size()-1; i++) {
 			turnDegreesArray.add((float)recentData.orientRecent.get(i).totalTurnDegrees);
+		}
+	}
+	
+	DataAnalyzer(ArrayList<DerivedOrientation> orientRecent) { 
+		for(int i = 0; i < orientRecent.size()-1; i++) {
+			turnDegreesArray.add((float)orientRecent.get(i).totalTurnDegrees);
 		}
 	}
 	
@@ -76,7 +86,7 @@ public class DataAnalyzer {
 			//As we subtract the right turns away, the turnCount should go down. If our new turncount grows, we must have subtracted a left turn.
 			leftDelta = quarterTurnCount - minTurnCount;
 			totalDegreesRight = turnDegreesArray.get(turnDegreesArray.size()-1) - turnDegreesArray.get(i);
-			//System.out.println(i + "\t" + leftDelta + "\t" + totalDegreesRight/90 + "\t" + turnDegreesArray.get(i));
+			System.out.println(i + "\tmin " + minTurnCount + "\tdel "+ leftDelta + "\tturns " + totalDegreesRight/90 + "\tdegree " + turnDegreesArray.get(i));
 		}
 		rightTurnCount = totalDegreesRight/90 + 0.5f*turnThreshold; // + 1/2 since we measured maximums, not averages
 		return rightTurnCount;
@@ -108,7 +118,7 @@ public class DataAnalyzer {
 			while((line = br.readLine()) != null) {
 				String tokens[] = line.split(",");
 				//System.out.println(tokens[8]);
-				turnDegreesArray.add(Float.parseFloat(tokens[8]) * -1); //flip the convention from mine, to Android's so fucntion will work on app. 
+				turnDegreesArray.add(Float.parseFloat(tokens[DEGREE_COL]) * -1); //flip the convention from mine, to Android's so fucntion will work on app. 
 			}
 			br.close();
 			fr.close();

@@ -46,6 +46,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	private SensorEvent magnRecentEvent = null;
 	private boolean isOrientationNew = false; //flag to identify if orientation record is fresh or not
 	
+	private DataAnalyzer myAnalyzer; //for interpreting sensordata to get parking floor. May become resource intensive in the future
 	
 	//absolute final result... what floor we parked on!
 	public String parkedFloor = "";
@@ -209,9 +210,14 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				rollInDegrees = Math.toDegrees(orientationMatrix[2]);
 				inclinationInDegrees = Math.toDegrees(SensorManager.getInclination(inclinationMatrix));
 				totalTurnDegrees = updateTurnDegrees(azimuthInDegrees);
-				parkedFloor = DataAnalyzer.getCurrentFloor(totalTurnDegrees);
-				//set the parking time too
-				parkedDateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date());
+				
+				if(orientRecent.size() > 1) {
+					myAnalyzer = new DataAnalyzer(orientRecent); //load up our most recent data. wasteful?
+					parkedFloor = myAnalyzer.getCurrentFloor();
+				} else {
+					parkedFloor = "0";
+				}
+				parkedDateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()); //set the parking time too
 			}
 		}
 		
@@ -257,39 +263,6 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 	}
 	
-	static class DataAnalyzer {
-	
-		/*
-		 * A simple version just to provide live update to estimate with. Real analyzer was moved to an external class
-		 */
-		static String getCurrentFloor(double totalTurnDegrees) {
-			String parkedFloor = "";
-			float quarterTurnCount = (float) (totalTurnDegrees / 90);
-			//TODO create array of pairs with border of turns to reach that floor and that floor's name. In future make this adaptable
-			//peel off final parking the car turn (could be left or right, but doesn't change your floor any)
-				//hardcoded for now. My building only lets compact cars park on the right
-			
-			quarterTurnCount -= 1;
-			if(quarterTurnCount < -1) {
-				parkedFloor = "1?";
-			} else if (quarterTurnCount < 1) {
-				parkedFloor = "1";
-			} else if (quarterTurnCount < 3) {
-				parkedFloor = "2";
-			} else if (quarterTurnCount < 5) {
-				parkedFloor = "2B";
-			} else if (quarterTurnCount < 7) {
-				parkedFloor = "3";
-			} else if (quarterTurnCount < 9) {
-				parkedFloor = "3B";
-			} else if (quarterTurnCount < 11) {
-				parkedFloor = "4";
-			}
-			
-			return parkedFloor;
-		}
-		
-	}
 	
 	class CompassReading {
 	    

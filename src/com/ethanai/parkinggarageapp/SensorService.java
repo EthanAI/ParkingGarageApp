@@ -197,113 +197,42 @@ public class SensorService extends Service implements SensorEventListener {
 		return null;
 	}
 
-	//OK that takes care of initializing & closing this service. Now we have the meat for what it does while alive
+	//Update our data object, write new reading to disk
     //@Override
     public void onSensorChanged(SensorEvent event) {
-    	//This could use some refactoring
     	String dateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date());
-        Sensor sensor = event.sensor;        
-        //handle accelerometer update
-        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-        	//Log.i(ACCELEROMETER_TAG, dateString);
-            String oldFloor = "";
-            String newFloor = "";
-            if(recentData != null && recentData.orientRecent != null) {
-            	oldFloor = recentData.parkedFloor;
-            }
+        Sensor sensor = event.sensor;  
+        int sensorType = sensor.getType();
+        
+        recentData.addUpToLimit(dateString, UserLocationManager.getLocation(), event);
 
-            recentData.addUpToLimit(dateString, UserLocationManager.getLocation(), event);
-            
-            if(!accelerometerFile.exists()) {
-                writeNewFile(accelerometerFile, recentData.accHeader + "\n");
-            } else {
-                appendToFile(accelerometerFile, recentData.accRecent.get(recentData.accRecent.size() - 1).toFormattedString());
-                //notify activities they should update based on the new data 
-                notifyUpdate(ACCELEROMETER_TAG);      
-            }
-            
-            
-            //also update the orientation records if new one was generated
-            if(recentData != null && recentData.orientRecent != null && recentData.accRecent.get(recentData.accRecent.size() - 1).createdOrientationReading) {
-            	Log.i(ORIENTATION_TAG, dateString);
-            	if(!orientFile.exists()) {
-                    writeNewFile(orientFile, recentData.orientHeader);
-                } else {
-                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
-                    //temporary graphic to report floor changes when they happen. good for testing
-                    newFloor = recentData.parkedFloor;
-                    if(!newFloor.equalsIgnoreCase(oldFloor)) {
-                    	//Toast.makeText(this, newFloor, Toast.LENGTH_SHORT).show();
-                    }
-                    //notify activities they should update based on the new data 
-                    notifyUpdate(ORIENTATION_TAG);   //important this happens last i think
-                }
-            }
-            
-        } else if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
-        	//Log.i(MAGNETIC_TAG, dateString);
-            String oldFloor = "";
-            String newFloor = "";
-            if(recentData != null && recentData.orientRecent != null) {
-            	oldFloor = recentData.parkedFloor;
-            }
-            
-        	recentData.addUpToLimit(dateString, UserLocationManager.getLocation(), event);
-            
-        	
-        	if(!magnFile.exists()) {
-        		writeNewFile(magnFile, recentData.magnHeader + "\n");
-	        } else {
+        switch (sensorType) {
+	        case Sensor.TYPE_ACCELEROMETER: 
+	            appendToFile(accelerometerFile, recentData.accRecent.get(recentData.accRecent.size() - 1).toFormattedString());
+	            notifyUpdate(ACCELEROMETER_TAG); 
+	            
+	            //check if this reading generated a new orientation reading
+	            if(recentData.isOrientationNew()) {
+	            	recentData.setOrientationUsed();
+	                appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
+	                notifyUpdate(ORIENTATION_TAG);   //important this happens last i think
+	            }
+	            break;
+	        case Sensor.TYPE_MAGNETIC_FIELD:
 	            appendToFile(magnFile, recentData.magnRecent.get(recentData.magnRecent.size() - 1).toFormattedString());
-	        }     	
-	        
-        	
-            notifyUpdate(MAGNETIC_TAG);    //seem only able to send one update 
-            
-          //also update the orientation records if new one was generated
-            if(recentData != null && recentData.orientRecent != null && recentData.magnRecent.get(recentData.magnRecent.size() - 1).createdOrientationReading) {
-                if(!orientFile.exists()) {
-                    writeNewFile(orientFile, recentData.orientHeader);
-                } else {
-                    appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
-                    //temporary graphic to report floor changes when they happen. good for testing
-                    newFloor = recentData.parkedFloor;
-                    if(!newFloor.equalsIgnoreCase(oldFloor)) {
-                    	//Toast.makeText(this, newFloor, Toast.LENGTH_SHORT).show();
-                    }
-                    //notify activities they should update based on the new data 
-                    notifyUpdate(ORIENTATION_TAG);   //important this happens last i think
-                }
-            }
-            
-        } else if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
-        	//Log.i(COMPASS_TAG, dateString);
-
-        	recentData.addUpToLimit(dateString, UserLocationManager.getLocation(), event);
-            
-        	
-        	if(!compassFile.exists()) {
-        		writeNewFile(compassFile, recentData.compassHeader + "\n");
-	        } else {
-	            appendToFile(compassFile, recentData.compassRecent.get(recentData.compassRecent.size() - 1).toFormattedString());
-	        }     
-	        	
-        	
-            notifyUpdate(COMPASS_TAG);      
-            
-        /*} else if (sensor.getType() == Sensor.TYPE_PRESSURE) {
-        	//Log.i(PRESSURE_TAG, dateString);
-            
-            recentData.addUpToLimit(dateString, event);
-            
-            if(!pressureFile.exists()) {
-        		writeNewFile(pressureFile, pressureHeader + "\n");
-	        } else {
-	            appendToFile(pressureFile, recentData.pressureRecent.get(recentData.pressureRecent.size() - 1).toFormattedString());
-	        }     
-	        
-            notifyUpdate(PRESSURE_TAG);   
-            */ 
+	            notifyUpdate(MAGNETIC_TAG);
+	            
+	            //check if this reading generated a new orientation reading
+	            if(recentData.isOrientationNew()) {
+	            	recentData.setOrientationUsed();
+	                appendToFile(orientFile, recentData.orientRecent.get(recentData.orientRecent.size() - 1).toFormattedString());   
+	                notifyUpdate(ORIENTATION_TAG);   //important this happens last i think
+	            }
+	            break;
+	        case Sensor.TYPE_ROTATION_VECTOR:
+	        	appendToFile(compassFile, recentData.compassRecent.get(recentData.compassRecent.size() - 1).toFormattedString());
+	        	notifyUpdate(COMPASS_TAG);
+	        	break;
         }
     }
     

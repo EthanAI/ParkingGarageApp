@@ -44,6 +44,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	//parts needed to be collected before creating a new DerivedOrientation
 	private SensorEvent accRecentEvent = null;
 	private SensorEvent magnRecentEvent = null;
+	private boolean isOrientationNew = false; //flag to identify if orientation record is fresh or not
 	
 	
 	//absolute final result... what floor we parked on!
@@ -67,46 +68,50 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	 * Store object in the appropriate ArrayList
 	 */
 	public <E> void addUpToLimit(String dateString, Location location, SensorEvent event) {
-		Sensor sensor = event.sensor;        
-        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+		Sensor sensor = event.sensor;     
+		int sensorType = sensor.getType();
+		
+		switch (sensorType) {
+		case Sensor.TYPE_ACCELEROMETER:
         	addUpToLimit(accRecent, new AccelerometerReading(dateString, location, event));  
         	
         	//also try to create an orientation data record
         	accRecentEvent = event; //add this sensor event or overwrite stale data
-        	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we not have both parts, build an orientation record and add it
-        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()), location));
-        		//flag that this most recent accelerometer reading was used for calculating a new orientation reading
-        		accRecent.get(accRecent.size() - 1).createdOrientationReading = true; 
+        	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we have both parts, build an orientation record and add it
+        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()), 
+        				location, accRecentEvent, magnRecentEvent));
+        		isOrientationNew = true;  //flag that this most recent accelerometer reading was used for calculating a new orientation reading
         		accRecentEvent = null; // require new readings for both sensors before building another
         		magnRecentEvent = null;
-        		
         	}
+        	break;
         		        	
-        } else if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+		case Sensor.TYPE_MAGNETIC_FIELD:
         	addUpToLimit(magnRecent, new MagnetReading(dateString, location, event));
         	
         	//also try to create an orientation data record
         	magnRecentEvent = event; //add this sensor event or overwrite stale data
-        	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we not have both parts, build an orientation record and add it
-        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()), location));
-        		//flag that this most recent magnet reading was used for calculating a new orientation reading
-        		magnRecent.get(magnRecent.size() - 1).createdOrientationReading = true; 
+        	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we have both parts, build an orientation record and add it
+        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()), 
+        				location, accRecentEvent, magnRecentEvent));
+        		isOrientationNew = true;   //flag that this most recent magnet reading was used for calculating a new orientation reading
         		accRecentEvent = null; // require new readings for both sensors before building another
         		magnRecentEvent = null;
-        		
         	}
+        	break;
         	
-        } else if (sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+		case Sensor.TYPE_ROTATION_VECTOR:
         	addUpToLimit(compassRecent, new CompassReading(dateString, event));
+        	break;
         	
-        } else if (sensor.getType() == Sensor.TYPE_RELATIVE_HUMIDITY) {
+		case Sensor.TYPE_RELATIVE_HUMIDITY:
         	addUpToLimit(humidRecent, new HumidityReading(dateString, event));
-
-        } else if (sensor.getType() == Sensor.TYPE_PRESSURE) {
+        	break;
+        	
+		case Sensor.TYPE_PRESSURE:
         	addUpToLimit(pressRecent, new PressureReading(dateString, event));
-
-        }		
-        
+        	break;
+		}
     }	
 	
 	public <E> void addUpToLimit(ArrayList<E> arrayList, E newEntry) {
@@ -116,12 +121,19 @@ public class RecentSensorData implements Serializable { //must specify serializa
         arrayList.add(newEntry);
     }	
 	
+	public boolean isOrientationNew() {
+		return isOrientationNew;
+	}
+	
+	public void setOrientationUsed() {
+		isOrientationNew = false;
+	}
+	
 	class MagnetReading {
 		
 		public String dateString;
 		public Location location;
 		public String locationString;
-		public boolean createdOrientationReading = false;
 		public float x;
 		public float y;
 		public float z;
@@ -167,7 +179,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public double totalTurnDegrees; //naive implementation, will evolve into turn counts. 
 		
-		DerivedOrientation(String dateString, Location location) {
+		DerivedOrientation(String dateString, Location location, SensorEvent accEvent, SensorEvent magnEvent) {
 			this.dateString = dateString;
 			this.location = location;
 			this.locationString = location.getLatitude() + " " + location.getLongitude();
@@ -183,8 +195,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			float inclinationMatrix[] = new float[9];
 			float orientationMatrix[] = new float[3];
 						
-			System.arraycopy(accRecentEvent.values, 0, mGravity, 0, 3);
-			System.arraycopy(magnRecentEvent.values, 0, mGeomagnetic, 0, 3);
+			System.arraycopy(accEvent.values, 0, mGravity, 0, 3);
+			System.arraycopy(magnEvent.values, 0, mGeomagnetic, 0, 3);
 			
 			//merge and calculate the inclination and orientation (finally)
 				//feed the sensor events, and function call will fill in the two Matrices
@@ -230,8 +242,6 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			return newTotal;
 		}
 		
-
-		
 		//Output converts degrees into quarter turns. Easier to eyeball. Also turn convention switched to my preference
 		public String toFormattedString() {
 			return "Date: " + dateString + ", " +
@@ -248,15 +258,18 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	}
 	
 	static class DataAnalyzer {
-		public static float quarterTurnCount;
+	
+		/*
+		 * A simple version just to provide live update to estimate with. Real analyzer was moved to an external class
+		 */
 		static String getCurrentFloor(double totalTurnDegrees) {
 			String parkedFloor = "";
-			quarterTurnCount = (float) (totalTurnDegrees / 90);
+			float quarterTurnCount = (float) (totalTurnDegrees / 90);
 			//TODO create array of pairs with border of turns to reach that floor and that floor's name. In future make this adaptable
 			//peel off final parking the car turn (could be left or right, but doesn't change your floor any)
 				//hardcoded for now. My building only lets compact cars park on the right
-			removeFidgiting();
-			removeParkTurn();
+			
+			quarterTurnCount -= 1;
 			if(quarterTurnCount < -1) {
 				parkedFloor = "1?";
 			} else if (quarterTurnCount < 1) {
@@ -275,22 +288,6 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			
 			return parkedFloor;
 		}
-		
-		//remove the last turn
-		//naieve implementation for now
-		private static void removeParkTurn() {
-			//identify continual turn threshold/time/speed/localmean
-			//once last one is identified, remove that amount (could be left, right, 90 stall/angled stall, multiple movements
-			//for now always assume a right quarter turn into the stall
-			quarterTurnCount -= 1; //note data convention is opposite of toString() and csv graphed data. Dont get mixed up
-		}
-		
-		//curently no effects
-		private static void removeFidgiting() {
-			//quarterTurnCount = quarterTurnCount;
-		}
-		
-		
 		
 	}
 	
@@ -363,7 +360,6 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public String dateString;
 		public Location location;
 		public String locationString;
-		public boolean createdOrientationReading = false;
 		public float x;
 		public float y;
 		public float z;

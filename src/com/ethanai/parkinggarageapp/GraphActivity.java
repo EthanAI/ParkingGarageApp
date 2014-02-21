@@ -50,7 +50,7 @@ public class GraphActivity extends Activity {
 
     private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
        
-    int plotDataCount = 1000; //passed to sensor service then to recentsensordata. if we want to overrride defaults in sensorservice
+    int plotDataCount = 2000; //passed to sensor service then to recentsensordata. if we want to overrride defaults in sensorservice
     RecentSensorData recentData = new RecentSensorData();
         
 	private final String ACCELEROMETER_TAG 	= "accelerometer";

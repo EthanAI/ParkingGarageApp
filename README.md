@@ -65,10 +65,20 @@ App to automatically determine the floor you parked out. GPS is not helpful, so 
     		Subtract out the final result to zero it, so we can eliminate any weird partial turning done before then
     		-Ignore weird phone movements since working backwards. 
     		Subtract out gravity from accelerometer, build cumulative values. See if we can ID stopping
+    		+use compass bearing to identify entry to garage (can we manage varying phone positions?)
+    		+assume confusion means first floor
+    		99 final signal strength means in garage?
+    			Check for correlation
+    		Record gps altitude? 
+    		Record gps bearing?
+    		+Increase GPS update rate
+    		Sync all sensors to single line? 
+    		+orientation only 5x per second. Fix it
+    		Acceleration seems not useful. y is acceleration? (who knows, phone can move)
         	
 	Bugs:
 		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
-        	
+        Signal strength seems to be recording after the sensors should be turned off.
     	
         
         

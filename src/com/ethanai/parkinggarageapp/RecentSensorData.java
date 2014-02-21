@@ -24,7 +24,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	private static final long serialVersionUID = 5721779411217090251L;
 	public int historyLength = 100;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
-    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss"; //implement this eventually for pretty date recording
+    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm.ss"; //implement this eventually for pretty date recording
     
     public Date initialDate; //date this structure initialized. 
 	public ArrayList<AccelerometerReading> accRecent = new ArrayList<AccelerometerReading>();
@@ -35,7 +35,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public ArrayList<DerivedOrientation> orientRecent = new ArrayList<DerivedOrientation>(); //will be dated with the time the two sensor readings got merged (here)
 	
 	//headers for each data type:
-    public String orientHeader = "Time, location, acc, distance, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
+    public String orientHeader = "Time, location, acc, distance, GPSbearing, GPSaltitude, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
     public String accHeader = "Time, location, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
     public String magnHeader = "Date, location, x, y, z\n";
     public String compassHeader = "Date, location, x, y, z, total, accuracy\n";
@@ -196,16 +196,19 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				pitchInDegrees = Math.toDegrees(orientationMatrix[1]);
 				rollInDegrees = Math.toDegrees(orientationMatrix[2]);
 				inclinationInDegrees = Math.toDegrees(SensorManager.getInclination(inclinationMatrix));
-				updateTurnHistory(azimuthInDegrees);
-				updateCurrentFloor();
+				totalTurnDegrees = updateTurnDegrees(azimuthInDegrees);
+				parkedFloor = DataAnalyzer.getCurrentFloor(totalTurnDegrees);
+				//set the parking time too
+				parkedDateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date());
 			}
 		}
 		
-		public void updateTurnHistory(double azimuthInDegrees) {
+		public double updateTurnDegrees(double azimuthInDegrees) {
+			double newTotal;
 			if(orientRecent == null || orientRecent.size() == 0) { //if we're the first record, initialize at zero
-				totalTurnDegrees = 0;
+				newTotal = 0;
 			} else {
-				totalTurnDegrees = orientRecent.get(orientRecent.size() - 1).totalTurnDegrees; //initialize with previous total
+				newTotal = orientRecent.get(orientRecent.size() - 1).totalTurnDegrees; //initialize with previous total
 				double previousAzimuth = orientRecent.get(orientRecent.size() - 1).azimuthInDegrees;
 				//compensate for possible crossing the South line (-180 to +180)
 				if((azimuthInDegrees - previousAzimuth) < -180) {
@@ -213,7 +216,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				} else if ((azimuthInDegrees - previousAzimuth) > 180) {
 					azimuthInDegrees -= 360;
 				}
-				totalTurnDegrees += azimuthInDegrees - previousAzimuth;
+				newTotal += azimuthInDegrees - previousAzimuth;
 								
 				/*
 				 * case 1. go from 0 to -10. now - old = -10 good
@@ -224,14 +227,36 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				 *  if delta > 180 degrees, subtract 360 from the new number. 170 - 360 = -190. -190 - -175 = -15
 				 */
 			}
+			return newTotal;
 		}
 		
-		public void updateCurrentFloor() {
-			float quarterTurnCount = (float) (totalTurnDegrees / 90);
+
+		
+		//Output converts degrees into quarter turns. Easier to eyeball. Also turn convention switched to my preference
+		public String toFormattedString() {
+			return "Date: " + dateString + ", " +
+					UserLocationManager.getGpsString(location) + "," +
+	                Double.toString(azimuthInDegrees) + "," + 
+	                Double.toString(pitchInDegrees) + "," +
+	                Double.toString(rollInDegrees) + "," +
+	                Double.toString(inclinationInDegrees) + "," +
+	                Double.toString(totalTurnDegrees * -1) + "," +
+	                Double.toString(totalTurnDegrees / -90) +
+	                "\n";
+		}
+		
+	}
+	
+	static class DataAnalyzer {
+		public static float quarterTurnCount;
+		static String getCurrentFloor(double totalTurnDegrees) {
+			String parkedFloor = "";
+			quarterTurnCount = (float) (totalTurnDegrees / 90);
 			//TODO create array of pairs with border of turns to reach that floor and that floor's name. In future make this adaptable
 			//peel off final parking the car turn (could be left or right, but doesn't change your floor any)
 				//hardcoded for now. My building only lets compact cars park on the right
-			quarterTurnCount -= 1;
+			removeFidgiting();
+			removeParkTurn();
 			if(quarterTurnCount < -1) {
 				parkedFloor = "1?";
 			} else if (quarterTurnCount < 1) {
@@ -248,24 +273,24 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				parkedFloor = "4";
 			}
 			
-			//set the parking time too
-			parkedDateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date());
+			return parkedFloor;
 		}
 		
-		//Output converts degrees into quarter turns. Easier to eyeball. Also turn convention switched to my preference
-		public String toFormattedString() {
-			return dateString + ", " +
-					locationString + ", " +
-					Float.toString(gpsAccuracy) + "," +
-					Float.toString(distance) + "," +
-	                Double.toString(azimuthInDegrees) + "," + 
-	                Double.toString(pitchInDegrees) + "," +
-	                Double.toString(rollInDegrees) + "," +
-	                Double.toString(inclinationInDegrees) + "," +
-	                Double.toString(totalTurnDegrees * -1) + "," +
-	                Double.toString(totalTurnDegrees / -90) +
-	                "\n";
+		//remove the last turn
+		//naieve implementation for now
+		private static void removeParkTurn() {
+			//identify continual turn threshold/time/speed/localmean
+			//once last one is identified, remove that amount (could be left, right, 90 stall/angled stall, multiple movements
+			//for now always assume a right quarter turn into the stall
+			quarterTurnCount -= 1; //note data convention is opposite of toString() and csv graphed data. Dont get mixed up
 		}
+		
+		//curently no effects
+		private static void removeFidgiting() {
+			//quarterTurnCount = quarterTurnCount;
+		}
+		
+		
 		
 	}
 	
@@ -364,18 +389,18 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	        	zDel = 0;
 	        	magDel = 0;
 	        } else {
-	        	xDel = Math.abs(accRecent.get(accRecent.size() - 1).x - x);
-	            yDel = Math.abs(accRecent.get(accRecent.size() - 1).y - y);
-	            zDel = Math.abs(accRecent.get(accRecent.size() - 1).z - z);
-	            magDel = Math.abs(accRecent.get(accRecent.size() - 1).mag - mag);
+	        	xDel = accRecent.get(accRecent.size() - 1).x - x;
+	            yDel = accRecent.get(accRecent.size() - 1).y - y;
+	            zDel = accRecent.get(accRecent.size() - 1).z - z;
+	            magDel = accRecent.get(accRecent.size() - 1).mag - mag;
 	
-	            if (xDel < ACCELEROMETER_NOISE) 
+	            if (Math.abs(xDel) < ACCELEROMETER_NOISE) 
 	            	xDel = (float)0.0;
-	            if (yDel < ACCELEROMETER_NOISE) 
+	            if (Math.abs(yDel) < ACCELEROMETER_NOISE) 
 	            	yDel = (float)0.0;
-	            if (zDel < ACCELEROMETER_NOISE) 
+	            if (Math.abs(zDel) < ACCELEROMETER_NOISE) 
 	            	zDel = (float)0.0;
-	            if (magDel < ACCELEROMETER_NOISE) 
+	            if (Math.abs(magDel) < ACCELEROMETER_NOISE) 
 	            	magDel = (float)0.0;
 	        } 
 		}

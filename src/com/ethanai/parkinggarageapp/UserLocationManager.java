@@ -82,16 +82,32 @@ public class UserLocationManager {
 		bestLocation = lastKnownLocation;
 
 		return bestLocation;
+		
+		/* spare code
+		 List<String> getAllProviders ()
+		 public void requestSingleUpdate (String provider, PendingIntent intent)
+		 requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,this) 
+		 
+		 http://android-developers.blogspot.com/2011/06/deep-dive-into-location.html
+		 */
 	}
 	
 	public static float getDistanceFromHome() {
+		return getDistanceFromHome(getLocation());
+	}
+	
+	public static float getDistanceFromHome(Location manualLocation) {
 		//if(getLocation())
 		//Log.i("GarageAppGPS", locationString);
-		return getLocation().distanceTo(homeLocation);
+		return manualLocation.distanceTo(homeLocation);
 	}
 	
 	public static String getLocationCoordinates() {
-		Location myLocation = getLocation();
+		return getLocationCoordinates(getLocation());
+	}
+	
+	public static String getLocationCoordinates(Location manualLocation) {
+		Location myLocation = manualLocation;
 		String locationString = myLocation.getLatitude() + " " + myLocation.getLongitude();
 		Log.i("GarageAppGPS", locationString);
 		return locationString;
@@ -99,6 +115,14 @@ public class UserLocationManager {
 	
 	public static boolean isAtHome() {
 		return (getLocation().distanceTo(homeLocation) < matchDistance);
+	}
+	
+	public static String getGpsString() {
+		return getLocationCoordinates() + "," + getDistanceFromHome() + "," + getLocation().getBearing() + "," + getLocation().getAltitude();
+	}
+	
+	public static String getGpsString(Location manualLocation) {
+		return getLocationCoordinates(manualLocation) + "," + manualLocation.getAccuracy() + "," + getDistanceFromHome(manualLocation) + "," + manualLocation.getBearing() + "," + manualLocation.getAltitude();
 	}
 
 }

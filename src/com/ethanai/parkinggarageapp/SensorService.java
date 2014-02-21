@@ -56,7 +56,7 @@ public class SensorService extends Service implements SensorEventListener {
     private File orientFile = null; //hold orientation derived from accelerometer and magnetic fields
     private File signalFile = null;
    
-    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss";
+    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm.ss";
 	private String FILE_DATE_FORMAT_STRING = "yyyy-MM-dd HH.mm";
 
 	private int maxReadingHistoryCount = 100;
@@ -147,6 +147,8 @@ public class SensorService extends Service implements SensorEventListener {
 		reportParkedFloor();
 		
 		mSensorManager.unregisterListener(this);
+		((TelephonyManager)getSystemService(TELEPHONY_SERVICE))
+			.listen(psListener, PhoneStateListener.LISTEN_NONE); //unregister the phone state listener
 		//unregisterReceiver(receiver);
 	}
 	

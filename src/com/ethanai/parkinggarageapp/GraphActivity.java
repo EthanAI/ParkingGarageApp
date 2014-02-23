@@ -58,6 +58,8 @@ public class GraphActivity extends Activity {
 	private final String ORIENTATION_TAG 	= "orientation";
 	private final String COMPASS_TAG 		= "compass";
 	private final String PRESSURE_TAG 		= "pressure";
+	
+	private LocalBroadcastManager lbManager; //only handles messages sent from this app
     
        	
 	//http://stackoverflow.com/questions/8802157/how-to-use-localbroadcastmanager
@@ -98,13 +100,14 @@ public class GraphActivity extends Activity {
 	    TextView tvTest = (TextView) findViewById(R.id.testField);
 	    tvTest.setText("0.0"); //recentEntries.get(recentEntries.size() - 1).toString());
 			
-	    //listeners are so we can hear when the sensor service updates so we can update our graph view. A better way to communicate?
+	    //listeners are so we can hear when the sensor service updates so we can update our graph view. 
 	    //need to list each term we are listening for here
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(ACCELEROMETER_TAG));
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(MAGNETIC_TAG));
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(ORIENTATION_TAG));
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(COMPASS_TAG));
-		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(PRESSURE_TAG));	
+	    lbManager = LocalBroadcastManager.getInstance(getApplicationContext());
+	    lbManager.registerReceiver(mMessageReceiver, new IntentFilter(ACCELEROMETER_TAG));
+	    lbManager.registerReceiver(mMessageReceiver, new IntentFilter(MAGNETIC_TAG));
+	    lbManager.registerReceiver(mMessageReceiver, new IntentFilter(ORIENTATION_TAG));
+	    lbManager.registerReceiver(mMessageReceiver, new IntentFilter(COMPASS_TAG));
+		lbManager.registerReceiver(mMessageReceiver, new IntentFilter(PRESSURE_TAG));	
 		
 	}
 	

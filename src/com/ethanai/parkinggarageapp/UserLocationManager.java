@@ -72,10 +72,9 @@ public class UserLocationManager {
 		//locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
 		//locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 
-		String locationProvider = LocationManager.NETWORK_PROVIDER;
 		// Or, use GPS location data:
-		// String locationProvider = LocationManager.GPS_PROVIDER;
-		Location lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
+		//Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 		Log.i("GarageAppGPS", lastKnownLocation.toString());
 		
 		//insert kung fu here to check different providers and times to make sure we have an accurate location

@@ -75,18 +75,23 @@ public class DataAnalyzer {
 		
 		//Intensity threshold - work back from end, until we find a left turn
 		float turnThreshold = 0.75f; //threshold 75% of a turn will be considered enough that a weak left turn will trigger end of right turn chain
-		float leftDelta = 0;
-		float minTurnCount = turnDegreesArray.get(turnDegreesArray.size()-1);
-		for(int i = turnDegreesArray.size() - 1; i > 0 && leftDelta < turnThreshold; i--) { //iterate back from the end (time of parking)
+		float leftDeltaCount = 0;
+		float minTurnCount = turnDegreesArray.get(turnDegreesArray.size()-1) / 90;
+		float smoothingThreshold = 0.2f;
+		for(int i = turnDegreesArray.size() - 1; i > 0 && leftDeltaCount < turnThreshold; i--) { //iterate back from the end (time of parking)
 			float quarterTurnCount = (float) (turnDegreesArray.get(i) / 90);
 			if(quarterTurnCount < minTurnCount) {
 				minTurnCount = quarterTurnCount;
 			}
 			//higher values are more 'right'. 
 			//As we subtract the right turns away, the turnCount should go down. If our new turncount grows, we must have subtracted a left turn.
-			leftDelta = quarterTurnCount - minTurnCount;
+				//limit how much a single data point can move us towards the threshold
+			float totalNewChange = (quarterTurnCount - minTurnCount) - leftDeltaCount;
+			leftDeltaCount += totalNewChange < smoothingThreshold ? totalNewChange : smoothingThreshold;
+			
 			totalDegreesRight = turnDegreesArray.get(turnDegreesArray.size()-1) - turnDegreesArray.get(i);
-			System.out.println(i + "\tmin " + minTurnCount + "\tdel "+ leftDelta + "\tturns " + totalDegreesRight/90 + "\tdegree " + turnDegreesArray.get(i));
+			// + 2 for he headers + 1 for orindal counting. total + 3 to match with exel data
+			System.out.println(i+3 + "\tdel "+ leftDeltaCount + "\tmin " + minTurnCount + "\tturnCount " + quarterTurnCount + "\tturns " + totalDegreesRight/90 + "\tdegree " + turnDegreesArray.get(i));
 		}
 		rightTurnCount = totalDegreesRight/90 + 0.5f*turnThreshold; // + 1/2 since we measured maximums, not averages
 		return rightTurnCount;

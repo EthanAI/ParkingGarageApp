@@ -79,7 +79,7 @@ public class GraphActivity extends Activity {
 		    } else if (sensorType.equals(MAGNETIC_TAG)) {
 		    		    	
 		    } else if (sensorType.equals(ORIENTATION_TAG)) {
-		    	TextView tvTest = (TextView) findViewById(R.id.testField);
+		    	TextView tvTest = (TextView) findViewById(R.id.floorField);
 		    	tvTest.setText("Floor: " + recentData.parkedFloor);
 		    	updateChart();	
 		    } else if (sensorType.equals(COMPASS_TAG)) {
@@ -97,8 +97,8 @@ public class GraphActivity extends Activity {
         setContentView(R.layout.activity_graph);
 		
 		//make this poll sensor service status and verify if it is running. May need some kind of trigger to repaint
-	    TextView tvTest = (TextView) findViewById(R.id.testField);
-	    tvTest.setText("0.0"); //recentEntries.get(recentEntries.size() - 1).toString());
+	    //TextView tvTest = (TextView) findViewById(R.id.floorField);
+	    //tvTest.setText("0.0"); //recentEntries.get(recentEntries.size() - 1).toString()); //don't show anything until we're getting data. 
 			
 	    //listeners are so we can hear when the sensor service updates so we can update our graph view. 
 	    //need to list each term we are listening for here

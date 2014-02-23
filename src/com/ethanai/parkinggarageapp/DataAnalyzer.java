@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 
@@ -14,7 +15,19 @@ import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
  * For now, just let them select 'Right Turn structure' 'Left turn structure' or 'Split' and have split go to TBC screen
  */
 public class DataAnalyzer {
-	ArrayList<Float> turnDegreesArray = new ArrayList<Float>();
+	ArrayList<Float> turnDegreesArray = new ArrayList<Float>(); //the data used to determine our floor
+	//structure to hold all the borders between floors for this particular garages
+	ArrayList<FloorBorder> floorBorders = new ArrayList<FloorBorder>(
+			Arrays.asList(
+					new FloorBorder(-1, -1, "Low?"),
+					new FloorBorder(1, 1, "1 Default"),
+					new FloorBorder(3, 2, "2"),
+					new FloorBorder(5, 2.5f, "2B"),
+					new FloorBorder(7, 3, "3"),
+					new FloorBorder(9, 3.5f, "3B"),
+					new FloorBorder(11, 4, "4"),
+					new FloorBorder(13, 99, "High?")
+					)); 
 
 	//for testing from csvs
 	private final int DEGREE_COL = 10;
@@ -45,22 +58,14 @@ public class DataAnalyzer {
 			//hardcoded for now. My building only lets compact cars park on the right
 		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
 		quarterTurnCount += parkTurnCorrection();
-		System.out.println("Corrected Right Turns: " + quarterTurnCount);
+		int roundedTurnCount = Math.round(quarterTurnCount);
+		System.out.println("Corrected Right Turns: " + roundedTurnCount);
 		
-		if(quarterTurnCount < -1) {
-			parkedFloor = "1?";
-		} else if (quarterTurnCount < 1) {
-			parkedFloor = "1";
-		} else if (quarterTurnCount < 3) {
-			parkedFloor = "2";
-		} else if (quarterTurnCount < 5) {
-			parkedFloor = "2B";
-		} else if (quarterTurnCount < 7) {
-			parkedFloor = "3";
-		} else if (quarterTurnCount < 9) {
-			parkedFloor = "3B";
-		} else if (quarterTurnCount < 11) {
-			parkedFloor = "4";
+		//iterate through the floor borders until we find our first, minimum floor hit.
+		for(FloorBorder border : floorBorders) {
+			if(roundedTurnCount < border.maxTurns && parkedFloor == "") {
+				parkedFloor = border.floorString;
+			}
 		}
 		
 		return parkedFloor;
@@ -135,6 +140,19 @@ public class DataAnalyzer {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	class FloorBorder {
+		public int maxTurns; //max number of quarter turns before crossing to the next floor positive is right, negative is left
+		public float floorNum; //numerical representation of a floor
+		public String floorString; //text representation of a floor
+		
+		FloorBorder (int maxTurns, float floorNum, String floorString) {
+			this.maxTurns = maxTurns;
+			this.floorNum = floorNum;
+			this.floorString = floorString;
+		}
+		
 	}
 	
 	

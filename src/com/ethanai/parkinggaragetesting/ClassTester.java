@@ -15,29 +15,19 @@ public class ClassTester {
 				"2014-02-21 18.42 Unknown orientationReadings",
 				"2014-02-22 15.47 Unknown orientationReadings"};
 		
-		//testAll(pathB, fileName);
+		test(pathB, fileName);
 	
 		//test individual 
 		test(pathB, fileName[0]);
 	}
 	
-	public static void test(String path, String name) {	
-		DataAnalyzer myAnalyzer = new DataAnalyzer(
-				new File(path + name + ".csv"));
-		
-		System.out.println("Parked Floor is: " + myAnalyzer.getCurrentFloor());
-		System.out.println(name + ".csv");
-		System.out.println();
 	
-	
-	}
-	
-	public static void testAll(String path, String fileName[]) {
+	public static void test(String path, String... fileName) {
 		for(String name : fileName) {
-			System.out.println(name + ".csv");
 			DataAnalyzer myAnalyzer = new DataAnalyzer(
 				new File(path + name + ".csv"));
 			System.out.println("Parked Floor is: " + myAnalyzer.getCurrentFloor());
+			System.out.println(name + ".csv");
 			System.out.println();
 		}
 	}

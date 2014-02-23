@@ -91,7 +91,7 @@ public class DataAnalyzer {
 			
 			totalDegreesRight = turnDegreesArray.get(turnDegreesArray.size()-1) - turnDegreesArray.get(i);
 			// + 2 for he headers + 1 for orindal counting. total + 3 to match with exel data
-			System.out.println(i+3 + "\tdel "+ leftDeltaCount + "\tmin " + minTurnCount + "\tturnCount " + quarterTurnCount + "\tturns " + totalDegreesRight/90 + "\tdegree " + turnDegreesArray.get(i));
+			//System.out.println(i+3 + "\tdel "+ leftDeltaCount + "\tmin " + minTurnCount + "\tturnCount " + quarterTurnCount + "\tturns " + totalDegreesRight/90 + "\tdegree " + turnDegreesArray.get(i));
 		}
 		rightTurnCount = totalDegreesRight/90 + 0.5f*turnThreshold; // + 1/2 since we measured maximums, not averages
 		return rightTurnCount;

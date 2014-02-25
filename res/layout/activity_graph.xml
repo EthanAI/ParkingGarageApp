@@ -29,22 +29,41 @@
 				android:layout_width="wrap_content"
 				android:text="Stop"
 				android:onClick="stopSensorService" />
-		</TableRow>
+		</TableRow>        
 	</TableLayout>
 	
-	<TextView
-        android:paddingTop="0dip"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textSize="30sp"
-        android:gravity="center"
-        android:id="@+id/floorField" />
-           
-    <LinearLayout 
+    <LinearLayout
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal" >
+
+	    <TextView
+	        android:id="@+id/turnField"
+	        android:layout_width="0dp"
+	        android:layout_weight="1"
+	        android:layout_height="wrap_content"
+	        android:layout_gravity="left"
+	        android:background="#88FF0000"/>
+	
+	    <TextView
+	        android:id="@+id/floorField"
+	        android:layout_width="0dp"
+	        android:layout_weight="1"
+	        android:layout_height="wrap_content"
+	        android:layout_gravity="right" 
+	        android:textSize="20sp"
+	        android:background="#8800FF00"/>
+	
+	</LinearLayout>
+    
+
+	
+	 <LinearLayout 
         android:id="@+id/chart" 
         android:orientation="horizontal"
         android:layout_width="fill_parent" 
         android:layout_height="0dip" 
         android:layout_weight="1"/>
+
 
 </LinearLayout>

@@ -85,8 +85,12 @@ public class GraphActivity extends Activity {
 		    } else if (sensorType.equals(MAGNETIC_TAG)) {
 		    		    	
 		    } else if (sensorType.equals(ORIENTATION_TAG)) {
-		    	TextView tvTest = (TextView) findViewById(R.id.floorField);
-		    	tvTest.setText("Floor: " + recentData.parkedFloor);
+		    	TextView tvTurn = (TextView) findViewById(R.id.turnField);
+		    	tvTurn.setText("Raw Turns: " + recentData.turnConsecutiveCount);
+		    	
+		    	TextView tvFloor = (TextView) findViewById(R.id.floorField);
+		    	tvFloor.setText("Floor: " + recentData.parkedFloor);
+		    	
 		    	updateChart();	
 		    } else if (sensorType.equals(COMPASS_TAG)) {
 		    	

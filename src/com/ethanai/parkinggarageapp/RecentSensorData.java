@@ -47,6 +47,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	private boolean isOrientationNew = false; //flag to identify if orientation record is fresh or not
 		
 	//absolute final result... what floor we parked on!
+	public float  turnConsecutiveCount;
 	public String parkedFloor = "";
 	public String parkedDateString ="";
 
@@ -211,6 +212,12 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				
 				if(orientRecent.size() > 1) {
 					parkedFloor = DataAnalyzer.getCurrentFloorEstimate(orientRecent);  
+					
+					//for viewing turncount during development.
+					ArrayList<Float> turnValues = new ArrayList<Float>();
+					for(DerivedOrientation orientationObject : orientRecent)
+						turnValues.add((float) orientationObject.totalTurnDegrees);
+					turnConsecutiveCount = DataAnalyzer.getConsecutiveRightTurns(turnValues);
 				} else {
 					parkedFloor = "0";
 				}
@@ -385,5 +392,5 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	                "\n";
 		}		
 	}
-
+	
 }

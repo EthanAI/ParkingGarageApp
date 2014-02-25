@@ -9,20 +9,25 @@
         android:layout_height="wrap_content"
         android:stretchColumns="*">
         <TableRow>
+            <Button 
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Delete CSVs"
+                android:onClick="deleteFiles" />
 			<Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="TextView"
+				android:text="Text"
 				android:onClick="changeToTextActivity" />
 			<Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="StartService"
+				android:text="Start"
 				android:onClick="startSensorService" />
 			<Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="StopService"
+				android:text="Stop"
 				android:onClick="stopSensorService" />
 		</TableRow>
 	</TableLayout>

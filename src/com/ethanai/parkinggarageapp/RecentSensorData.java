@@ -148,7 +148,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String toFormattedString() {
-			return dateString + ", " +
+			return "Date: " + dateString + ", " +
 					locationString + ", " +
 	                Float.toString(x) + "," + 
 	                Float.toString(y) + "," +
@@ -280,7 +280,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String toFormattedString() {
-			return dateString + ", " +
+			return "Date: " + dateString + ", " +
 	                Float.toString(x) + "," + 
 	                Float.toString(y) + "," +
 	                Float.toString(z) + "," +
@@ -299,7 +299,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String toFormattedString() {
-			return dateString + ", " +
+			return "Date: " + dateString + ", " +
 	                Float.toString(humidPercent) + 
 	                "\n";
 		}
@@ -317,7 +317,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String toFormattedString() {
-			return dateString + ", " +
+			return "Date: " + dateString + ", " +
 	                Float.toString(pressure) + 
 	                "\n";
 		}
@@ -372,7 +372,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String toFormattedString() {
-			return dateString + ", " +
+			return "Date: " + dateString + ", " +
 					locationString + ", " +
 	                Float.toString(x) + ", " +
 	                Float.toString(y) + ", " +

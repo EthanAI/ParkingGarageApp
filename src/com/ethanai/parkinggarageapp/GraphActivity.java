@@ -1,5 +1,7 @@
 package com.ethanai.parkinggarageapp;
 
+import java.io.File;
+
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.model.TimeSeries;
@@ -16,6 +18,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -23,6 +26,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 //TODO add reciever for orientation also add that graph, probably our important one
 @SuppressLint("SimpleDateFormat")
@@ -250,6 +254,16 @@ public class GraphActivity extends Activity {
   /*
    * Function for the buttons
    */
+    public void deleteFiles(View view) {
+    	//TODO make this softcoded once user settings is in a final implementation
+    	String folderName = "Documents";
+    	String sdCard = Environment.getExternalStorageDirectory().toString(); //get root of external storage
+        File dir = new File(sdCard, folderName);
+    	for(File file: dir.listFiles()) 
+    		file.delete();
+    	Toast.makeText(getBaseContext(), "CSVs deleted.", Toast.LENGTH_SHORT).show();
+    }
+    
 	public void changeToTextActivity(View view) {
 	    Intent intent = new Intent(GraphActivity.this, TextActivity.class);
 	    startActivity(intent);

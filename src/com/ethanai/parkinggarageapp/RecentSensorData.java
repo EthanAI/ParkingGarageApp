@@ -45,9 +45,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	private SensorEvent accRecentEvent = null;
 	private SensorEvent magnRecentEvent = null;
 	private boolean isOrientationNew = false; //flag to identify if orientation record is fresh or not
-	
-	private DataAnalyzer myAnalyzer; //for interpreting sensordata to get parking floor. May become resource intensive in the future
-	
+		
 	//absolute final result... what floor we parked on!
 	public String parkedFloor = "";
 	public String parkedDateString ="";
@@ -212,8 +210,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				totalTurnDegrees = updateTurnDegrees(azimuthInDegrees);
 				
 				if(orientRecent.size() > 1) {
-					myAnalyzer = new DataAnalyzer(orientRecent); //load up our most recent data. wasteful?
-					parkedFloor = myAnalyzer.getCurrentFloor();
+					parkedFloor = DataAnalyzer.getCurrentFloorEstimate(orientRecent);  
 				} else {
 					parkedFloor = "0";
 				}

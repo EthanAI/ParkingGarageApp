@@ -12,9 +12,12 @@ public class UserLocationManager {
 	
 	//Make list of locations with all the relevant data
 	//temp hardcoded home location
-	public static Location homeLocation = new Location("hardcoded");
+	//public Location homeLocation = new Location("hardcoded");
+	public static final String HOME_TAG = "Home";
+	public static Location homeLocation; 
 	
-	public static void initialize(Context newContext) {
+	public static void initialize(Context newContext) {	
+		homeLocation = UserSettings.getUserLocation(HOME_TAG).location;
 		setContext(newContext);
 		setHomeLocation();
 	}
@@ -73,8 +76,8 @@ public class UserLocationManager {
 		//locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
 
 		// Or, use GPS location data:
-		//Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-		Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+		//Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 		Log.i("GarageAppGPS", lastKnownLocation.toString());
 		
 		//insert kung fu here to check different providers and times to make sure we have an accurate location

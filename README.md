@@ -75,9 +75,15 @@ App to automatically determine the floor you parked out. GPS is not helpful, so 
     		+orientation only 5x per second. Fix it
     		Acceleration seems not useful. y is acceleration? (who knows, phone can move)
         	
+        	+Use GPS speed to activate disactivate if no BT in car 
+  
 	Bugs:
 		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
-        Signal strength seems to be recording after the sensors should be turned off.
-    	
+        xSignal strength seems to be recording after the sensors should be turned off.
+    	+Strange jumps sometimes
+    		Maybe problems with low refresh rate?
+    		Add safety override to:
+    			Rate of degree change
+    			Rate of azimuth change - 20 degree max per tick (0.2 s)
         
         

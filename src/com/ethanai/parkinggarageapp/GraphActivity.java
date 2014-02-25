@@ -28,6 +28,8 @@ import android.widget.TextView;
 @SuppressLint("SimpleDateFormat")
 public class GraphActivity extends Activity {
 	
+	public static UserSettings mySettings = new UserSettings(); //initialize the settings. Should only be one of this object ever. 
+	
     private GraphicalView mChart;
     
     private TimeSeries rotationCountSeries;

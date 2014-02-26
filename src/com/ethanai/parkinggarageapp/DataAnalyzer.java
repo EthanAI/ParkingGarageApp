@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
+import com.ethanai.parkinggarageapp.RecentSensorData.PhoneLocation;
 import com.ethanai.parkinggarageapp.UserSettings.FloorBorder;
 import com.ethanai.parkinggarageapp.UserSettings.UserLocation;
 
@@ -38,17 +39,28 @@ public class DataAnalyzer {
 		readTurnDegreesFromFile(dataFile);
 	}
 	*/
-
+	
 	/*
 	 * Doesn't hold the full dataset in memory so just an estimate
 	 */
+	public static String getCurrentFloorEstimate(RecentSensorData recentData) {
+		ArrayList<Float> arrayList = new ArrayList<Float>();
+		for(int i = 0; i < recentData.orientRecent.size()-1; i++) {
+			arrayList.add((float)recentData.orientRecent.get(i).totalTurnDegrees);
+		}
+		return getCurrentFloor(arrayList, recentData.newestPhoneLocation);
+	}
+	
+	/*
 	public static String getCurrentFloorEstimate(ArrayList<DerivedOrientation> orientRecent) {
 		ArrayList<Float> arrayList = new ArrayList<Float>();
 		for(int i = 0; i < orientRecent.size()-1; i++) {
 			arrayList.add((float)orientRecent.get(i).totalTurnDegrees);
 		}
-		return getCurrentFloor(arrayList);
+		PhoneLocation parkedPhoneLocation = new PhoneLocation(orientRecent.get(orientRecent.size() - 1).location);
+		return getCurrentFloor(arrayList, parkedPhoneLocation);
 	}
+	*/
 	
 	/*
 	 * Uses the data stored in the csv, most likely to be correct
@@ -58,8 +70,13 @@ public class DataAnalyzer {
 	}
 	
 	
-	public static String getCurrentFloor(ArrayList<Float> turnDegreesArray) {
-		String currentLocationName = UserLocationManager.getLocationName();
+	public static String getCurrentFloor(ArrayList<Float> turnDegreesArray, PhoneLocation... phoneLocation) {
+		String currentLocationName;
+		if(null != phoneLocation) {
+			currentLocationName = phoneLocation[0].getLocationName();
+		} else {
+			currentLocationName = "Home";
+		}
 		UserLocation userLocation = UserSettings.getUserLocation(currentLocationName);
 		ArrayList<FloorBorder> floorBorders = userLocation.floorBorders;
 		

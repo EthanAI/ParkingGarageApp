@@ -7,13 +7,16 @@ import android.hardware.SensorEvent;
 
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.location.LocationManager;
 
 import java.io.Serializable;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 //import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 //import java.util.Date;
 import java.util.Date;
+import java.util.TimeZone;
 
 @SuppressLint("SimpleDateFormat")
 public class RecentSensorData implements Serializable { //must specify serializable so it can be passed by our intents neatly
@@ -24,7 +27,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	private static final long serialVersionUID = 5721779411217090251L;
 	public int historyLength = 100;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
-    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm.ss"; //implement this eventually for pretty date recording
+	public DateFormat format = new SimpleDateFormat("'Date 'yyyy-MM-dd HH:mm:ss.SSS");
     
     public Date initialDate; //date this structure initialized. 
 	public ArrayList<AccelerometerReading> accRecent = new ArrayList<AccelerometerReading>();
@@ -33,53 +36,62 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public ArrayList<HumidityReading> humidRecent = new ArrayList<HumidityReading>();
 	public ArrayList<PressureReading> pressRecent = new ArrayList<PressureReading>();
 	public ArrayList<DerivedOrientation> orientRecent = new ArrayList<DerivedOrientation>(); //will be dated with the time the two sensor readings got merged (here)
+	public ArrayList<PhoneLocation> gpsRecent = new ArrayList<PhoneLocation>();
+	public ArrayList<PhoneLocation> networkRecent = new ArrayList<PhoneLocation>();
 	
 	//headers for each data type:
-    public String orientHeader = "Time, location, acc, distance, GPSbearing, GPSaltitude, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
-    public String accHeader = "Time, location, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
-    public String magnHeader = "Date, location, x, y, z\n";
-    public String compassHeader = "Date, location, x, y, z, total, accuracy\n";
-	public String pressureHeader = "Date, location, Pressure(millibars)\n";
+    public final String orientHeader = "Time, lat, long, accuracy, distance, bearing, altitude, speed, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
+    public final String accHeader = "Time, lat, long, accuracy, distance, bearing, altitude, speed, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
+    public final String magnHeader = "Date, lat, long, accuracy, distance, bearing, altitude, speed, x, y, z\n";
+    public final String compassHeader = "Date, lat, long, accuracy, distance, bearing, altitude, speed, x, y, z, total, accuracy\n";
+	public final String pressureHeader = "Date, lat, long, accuracy, distance, bearing, altitude, speed, Pressure(millibars)\n";
+	public final String locationHeader = "Date, lat, long, accuracy, distance, bearing, altitude, speed \n";
 
 	//parts needed to be collected before creating a new DerivedOrientation
 	private SensorEvent accRecentEvent = null;
 	private SensorEvent magnRecentEvent = null;
 	private boolean isOrientationNew = false; //flag to identify if orientation record is fresh or not
 		
-	//absolute final result... what floor we parked on!
+	//absolute final result... what floor we parked on! Also used for running current location/status
 	public float  turnConsecutiveCount;
 	public String parkedFloor = "";
 	public String parkedDateString ="";
+	public PhoneLocation newestPhoneLocation;
+	public final String HOME_TAG = "Home";
 
 	RecentSensorData() {
-		initialDate = new Date();  //date this structure initialized. Caller needs to be careful so this is close to the start of sensor polling   
+		initialDate = new Date();  //date this structure initialized. Caller needs to be careful so this is close to the start of sensor polling  
+		format.setTimeZone(TimeZone.getTimeZone("HST"));
 	}
 	
 	RecentSensorData(Date manualInitialDate) {
 		initialDate = manualInitialDate;
+		format.setTimeZone(TimeZone.getTimeZone("HST"));
 	}
 	
 	RecentSensorData(int newHistoryLength) {
 		historyLength = newHistoryLength;
+		format.setTimeZone(TimeZone.getTimeZone("HST"));
 	}
 	
 	/*
 	 * Call the constructor for whatever sensor type made this, build a sensor reading object
 	 * Store object in the appropriate ArrayList
 	 */
-	public <E> void addUpToLimit(String dateString, Location location, SensorEvent event) {
+	public <E> void addUpToLimit(PhoneLocation phoneLocation, SensorEvent event) {
+		Location location = phoneLocation.location;
 		Sensor sensor = event.sensor;     
 		int sensorType = sensor.getType();
 		
 		switch (sensorType) {
 		case Sensor.TYPE_ACCELEROMETER:
-        	addUpToLimit(accRecent, new AccelerometerReading(dateString, location, event));  
+        	addUpToLimit(accRecent, new AccelerometerReading(location, event));  
         	
         	//also try to create an orientation data record
         	accRecentEvent = event; //add this sensor event or overwrite stale data
         	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we have both parts, build an orientation record and add it
-        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()), 
-        				location, accRecentEvent, magnRecentEvent));
+        		addUpToLimit(orientRecent, new DerivedOrientation(location, accRecentEvent, magnRecentEvent));
+        		updateParkingData();
         		isOrientationNew = true;  //flag that this most recent accelerometer reading was used for calculating a new orientation reading
         		accRecentEvent = null; // require new readings for both sensors before building another
         		magnRecentEvent = null;
@@ -87,13 +99,13 @@ public class RecentSensorData implements Serializable { //must specify serializa
         	break;
         		        	
 		case Sensor.TYPE_MAGNETIC_FIELD:
-        	addUpToLimit(magnRecent, new MagnetReading(dateString, location, event));
+        	addUpToLimit(magnRecent, new MagnetReading(location, event));
         	
         	//also try to create an orientation data record
         	magnRecentEvent = event; //add this sensor event or overwrite stale data
         	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we have both parts, build an orientation record and add it
-        		addUpToLimit(orientRecent, new DerivedOrientation(new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()), 
-        				location, accRecentEvent, magnRecentEvent));
+        		addUpToLimit(orientRecent, new DerivedOrientation(location, accRecentEvent, magnRecentEvent));
+        		updateParkingData();
         		isOrientationNew = true;   //flag that this most recent magnet reading was used for calculating a new orientation reading
         		accRecentEvent = null; // require new readings for both sensors before building another
         		magnRecentEvent = null;
@@ -101,18 +113,28 @@ public class RecentSensorData implements Serializable { //must specify serializa
         	break;
         	
 		case Sensor.TYPE_ROTATION_VECTOR:
-        	addUpToLimit(compassRecent, new CompassReading(dateString, event));
+        	addUpToLimit(compassRecent, new CompassReading(event));
         	break;
         	
 		case Sensor.TYPE_RELATIVE_HUMIDITY:
-        	addUpToLimit(humidRecent, new HumidityReading(dateString, event));
+        	addUpToLimit(humidRecent, new HumidityReading(event));
         	break;
         	
 		case Sensor.TYPE_PRESSURE:
-        	addUpToLimit(pressRecent, new PressureReading(dateString, event));
+        	addUpToLimit(pressRecent, new PressureReading(event));
         	break;
 		}
     }	
+	
+	//version for non-sensor data (gps records)
+	public void addUpToLimit(Location newLocation) {
+		if(newLocation.getProvider().equalsIgnoreCase(LocationManager.GPS_PROVIDER)) {
+			addUpToLimit(gpsRecent, new PhoneLocation(newLocation));
+		} else {
+			addUpToLimit(networkRecent, new PhoneLocation(newLocation));
+
+		}
+	}
 	
 	public <E> void addUpToLimit(ArrayList<E> arrayList, E newEntry) {
         if(arrayList != null && arrayList.size() == historyLength) {
@@ -129,6 +151,21 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		isOrientationNew = false;
 	}
 	
+	public void updateParkingData() {
+		if(orientRecent.size() > 1) {
+			parkedFloor = DataAnalyzer.getCurrentFloorEstimate(this);  
+			
+			//for viewing turncount during development.
+			ArrayList<Float> turnValues = new ArrayList<Float>();
+			for(DerivedOrientation orientationObject : orientRecent)
+				turnValues.add((float) orientationObject.totalTurnDegrees);
+			turnConsecutiveCount = DataAnalyzer.getConsecutiveRightTurns(turnValues);
+		} else {
+			parkedFloor = "0";
+		}
+		parkedDateString = format.format(new Date()); //set the parking time too
+	}
+	
 	class MagnetReading {
 		
 		public String dateString;
@@ -138,8 +175,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public float y;
 		public float z;
 		
-		MagnetReading(String dateString, Location location, SensorEvent event) {
-			this.dateString = dateString;
+		MagnetReading(Location location, SensorEvent event) {
+			this.dateString = format.format(event.timestamp);
 			this.location = location;
 			this.locationString = location.getLatitude() + " " + location.getLongitude();
 			this.x = event.values[0];
@@ -179,13 +216,13 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public double totalTurnDegrees; //naive implementation, will evolve into turn counts. 
 		
-		DerivedOrientation(String dateString, Location location, SensorEvent accEvent, SensorEvent magnEvent) {
-			this.dateString = dateString;
+		DerivedOrientation(Location location, SensorEvent accEvent, SensorEvent magnEvent) {
+			this.dateString = format.format(new Date());
 			this.location = location;
 			this.locationString = location.getLatitude() + " " + location.getLongitude();
 	    	
 			this.gpsAccuracy = location.getAccuracy();
-			this.distance = location.distanceTo(UserLocationManager.homeLocation);
+			this.distance = location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location); //get distance to home (for now its default for me)
 			
 			// Storage for Sensor readings. Need both present before orientation can be derived
 			float[] mGravity = new float[3]; //accelerometer
@@ -210,8 +247,9 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				inclinationInDegrees = Math.toDegrees(SensorManager.getInclination(inclinationMatrix));
 				totalTurnDegrees = updateTurnDegrees(azimuthInDegrees);
 				
+				/* this should happen in the recenData object, not in a DerivedOrientation object
 				if(orientRecent.size() > 1) {
-					parkedFloor = DataAnalyzer.getCurrentFloorEstimate(orientRecent);  
+					parkedFloor = DataAnalyzer.getCurrentFloorEstimate(newestPhoneLocation);  
 					
 					//for viewing turncount during development.
 					ArrayList<Float> turnValues = new ArrayList<Float>();
@@ -221,7 +259,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				} else {
 					parkedFloor = "0";
 				}
-				parkedDateString = new SimpleDateFormat(DATE_FORMAT_STRING).format(new Date()); //set the parking time too
+				parkedDateString = format.format(new Date()); //set the parking time too
+				*/
 			}
 		}
 		
@@ -255,7 +294,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//Output converts degrees into quarter turns. Easier to eyeball. Also turn convention switched to my preference
 		public String toFormattedString() {
 			return "Date: " + dateString + ", " +
-					UserLocationManager.getGpsString(location) + "," +
+					newestPhoneLocation.locationString + "," +
 	                Double.toString(azimuthInDegrees) + "," + 
 	                Double.toString(pitchInDegrees) + "," +
 	                Double.toString(rollInDegrees) + "," +
@@ -277,8 +316,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public float angle;
 		public float accuracy;
 		
-		CompassReading(String dateString, SensorEvent event) {
-			this.dateString = dateString;
+		CompassReading(SensorEvent event) {
+			this.dateString = format.format(event.timestamp);
 			this.x = event.values[0];
 			this.y = event.values[1];
 			this.z = event.values[2];
@@ -300,8 +339,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public String dateString;
 		public float humidPercent;
 		
-		HumidityReading(String dateString, SensorEvent event) {
-			this.dateString = dateString;
+		HumidityReading(SensorEvent event) {
+			this.dateString = format.format(event.timestamp);
 			this.humidPercent = event.values[0];
 		}
 		
@@ -318,8 +357,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public String dateString;
 		public float pressure;
 		
-		PressureReading(String dateString, SensorEvent event)  {
-			this.dateString = dateString;
+		PressureReading(SensorEvent event)  {
+			this.dateString = format.format(event.timestamp);
 			this.pressure = event.values[0];
 		}
 		
@@ -328,8 +367,6 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	                Float.toString(pressure) + 
 	                "\n";
 		}
-	
-	
 	}
 	
 	class AccelerometerReading {
@@ -347,8 +384,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public float magDel;	
 			
 		
-		AccelerometerReading(String dateString, Location location, SensorEvent event) {
-			this.dateString = dateString;
+		AccelerometerReading(Location location, SensorEvent event) {
+			this.dateString = format.format(event.timestamp);
 			this.location = location;
 			this.locationString = location.getLatitude() + " " + location.getLongitude();
 			x = event.values[0];
@@ -393,4 +430,47 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}		
 	}
 	
+	class PhoneLocation {
+		public String provider;
+		public Location location;
+		
+		public final int MATCH_DISTANCE = 150;
+		
+		public Date date;
+
+		public String dateString;
+		public String locationString;
+		
+		PhoneLocation (Location location) {
+			this.provider = location.getProvider();
+			this.location = location;
+			this.date = new Date(location.getTime());			
+			this.dateString = format.format(date);
+			this.locationString = getLocationString();
+					
+		}	
+
+		public String getLocationCoordinates() {
+			String locationString = location.getLatitude() + " " + location.getLongitude();
+			//Log.i("GarageAppGPS", locationString);
+			return locationString;
+		}
+		
+		public String getLocationName() {
+			if(isAtHome()) 
+				return HOME_TAG;
+			else
+				return getLocationCoordinates();
+		}
+		
+		public boolean isAtHome() {
+			return (location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location) < MATCH_DISTANCE);
+		}
+		
+		public String getLocationString() {
+			return location.getLatitude() + ", " + location.getLongitude() + ", " + location.getAccuracy() + ", " 
+					+ location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location) + ", " + location.getBearing() + ", " 
+					+ location.getAltitude() + ", " + location.getSpeed() + "\n";
+		}
+	}
 }

@@ -18,9 +18,6 @@ public class DaemonReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) { //maybe not final. create new context Context getBaseContext() and pass it
 		Log.i("BootReceiver", "Recieved something. " + intent.getAction());
 		myNotifier = new ParkingNotificationManager(context, null);
-		if(!UserLocationManager.isInitialized) {
-			UserLocationManager.initialize(context);
-		}
 		
 		if(intent.getAction() == Intent.ACTION_POWER_CONNECTED) {
 			Toast.makeText(context, "Power On!", Toast.LENGTH_SHORT).show();
@@ -32,13 +29,17 @@ public class DaemonReceiver extends BroadcastReceiver {
 				//Make 2nd deamon? Activate sensors when near home
 				//check GPS is not home
 			if(isCarDevice(intent)) {
-				//Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
+				Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
+				startSensors(context); //possibly this getting triggered multiple times by multiple bluetooth devices (if rebooted in the car?)
+				//need detailed GPS work complete with an array of geofences based on user settings
+				//How to get access to all that from boot? Most code in the SensorService service and that doesn't run at boot.
+				/*
 				if(UserLocationManager.isAtHome()) {
 					Toast.makeText(context, "At home, no need", Toast.LENGTH_LONG).show();
 				} else {
 					Toast.makeText(context, "Outside, Start Sensors", Toast.LENGTH_LONG).show();
-					startSensors(context); //possibly this getting triggered multiple times by multiple bluetooth devices (if rebooted in the car?)
 				}
+				*/
 			} else {
 				Toast.makeText(context, "Other BT Connection", Toast.LENGTH_SHORT).show();
 			}

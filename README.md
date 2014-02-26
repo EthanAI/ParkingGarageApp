@@ -1,7 +1,13 @@
 accelerometerApp
 ================
 
-App to automatically determine the floor you parked out. GPS is not helpful, so we use the accelerometers to judge how many times you've turned.
+App to automatically determine the floor you parked out. GPS is not helpful, so we use the sensors to judge how many times you've turned.
+
+Primary mechanics:
+1. Detect when driving starts
+2. Detect when nearing parking garage
+3. Detect when driving stops
+4. Use sensor data from 2 to 3 to analyze parked floor 
 
     Goals:
         xRead sensors

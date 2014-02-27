@@ -7,6 +7,7 @@ import android.location.Location;
 
 public class UserSettings {
 	public static ArrayList<UserLocation> allUserLocations = new ArrayList<UserLocation>();
+	public static int recentDataHistoryCount = 2000;
 	
 	UserSettings() {
 		for(int i = 0; i < 1; i++) { //TODO iterate through all of stored persistent data

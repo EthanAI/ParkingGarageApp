@@ -8,11 +8,11 @@
 
 package com.ethanai.parkinggarageapp;
 
-import java.io.BufferedReader;
+//import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
+//import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
@@ -34,9 +34,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
-import android.telephony.PhoneStateListener;
-import android.telephony.SignalStrength;
-import android.telephony.TelephonyManager;
+//import android.telephony.PhoneStateListener;
+//import android.telephony.SignalStrength;
+//import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -56,12 +56,12 @@ public class SensorService extends Service implements SensorEventListener {
     private File compassFile = null;
     //private File pressureFile = null;
     private File orientFile = null; //hold orientation derived from accelerometer and magnetic fields
-    private File signalFile = null;
+    //private File signalFile = null;
+    private File parkingLogFile = null;
    
-    private String DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm.ss";
 	private String FILE_DATE_FORMAT_STRING = "yyyy-MM-dd HH.mm";
 
-	private int maxReadingHistoryCount = 100;
+	//private int maxReadingHistoryCount = 100;
 	private RecentSensorData recentData; 
 
 	private final String ACCELEROMETER_TAG 	= "accelerometer";
@@ -90,14 +90,16 @@ public class SensorService extends Service implements SensorEventListener {
 		Toast.makeText(this, "Sensors Started", Toast.LENGTH_SHORT).show();
 
         //get info from the calling Activity
-        Bundle extras = intent.getExtras();
+        /*
+		Bundle extras = intent.getExtras();
         if(extras != null){
         	int newMax = extras.getInt("maxReadingHistoryCount");
         	if(newMax > 0) {
         		maxReadingHistoryCount = newMax;
         	}
         }
-        recentData =  new RecentSensorData(maxReadingHistoryCount);
+        */
+        recentData =  new RecentSensorData();
         
         //create notifier and notify sensors running
 		myNotifier = new ParkingNotificationManager(this, recentData);
@@ -117,7 +119,8 @@ public class SensorService extends Service implements SensorEventListener {
         mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
         
         //Listen for signal strength
-        ((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS); //register the phone state listener
+        	//temp disabled for debugging. Not using this data anyhow. 
+        //((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS); //register the phone state listener
 
         //location listeners
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -139,7 +142,8 @@ public class SensorService extends Service implements SensorEventListener {
 	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " compassReadings.csv"); 
 	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
 	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " orientationReadings.csv"); 
-	    signalFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " signalStrength.csv");
+	    //signalFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " signalStrength.csv");
+	    parkingLogFile = createExternalFile(STORAGE_DIRECTORY_NAME, "parkingLog.csv");
 	    
 		appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
 		appendToFile(orientFile, recentData.orientHeader);
@@ -147,6 +151,7 @@ public class SensorService extends Service implements SensorEventListener {
 		appendToFile(accelerometerFile, recentData.accHeader);
 		appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
 		appendToFile(magnFile, recentData.magnHeader);
+		appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");
         
                         				
 		return START_STICKY; //keep running until specifically stopped
@@ -157,19 +162,34 @@ public class SensorService extends Service implements SensorEventListener {
 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
 		super.onDestroy();		
 		
+		//display result to user
 		myNotifier.cancelRunStateNotification(); //turn off sensor notification
 		myNotifier.daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
-		storeFinalLocation();
-		reportParkedFloor();
+		myNotifier.floorNotification();
+		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
+
+		//keep result somewhere
+		//storeFinalLocation();
+		appendToFile(parkingLogFile, recentData.parkedDateString + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
+				+ ", " + recentData.newestPhoneLocation.getLocationName() + ", " +recentData.parkedFloor + "," 
+				+ orientFile.getName().toString() + "\n");
 		
 		mSensorManager.unregisterListener(this); //undo sensor listeners
 		locationManager.removeUpdates(gpsListener); //undo location listeners
 		locationManager.removeUpdates(networkListener);
 		
-		((TelephonyManager)getSystemService(TELEPHONY_SERVICE))
-			.listen(psListener, PhoneStateListener.LISTEN_NONE); //unregister the phone state listener
+		//((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_NONE); //unregister the phone state listener
 		//unregisterReceiver(receiver);
 	}
+	
+	/*
+	public void storeFinalLocation() {
+		insertAtFileTop(orientFile, "Parked at: " + recentData.newestPhoneLocation.getLocationName() + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
+				+ ", Distance: " + Float.toString(recentData.newestPhoneLocation.location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location)) 
+				+ ", Parked Floor: " + recentData.parkedFloor + ", ");
+	}
+	*/
+
 	
 	public LocationListener gpsListener = new LocationListener() {
         public void onLocationChanged(Location location) {
@@ -206,6 +226,7 @@ public class SensorService extends Service implements SensorEventListener {
         }
 	};
 	
+	/*
 	//Override phone state listener to add code to react to signal strength changing
 	//http://mfarhan133.wordpress.com/2010/10/15/manipulating-incoming-ougoing-calls-tutorial-for-android/
 	private final PhoneStateListener psListener = new PhoneStateListener() {
@@ -225,25 +246,8 @@ public class SensorService extends Service implements SensorEventListener {
            					+ recentData.newestPhoneLocation.getLocationCoordinates() + "," + signalString);
         }
 	};	
+	*/
 	
-	/*
-	 * Should update some local stored data so later we can retrieve it. 
-	 * Also update widget or notification icon
-	 */
-	public void reportParkedFloor() {
-		//TODO
-		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
-		//TODO store on file
-		//TODO update widget?
-		myNotifier.floorNotification();
-
-	}
-	
-	public void storeFinalLocation() {
-		insertAtFileTop(orientFile, "Parked at: " + recentData.newestPhoneLocation.getLocationName() + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
-				+ ", Distance: " + Float.toString(recentData.newestPhoneLocation.location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location)) 
-				+ ", Parked Floor: " + recentData.parkedFloor + ", ");
-	}
 	
 	
 	@Override
@@ -345,6 +349,7 @@ public class SensorService extends Service implements SensorEventListener {
             writeNewFile(file, text);
     }
     
+    /* possible bug source. Maybe needs a separate thread because of time required
     public void insertAtFileTop(File file, String text) {
     	FileReader fr;
 		try {
@@ -368,6 +373,7 @@ public class SensorService extends Service implements SensorEventListener {
 			e.printStackTrace();
 		}    	
     }
+    */
 
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {

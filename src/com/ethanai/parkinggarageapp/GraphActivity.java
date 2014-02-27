@@ -56,7 +56,8 @@ public class GraphActivity extends Activity {
 
     private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
        
-    int plotDataCount = 2000; //passed to sensor service then to recentsensordata. if we want to overrride defaults in sensorservice
+    //int plotDataCount = 2000; //passed to sensor service then to recentsensordata. if we want to overrride defaults in sensorservice //move to user settings
+    
     RecentSensorData recentData = new RecentSensorData();
         
 	private final String ACCELEROMETER_TAG 	= "accelerometer";
@@ -276,7 +277,7 @@ public class GraphActivity extends Activity {
 	
 	public void startSensorService(View view) { 
 		Intent intent = new Intent(getBaseContext(), SensorService.class);
-		intent.putExtra("maxReadingHistoryCount", plotDataCount); //later restore this so we can control the graph view easily
+		//intent.putExtra("maxReadingHistoryCount", plotDataCount); //later restore this so we can control the graph view easily
 		startService(intent); //start Accelerometer Service. Pass it info
 	}
 	

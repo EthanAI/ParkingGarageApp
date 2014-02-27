@@ -84,7 +84,9 @@ Primary mechanics:
         	+Use GPS speed to activate disactivate if no BT in car 
   
 	Bugs:
-		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
+		XGraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
+			XWas a problem to appending final info to the front of the file
+		GPS info not updating on the output. Pretty sure we're listening, not getting saved?
         xSignal strength seems to be recording after the sensors should be turned off.
     	+Strange jumps sometimes
     		Maybe problems with low refresh rate?

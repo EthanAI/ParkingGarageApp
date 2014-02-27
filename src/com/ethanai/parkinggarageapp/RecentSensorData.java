@@ -25,7 +25,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	 * 
 	 */
 	private static final long serialVersionUID = 5721779411217090251L;
-	public int historyLength = 100;
+	public int historyLength = UserSettings.recentDataHistoryCount;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
 	public DateFormat format = new SimpleDateFormat("'Date 'yyyy-MM-dd HH:mm:ss.SSS");
     
@@ -64,6 +64,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		format.setTimeZone(TimeZone.getTimeZone("HST"));
 	}
 	
+	/*
 	RecentSensorData(Date manualInitialDate) {
 		initialDate = manualInitialDate;
 		format.setTimeZone(TimeZone.getTimeZone("HST"));
@@ -73,24 +74,25 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		historyLength = newHistoryLength;
 		format.setTimeZone(TimeZone.getTimeZone("HST"));
 	}
+	*/
 	
 	/*
 	 * Call the constructor for whatever sensor type made this, build a sensor reading object
 	 * Store object in the appropriate ArrayList
+	 * Well accept manual locations but could also use the newestLocation stored in the global field
 	 */
 	public <E> void addUpToLimit(PhoneLocation phoneLocation, SensorEvent event) {
-		Location location = phoneLocation.location;
 		Sensor sensor = event.sensor;     
 		int sensorType = sensor.getType();
 		
 		switch (sensorType) {
 		case Sensor.TYPE_ACCELEROMETER:
-        	addUpToLimit(accRecent, new AccelerometerReading(location, event));  
+        	addUpToLimit(accRecent, new AccelerometerReading(phoneLocation, event));  
         	
         	//also try to create an orientation data record
         	accRecentEvent = event; //add this sensor event or overwrite stale data
         	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we have both parts, build an orientation record and add it
-        		addUpToLimit(orientRecent, new DerivedOrientation(location, accRecentEvent, magnRecentEvent));
+        		addUpToLimit(orientRecent, new DerivedOrientation(phoneLocation, accRecentEvent, magnRecentEvent));
         		updateParkingData();
         		isOrientationNew = true;  //flag that this most recent accelerometer reading was used for calculating a new orientation reading
         		accRecentEvent = null; // require new readings for both sensors before building another
@@ -99,12 +101,12 @@ public class RecentSensorData implements Serializable { //must specify serializa
         	break;
         		        	
 		case Sensor.TYPE_MAGNETIC_FIELD:
-        	addUpToLimit(magnRecent, new MagnetReading(location, event));
+        	addUpToLimit(magnRecent, new MagnetReading(phoneLocation, event));
         	
         	//also try to create an orientation data record
         	magnRecentEvent = event; //add this sensor event or overwrite stale data
         	if((accRecentEvent != null) && (magnRecentEvent != null)) { //if we have both parts, build an orientation record and add it
-        		addUpToLimit(orientRecent, new DerivedOrientation(location, accRecentEvent, magnRecentEvent));
+        		addUpToLimit(orientRecent, new DerivedOrientation(phoneLocation, accRecentEvent, magnRecentEvent));
         		updateParkingData();
         		isOrientationNew = true;   //flag that this most recent magnet reading was used for calculating a new orientation reading
         		accRecentEvent = null; // require new readings for both sensors before building another
@@ -169,6 +171,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	class MagnetReading {
 		
 		public String dateString;
+		public Date date;
 		public Location location;
 		public String locationString;
 		public float x;
@@ -176,9 +179,9 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public float z;
 		
 		MagnetReading(Location location, SensorEvent event) {
-			this.dateString = format.format(event.timestamp);
-			this.location = location;
-			this.locationString = location.getLatitude() + " " + location.getLongitude();
+			this.date = new Date(event.timestamp);			
+			this.dateString = format.format(date);			this.location = location;
+			this.locationString =  new PhoneLocation(location).locationString; // location.getLatitude() + " " + location.getLongitude();
 			this.x = event.values[0];
 			this.y = event.values[1];
 			this.z = event.values[2];
@@ -219,7 +222,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		DerivedOrientation(Location location, SensorEvent accEvent, SensorEvent magnEvent) {
 			this.dateString = format.format(new Date());
 			this.location = location;
-			this.locationString = location.getLatitude() + " " + location.getLongitude();
+			this.locationString =  new PhoneLocation(location).locationString; // location.getLatitude() + " " + location.getLongitude();
 	    	
 			this.gpsAccuracy = location.getAccuracy();
 			this.distance = location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location); //get distance to home (for now its default for me)
@@ -310,6 +313,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	class CompassReading {
 	    
 		public String dateString;
+		public Date date;
 		public float x;
 		public float y;
 		public float z;
@@ -317,7 +321,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public float accuracy;
 		
 		CompassReading(SensorEvent event) {
-			this.dateString = format.format(event.timestamp);
+			this.date = new Date(event.timestamp);			
+			this.dateString = format.format(date);
 			this.x = event.values[0];
 			this.y = event.values[1];
 			this.z = event.values[2];
@@ -372,6 +377,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	class AccelerometerReading {
 		//public Date date; //might be nice to return this someday so I can do math, but probably not in the near future
 		public String dateString;
+		public Date date;
 		public Location location;
 		public String locationString;
 		public float x;
@@ -385,9 +391,10 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			
 		
 		AccelerometerReading(Location location, SensorEvent event) {
-			this.dateString = format.format(event.timestamp);
+			this.date = new Date(event.timestamp);			
+			this.dateString = format.format(date);
 			this.location = location;
-			this.locationString = location.getLatitude() + " " + location.getLongitude();
+			this.locationString =  new PhoneLocation(location).locationString; // location.getLatitude() + " " + location.getLongitude();
 			x = event.values[0];
 	        y = event.values[1];
 	        z = event.values[2];
@@ -430,7 +437,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}		
 	}
 	
-	class PhoneLocation {
+	class PhoneLocation extends Location {
 		public String provider;
 		public Location location;
 		
@@ -442,6 +449,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public String locationString;
 		
 		PhoneLocation (Location location) {
+			super(location);
 			this.provider = location.getProvider();
 			this.location = location;
 			this.date = new Date(location.getTime());			
@@ -470,7 +478,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public String getLocationString() {
 			return location.getLatitude() + ", " + location.getLongitude() + ", " + location.getAccuracy() + ", " 
 					+ location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location) + ", " + location.getBearing() + ", " 
-					+ location.getAltitude() + ", " + location.getSpeed() + "\n";
+					+ location.getAltitude() + ", " + location.getSpeed();
+		}
+		
+		public String toFormattedString() {
+			return getLocationString() + "\n";
 		}
 	}
 }

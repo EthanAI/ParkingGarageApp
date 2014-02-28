@@ -99,12 +99,7 @@ public class SensorService extends Service implements SensorEventListener {
         	}
         }
         */
-        recentData =  new RecentSensorData();
-        
-        //create notifier and notify sensors running
-		myNotifier = new ParkingNotificationManager(this, recentData);
-		myNotifier.sensorRunningNotification();
-		
+	
 		//set up sensor listeners
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         
@@ -130,7 +125,10 @@ public class SensorService extends Service implements SensorEventListener {
 		//get initial location and date for file naming
 	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(new Date());
 	    Location initialLocation = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER); //assume this will get us something useful always
-	    recentData.newestPhoneLocation = recentData.new PhoneLocation(initialLocation); //good object for getting data about locations
+	    
+	    //set up structure to hold recent data (not all data so we can run for unlimited time)
+        recentData =  new RecentSensorData(initialLocation);
+	    //recentData.newestPhoneLocation = recentData.new PhoneLocation(initialLocation); //good object for getting data about locations
 
 	    String locationName = recentData.newestPhoneLocation.getLocationName();
 	    String locationCoords = recentData.newestPhoneLocation.getLocationCoordinates();
@@ -152,7 +150,10 @@ public class SensorService extends Service implements SensorEventListener {
 		appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
 		appendToFile(magnFile, recentData.magnHeader);
 		appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");
-        
+		
+		//create notifier and notify sensors running
+		myNotifier = new ParkingNotificationManager(this, recentData);
+		myNotifier.sensorRunningNotification();
                         				
 		return START_STICKY; //keep running until specifically stopped
 	}
@@ -171,7 +172,7 @@ public class SensorService extends Service implements SensorEventListener {
 		//keep result somewhere
 		//storeFinalLocation();
 		appendToFile(parkingLogFile, recentData.parkedDateString + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
-				+ ", " + recentData.newestPhoneLocation.getLocationName() + ", " +recentData.parkedFloor + "," 
+				+ ", " + recentData.newestPhoneLocation.getLocationName() + ", " + recentData.parkedFloor + "," 
 				+ orientFile.getName().toString() + "\n");
 		
 		mSensorManager.unregisterListener(this); //undo sensor listeners
@@ -195,6 +196,7 @@ public class SensorService extends Service implements SensorEventListener {
         public void onLocationChanged(Location location) {
         	//gpsLocation = location;
         	recentData.addUpToLimit(location);
+        	recentData.setGPSLocation(location);
             //appendToFile(gpsFile, recentData.newestPhoneLocation.locationString);
         	notifyUpdate(GPS_TAG);
         }
@@ -213,6 +215,7 @@ public class SensorService extends Service implements SensorEventListener {
         public void onLocationChanged(Location location) {
         	//networkLocation = location;
         	recentData.addUpToLimit(location);
+        	recentData.setNetworkLocation(location);
         	notifyUpdate(NETWORK_TAG);
         }
         public void onStatusChanged(String s, int i, Bundle bundle) {
@@ -263,7 +266,7 @@ public class SensorService extends Service implements SensorEventListener {
         Sensor sensor = event.sensor;  
         int sensorType = sensor.getType();
         
-        recentData.addUpToLimit(recentData.newestPhoneLocation, event);
+        recentData.addUpToLimit(event);
 
         switch (sensorType) {
 	        case Sensor.TYPE_ACCELEROMETER: 

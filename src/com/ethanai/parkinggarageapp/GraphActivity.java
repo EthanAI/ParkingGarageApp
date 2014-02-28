@@ -282,7 +282,9 @@ public class GraphActivity extends Activity {
 	}
 	
 	public void stopSensorService(View view) {
-		stopService(new Intent(getBaseContext(), SensorService.class)); //start Accelerometer Service. Pass it info
+		//Context context = getBaseContext();
+		Intent intent = new Intent(getApplicationContext(), SensorService.class);
+		stopService(intent); 
 	}
   
 }

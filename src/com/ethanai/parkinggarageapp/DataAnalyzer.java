@@ -7,7 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
+//import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 import com.ethanai.parkinggarageapp.RecentSensorData.PhoneLocation;
 import com.ethanai.parkinggarageapp.UserSettings.FloorBorder;
 import com.ethanai.parkinggarageapp.UserSettings.UserLocation;
@@ -72,8 +72,9 @@ public class DataAnalyzer {
 	
 	public static String getCurrentFloor(ArrayList<Float> turnDegreesArray, PhoneLocation... phoneLocation) {
 		String currentLocationName;
-		if(null != phoneLocation) {
-			currentLocationName = phoneLocation[0].getLocationName();
+		if(null != phoneLocation[0]) {
+			PhoneLocation currentLocation = phoneLocation[0];
+			currentLocationName = currentLocation.getLocationName();
 		} else {
 			currentLocationName = "Home";
 		}

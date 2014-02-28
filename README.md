@@ -82,11 +82,18 @@ Primary mechanics:
     		Acceleration seems not useful. y is acceleration? (who knows, phone can move)
         	
         	+Use GPS speed to activate disactivate if no BT in car 
+        	+Make dataAnalyzer count all turns for my use
   
 	Bugs:
 		XGraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
 			XWas a problem to appending final info to the front of the file
 		GPS info not updating on the output. Pretty sure we're listening, not getting saved?
+			We're just feeding itself its own value -_-. 
+			Expand headers to have network and gps versions
+			Store each location type in each reading
+			Output both location types in toFormattedString
+			Adjust dataAnalyzer to use the new column
+				Eventually pick a single location as winner and discard the other one
         xSignal strength seems to be recording after the sensors should be turned off.
     	+Strange jumps sometimes
     		Maybe problems with low refresh rate?

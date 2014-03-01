@@ -8,6 +8,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.util.Log;
 
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -40,7 +41,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public ArrayList<PhoneLocation> networkRecent = new ArrayList<PhoneLocation>();
 	
 	//headers for each data type:
-    public final String orientHeader = "Time, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
+    public final String orientHeader = "Time, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, raw azimuth, smoothed azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
     public final String accHeader = "Time, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
     public final String magnHeader = "Date, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, x, y, z\n";
     public final String compassHeader = "Date, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, x, y, z, total, accuracy\n";
@@ -69,9 +70,9 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		//initialize string with all gps location
 		if(null == currentGPSLocation)
-			recentLocationString += "0,0,0,0,0,0,0, ";
+			recentLocationString = "0,0,0,0,0,0,0" + ", ";
 		else
-			recentLocationString += currentGPSLocation.locationString + ", ";
+			recentLocationString = currentGPSLocation.locationString + ", ";
 		if(null == currentNetworkLocation)
 			recentLocationString += "0,0,0,0,0,0,0";
 		else
@@ -196,7 +197,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		if(null == currentGPSLocation)
 			recentLocationString += "0,0,0,0,0,0,0,";
 		else
-			recentLocationString += currentGPSLocation.locationString;
+			recentLocationString += currentGPSLocation.locationString + ", ";
 		if(null == currentNetworkLocation)
 			recentLocationString += "0,0,0,0,0,0,0,";
 		else
@@ -212,7 +213,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		if(null == currentGPSLocation)
 			recentLocationString += "0,0,0,0,0,0,0,";
 		else
-			recentLocationString += currentGPSLocation.locationString;
+			recentLocationString += currentGPSLocation.locationString + ", ";
 		if(null == currentNetworkLocation)
 			recentLocationString += "0,0,0,0,0,0,0,";
 		else
@@ -259,6 +260,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//Also contains turn history. this will evolve to be more than just an angle. Might want to force unlimited length in recording?
 		//or have final step be read the full data from the stored file? Break out into a separate object?
 	class DerivedOrientation {
+		private final double MAX_ADJACENT_CHANGE = 25;
+		
 		public String dateString;
 		public Location location;
 		public String locationString;
@@ -268,12 +271,14 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//Values we want:
 			//http://developer.android.com/reference/android/hardware/SensorManager.html#getOrientation(float[], float[])
 		public double azimuthInDegrees;
+		//public double correctedAzimuthInDegrees; //corrected by limiting changes by MAX_ADJACENT_CHANGE
 		public double pitchInDegrees;
 		public double rollInDegrees;
 			//http://developer.android.com/reference/android/hardware/SensorManager.html#getInclination(float[])
 		public double inclinationInDegrees; 
 		
 		public double totalTurnDegrees; //naive implementation, will evolve into turn counts. 
+
 		
 		DerivedOrientation(SensorEvent accEvent, SensorEvent magnEvent) {
 			this.dateString = format.format(new Date());
@@ -301,6 +306,19 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				SensorManager.getOrientation(rotationMatrix, orientationMatrix); //
 				// Convert from radians to degrees and store in our target values
 				azimuthInDegrees = Math.toDegrees(orientationMatrix[0]);
+				
+				//get previous azimuth if available
+				//Double previousAzimuth = orientRecent.size() > 0 
+				//		? orientRecent.get(orientRecent.size() - 1).correctedAzimuthInDegrees 
+				//		: azimuthInDegrees;
+						
+				//correctedAzimuthInDegrees = previousAzimuth + getMaxAcceptableChange(azimuthInDegrees, previousAzimuth, MAX_ADJACENT_CHANGE);
+				//correction if we cross the south line
+				//if(correctedAzimuthInDegrees > 180)
+				//	correctedAzimuthInDegrees -= 360;
+				//if(correctedAzimuthInDegrees < -180)
+				//	correctedAzimuthInDegrees += 360;
+					
 				pitchInDegrees = Math.toDegrees(orientationMatrix[1]);
 				rollInDegrees = Math.toDegrees(orientationMatrix[2]);
 				inclinationInDegrees = Math.toDegrees(SensorManager.getInclination(inclinationMatrix));
@@ -323,7 +341,29 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			}
 		}
 		
-		public double updateTurnDegrees(double azimuthInDegrees) {
+		/* Function to limit the amount of change possible between sucessive readings
+		 * getting problems with angle 180 degree changes in 200 ms. That just isn't possible
+		 * Its sensor noise. Possibly due to slow reading rate, but cleaning noisy sensor data is just part of 
+		 * using sensors. 
+		 */
+		/* hmm, this is running into trouble because the sudden 350 degree shifts are how we detect crossing the S line. 
+		public double getMaxAcceptableChange(double newValue, double oldValue, double smoothingLimit){
+			//get the last one. If one one exists, take that
+			//if(null == oldValue) 
+			//	oldValue = orientRecent.get(orientRecent.size() - 1).totalTurnDegrees;
+			//else
+			//	oldValue = newValue;
+			double totalChange = newValue - oldValue;
+			if(Math.abs(totalChange) > smoothingLimit) { //limit intensity to smoothing limit
+				totalChange = totalChange / Math.abs(totalChange) * smoothingLimit;
+				Log.w("DataSmoothing", totalChange + ", " + oldValue + "," + newValue);
+			}
+			
+			return totalChange;
+		}
+		*/
+		
+		public double updateTurnDegrees(double newAzimuthInDegrees) {
 			double newTotal;
 			if(orientRecent == null || orientRecent.size() == 0) { //if we're the first record, initialize at zero
 				newTotal = 0;
@@ -331,12 +371,12 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				newTotal = orientRecent.get(orientRecent.size() - 1).totalTurnDegrees; //initialize with previous total
 				double previousAzimuth = orientRecent.get(orientRecent.size() - 1).azimuthInDegrees;
 				//compensate for possible crossing the South line (-180 to +180)
-				if((azimuthInDegrees - previousAzimuth) < -180) {
-					azimuthInDegrees += 360;
-				} else if ((azimuthInDegrees - previousAzimuth) > 180) {
-					azimuthInDegrees -= 360;
+				if((newAzimuthInDegrees - previousAzimuth) < -180) {
+					newAzimuthInDegrees += 360;
+				} else if ((newAzimuthInDegrees - previousAzimuth) > 180) {
+					newAzimuthInDegrees -= 360;
 				}
-				newTotal += azimuthInDegrees - previousAzimuth;
+				newTotal += newAzimuthInDegrees - previousAzimuth; //could put limiters here to save time
 								
 				/*
 				 * case 1. go from 0 to -10. now - old = -10 good
@@ -354,7 +394,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public String toFormattedString() {
 			return  dateString + ", " +
 					recentLocationString + "," +
-	                Double.toString(azimuthInDegrees) + "," + 
+	                Double.toString(azimuthInDegrees) + "," +
+	                Double.toString(0.0) + "," +
 	                Double.toString(pitchInDegrees) + "," +
 	                Double.toString(rollInDegrees) + "," +
 	                Double.toString(inclinationInDegrees) + "," +
@@ -532,9 +573,13 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String getLocationString() {
-			return location.getLatitude() + ", " + location.getLongitude() + ", " + location.getAccuracy() + ", " 
-					+ location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location) + ", " + location.getBearing() + ", " 
-					+ location.getAltitude() + ", " + location.getSpeed();
+			return location.getLatitude() + ", " 
+					+ location.getLongitude() + ", " 
+					+ location.getAccuracy() + ", " 
+					+ location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location) + ", " 
+					+ location.getBearing() + ", " 
+					+ location.getAltitude() + ", " 
+					+ location.getSpeed();
 		}
 		
 		public String toFormattedString() {

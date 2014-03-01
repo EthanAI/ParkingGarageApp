@@ -85,8 +85,9 @@ Primary mechanics:
         	+Make dataAnalyzer count all turns for my use
   
 	Bugs:
-		XGraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
+		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
 			XWas a problem to appending final info to the front of the file
+			Bug returned 2/28. Long time analyzing the completed csv? Threading should be applied
 		GPS info not updating on the output. Pretty sure we're listening, not getting saved?
 			We're just feeding itself its own value -_-. 
 			Expand headers to have network and gps versions
@@ -99,6 +100,6 @@ Primary mechanics:
     		Maybe problems with low refresh rate?
     		Add safety override to:
     			Rate of degree change
-    			Rate of azimuth change - 20 degree max per tick (0.2 s)
+    			xRate of azimuth change - 20 degree max per tick (0.2 s)
         
         

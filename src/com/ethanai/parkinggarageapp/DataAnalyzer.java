@@ -19,7 +19,7 @@ import com.ethanai.parkinggarageapp.UserSettings.UserLocation;
 public class DataAnalyzer {
 
 	//for csv retrieval 
-	private static final int DEGREE_COL = 10;
+	private static final int DEGREE_COL = 11;
 	
 	/*//changing to not be an object anymore
 	DataAnalyzer(RecentSensorData recentData) { 

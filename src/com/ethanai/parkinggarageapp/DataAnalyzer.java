@@ -20,34 +20,51 @@ public class DataAnalyzer {
 	//for csv retrieval 
 	private static final int DEGREE_COL = 11;
 	
-	/*//changing to not be an object anymore
-	DataAnalyzer(RecentSensorData recentData) { 
+	ArrayList<Float> turnDegreesArray = new ArrayList<Float>();
+	ArrayList<Double> latArray = new ArrayList<Double>();
+	ArrayList<Double> longArray = new ArrayList<Double>();
+	PhoneLocation currentPhoneLocation;
+	
+	DataAnalyzer(RecentSensorData recentData, PhoneLocation newCurrentPhoneLocation) { 
 		for(int i = 0; i < recentData.orientRecent.size()-1; i++) {
 			turnDegreesArray.add((float)recentData.orientRecent.get(i).totalTurnDegrees);
 		}
+		
+		for(int i = 0; i < recentData.orientRecent.size() - 1; i++) {
+			latArray.add(recentData.orientRecent.get(i).location.getLatitude());
+			longArray.add(recentData.orientRecent.get(i).location.getLongitude());
+		}
+		
+		currentPhoneLocation = newCurrentPhoneLocation;
 	}
-	
+
+	/*
 	DataAnalyzer(ArrayList<DerivedOrientation> orientRecent) { 
 		for(int i = 0; i < orientRecent.size()-1; i++) {
 			turnDegreesArray.add((float)orientRecent.get(i).totalTurnDegrees);
 		}
 	}
+	*/
 	
 	//for development need to load data from stored example csv files
 	public DataAnalyzer(File dataFile) {
-		readTurnDegreesFromFile(dataFile);
+		readFile(dataFile);
 	}
-	*/
+
 	
 	/*
 	 * Doesn't hold the full dataset in memory so just an estimate
 	 */
-	public static String getCurrentFloorEstimate(RecentSensorData recentData) {
+	public String getCurrentFloorEstimate(RecentSensorData recentData) {
 		ArrayList<Float> arrayList = new ArrayList<Float>();
 		for(int i = 0; i < recentData.orientRecent.size()-1; i++) {
 			arrayList.add((float)recentData.orientRecent.get(i).totalTurnDegrees);
 		}
 		return getCurrentFloor(arrayList, recentData.newestPhoneLocation);
+	}
+	
+	public String getCurrentFloorEstimate() {
+		return getCurrentFloor();
 	}
 	
 	/*
@@ -64,12 +81,13 @@ public class DataAnalyzer {
 	/*
 	 * Uses the data stored in the csv, most likely to be correct
 	 */
-	public static String getCurrentFloorFinal(File dataFile) {
-		return getCurrentFloor(readTurnDegreesFromFile(dataFile));
+	public String getCurrentFloorFinal(File dataFile) {
+		readFile(dataFile);
+		return getCurrentFloor();
 	}
 	
 	
-	public static String getCurrentFloor(ArrayList<Float> turnDegreesArray, PhoneLocation... phoneLocation) {
+	public String getCurrentFloor(ArrayList<Float> turnDegreesArray, PhoneLocation... phoneLocation) {
 		String currentLocationName;
 		if(null != phoneLocation[0]) {
 			PhoneLocation currentLocation = phoneLocation[0];
@@ -81,11 +99,41 @@ public class DataAnalyzer {
 		ArrayList<FloorBorder> floorBorders = userLocation.floorBorders;
 		
 		String parkedFloor = "";
-		float quarterTurnCount = getConsecutiveRightTurns(turnDegreesArray);
+		float quarterTurnCount = getConsecutiveRightTurns();
 		System.out.println("Raw right turns: " + quarterTurnCount);
 
-		quarterTurnCount += fidgitingCorrection(turnDegreesArray); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
-		quarterTurnCount += parkTurnCorrection(turnDegreesArray);
+		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
+		quarterTurnCount += parkTurnCorrection();
+		int roundedTurnCount = Math.round(quarterTurnCount);
+		System.out.println("Corrected Right Turns: " + roundedTurnCount);
+		
+		//iterate through the floor borders until we find our first, minimum floor hit.
+		for(FloorBorder border : floorBorders) {
+			if(roundedTurnCount < border.maxTurns && parkedFloor == "") {
+				parkedFloor = border.floorString;
+			}
+		}
+		
+		return parkedFloor;
+	}
+	
+	public String getCurrentFloor() {
+		String currentLocationName;
+		if(null != currentPhoneLocation) {
+			PhoneLocation currentLocation = currentPhoneLocation;
+			currentLocationName = currentLocation.getLocationName();
+		} else {
+			currentLocationName = "Home"; //default 
+		}
+		UserLocation userLocation = UserSettings.getUserLocation(currentLocationName);
+		ArrayList<FloorBorder> floorBorders = userLocation.floorBorders;
+		
+		String parkedFloor = "";
+		float quarterTurnCount = getConsecutiveRightTurns();
+		System.out.println("Raw right turns: " + quarterTurnCount);
+
+		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
+		quarterTurnCount += parkTurnCorrection();
 		int roundedTurnCount = Math.round(quarterTurnCount);
 		System.out.println("Corrected Right Turns: " + roundedTurnCount);
 		
@@ -103,7 +151,8 @@ public class DataAnalyzer {
 	//takes values as degrees, returns value as fraction of quarter turns
 	/*  3/1/14 Adding guts so this effectively counts all turns
 	 */
-	public static float getConsecutiveRightTurns(ArrayList<Float> turnDegreesArray) {
+	
+	public float getConsecutiveRightTurns() {
 		//Time threshold - if we didnt turn after xxx readings ... maybe not good measure
 		
 		//Intensity threshold - work back from end, until we find a left turn
@@ -120,7 +169,7 @@ public class DataAnalyzer {
 		for(int i = turnDegreesArray.size() - 1; i > 0 && leftConsecutiveCount < leftThreshold; i--) {
 			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i);
 			float quarterTurnCount = floatingMeanDegrees / 90; //net quarter turns according to sensors
-			if(quarterTurnCount < runningLowCount) {
+			if(quarterTurnCount > runningLowCount) { //keep consistent with current sign convention
 				runningLowCount = quarterTurnCount;
 			}
 			rightConsecutiveCount = parkingEndCount - runningLowCount;
@@ -129,34 +178,58 @@ public class DataAnalyzer {
 			//System.out.println(i+3 + "\tleftCount "+ leftConsecutiveCount + "\trightCount " + rightConsecutiveCount + "\tparkingEndCount " + parkingEndCount + "\trunningLowCount " + runningLowCount);
 			
 		}
-		/*
-		float turnThreshold = 0.75f; //threshold 75% of a turn will be considered enough that a weak left turn will trigger end of right turn chain
-		float leftDeltaCount = 0;
-		float minTurnCount = turnDegreesArray.get(turnDegreesArray.size()-1) / 90;
-		float smoothingThreshold = 0.2f;
-		for(int i = turnDegreesArray.size() - 1; i > 0 && leftDeltaCount < turnThreshold; i--) { //iterate back from the end (time of parking)
-			float quarterTurnCount = (float) (turnDegreesArray.get(i) / 90); //data point at this time in terms of quarter turns
-			if(quarterTurnCount < minTurnCount) {
-				minTurnCount = quarterTurnCount;
-			}
-			//higher values are more 'right'. 
-			//As we subtract the right turns away, the turnCount should go down. If our new turncount grows, we must have subtracted a left turn.
-				//limit how much a single data point can move us towards the threshold
-			float totalNewChange = (quarterTurnCount - minTurnCount) - leftDeltaCount;
-			leftDeltaCount += totalNewChange < smoothingThreshold ? totalNewChange : smoothingThreshold;
-			
-			totalDegreesRight = turnDegreesArray.get(turnDegreesArray.size()-1) - turnDegreesArray.get(i);
-			// + 2 for he headers + 1 for ordinal counting. total + 3 to match with exel data
-			System.out.println(i+3 + "\tdel "+ leftDeltaCount + "\tmin " + minTurnCount + "\tturnCount " + quarterTurnCount + "\tturns " + totalDegreesRight/90 + "\tdegree " + turnDegreesArray.get(i));
-		}
-		rightTurnCount = totalDegreesRight/90 + 0.5f*turnThreshold; // + 1/2 since we measured maximums, not averages
-		*/
-		return rightConsecutiveCount;
+		return Math.abs(rightConsecutiveCount);
 	}
 	
+	public ArrayList<TurnCount> getAllTurns() {
+		int meanOffset = 10; //how far left and right to include in the smoothing averaging process
+		
+		ArrayList<TurnCount> turnHistory = new ArrayList<TurnCount>(); //hold the detected turns
+
+		//variable to we compare against to see if we've competed more than one turn of a type
+		float turnCountingCompareValue = getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size() - 1);
+		for(int i = turnDegreesArray.size() - 1; i > 0; i--) {
+			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i);
+			float changeSinceLastTurnPush = floatingMeanDegrees - turnCountingCompareValue;
+			if(changeSinceLastTurnPush > 90) {
+				int consecutiveCount;
+				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Left"))
+					consecutiveCount = 1;
+				else 
+					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
+				turnHistory.add(new TurnCount("Left", consecutiveCount, i, latArray.get(i), longArray.get(i)));
+				turnCountingCompareValue += 90;
+			} else if (changeSinceLastTurnPush < -90) {
+				int consecutiveCount;
+				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Right"))
+					consecutiveCount = 1;
+				else 
+					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
+				turnHistory.add(new TurnCount("Right", consecutiveCount, i, latArray.get(i), longArray.get(i)));
+				turnCountingCompareValue += -90;
+			}
+		}
+		return turnHistory;
+	}
+	
+	public class TurnCount {
+		public String direction;
+		public int count;
+		public int index;
+		public double latitude;
+		public double longitude;
+		
+		TurnCount(String newDirection, int newCount, int newIndex, double newLatitude, double newLongitude) {
+			direction = newDirection;
+			count = newCount;
+			index = newIndex;
+			latitude = newLatitude;
+			longitude = newLongitude;
+		}
+	}
 
 	
-	public static float getFloatingAverage(ArrayList<Float> turnDegreesArray, int searchOffset, int idx) {
+	public float getFloatingAverage(ArrayList<Float> turnDegreesArray, int searchOffset, int idx) {
 		float mean = 0;
 		int summedCount = 0;
 		for(int i = idx - searchOffset; i <= idx + searchOffset; i++) {
@@ -172,7 +245,7 @@ public class DataAnalyzer {
 	
 	//remove the last turn
 	//naieve implementation for now
-	public static float parkTurnCorrection(ArrayList<Float> turnDegreesArray) {
+	public float parkTurnCorrection() {
 		//identify continual turn threshold/time/speed/localmean
 		//once last one is identified, remove that amount (could be left, right, 90 stall/angled stall, multiple movements
 		//for now always assume a right quarter turn into the stall
@@ -180,14 +253,14 @@ public class DataAnalyzer {
 	}
 	
 	//curently no effects
-	public static float fidgitingCorrection(ArrayList<Float> turnDegreesArray) {
+	public float fidgitingCorrection() {
 		return 0; //not yet implemented
 	}
 	
 	//temporary file functions for the design phase
 	//
-	public static ArrayList<Float> readTurnDegreesFromFile(File dataFile) {
-		ArrayList<Float> arrayList = new ArrayList<Float>();
+	public void readFile(File dataFile) {
+		
 		try {
 			FileReader fr = new FileReader(dataFile);
 			BufferedReader br = new BufferedReader(fr);
@@ -197,7 +270,10 @@ public class DataAnalyzer {
 			while((line = br.readLine()) != null) {
 				String tokens[] = line.split(",");
 				//System.out.println(tokens[8]);
-				arrayList.add(Float.parseFloat(tokens[DEGREE_COL]) * -1); //flip the convention from mine, to Android's so fucntion will work on app. 
+				turnDegreesArray.add(Float.parseFloat(tokens[DEGREE_COL]));
+				
+				latArray.add(Double.parseDouble(tokens[1]));
+				longArray.add(Double.parseDouble(tokens[2]));
 			}
 			br.close();
 			fr.close();
@@ -208,6 +284,5 @@ public class DataAnalyzer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return arrayList;
 	}	
 }

@@ -175,13 +175,14 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	
 	public void updateParkingData() {
 		if(orientRecent.size() > 1) {
-			parkedFloor = DataAnalyzer.getCurrentFloorEstimate(this);  
+			DataAnalyzer dataAnalyzer = new DataAnalyzer(this, newestPhoneLocation);
+			parkedFloor = dataAnalyzer.getCurrentFloorEstimate();  
 			
 			//for viewing turncount during development.
-			ArrayList<Float> turnValues = new ArrayList<Float>();
-			for(DerivedOrientation orientationObject : orientRecent)
-				turnValues.add((float) orientationObject.totalTurnDegrees);
-			turnConsecutiveCount = DataAnalyzer.getConsecutiveRightTurns(turnValues);
+			//ArrayList<Float> turnValues = new ArrayList<Float>();
+			//for(DerivedOrientation orientationObject : orientRecent)
+			//	turnValues.add((float) orientationObject.totalTurnDegrees);
+			turnConsecutiveCount = dataAnalyzer.getConsecutiveRightTurns();
 		} else {
 			parkedFloor = "0";
 		}

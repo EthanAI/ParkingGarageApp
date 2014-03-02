@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import com.ethanai.parkinggarageapp.DataAnalyzer;
+import com.ethanai.parkinggarageapp.DataAnalyzer.TurnCount;
 
 public class ClassTester {
 	
@@ -22,7 +23,7 @@ public class ClassTester {
 		
 		
 		//test(pathB, fileName);
-		testB(pathB, fileName);
+		testB(pathB, fileName[3]);
 		
 		//test individual 
 		//test(pathB, fileName[0]);
@@ -35,12 +36,12 @@ public class ClassTester {
 	
 	public static void test(String path, String... fileName) {
 		for(String name : fileName) {
-			ArrayList<Float> turnDegreesArray = DataAnalyzer.readTurnDegreesFromFile(new File(path + name + ".csv"));
+			DataAnalyzer dataAnalyzer = new DataAnalyzer(new File(path + name + ".csv"));
 			//String currentFloor = DataAnalyzer.getCurrentFloorFinal(new File(path + name + ".csv"));
-			Float turnCount = DataAnalyzer.getConsecutiveRightTurns(turnDegreesArray);
+			Float turnCount = dataAnalyzer.getConsecutiveRightTurns();
 			System.out.print("RawTurnCount: " + turnCount);
-			turnCount += DataAnalyzer.fidgitingCorrection(turnDegreesArray);
-			turnCount += DataAnalyzer.parkTurnCorrection(turnDegreesArray);
+			turnCount += dataAnalyzer.fidgitingCorrection();
+			turnCount += dataAnalyzer.parkTurnCorrection();
 			System.out.print(" Modified TurnCount: " + turnCount);
 			//System.out.print(" Rounded TurnCount: " + Math.round(turnCount));
 			System.out.print(" Dist From Center : " + getCertainty(turnCount));
@@ -51,62 +52,21 @@ public class ClassTester {
 	}
 	
 	
-	public void testB(String path, String... fileName) {
+	public static void testB(String path, String... fileName) {
 		for(String name : fileName) {
-			ArrayList<Float> turnDegreesArray = DataAnalyzer.readTurnDegreesFromFile(new File(path + name + ".csv"));
+			DataAnalyzer dataAnalyzer = new DataAnalyzer(new File(path + name + ".csv"));
 			//String currentFloor = DataAnalyzer.getCurrentFloorFinal(new File(path + name + ".csv"));
-
-			System.out.print(getAllTurns(turnDegreesArray));
 
 			System.out.println();
 			System.out.println(name + ".csv");
-			System.out.println();
-		}
-	}
-	
-	public ArrayList<TurnCount> getAllTurns(ArrayList<Float> turnDegreesArray) {
-		int meanOffset = 10; //how far left and right to include in the smoothing averaging process
-		
-		ArrayList<TurnCount> turnHistory = new ArrayList<TurnCount>(); //hold the detected turns
-
-		//variable to we compare against to see if we've competed more than one turn of a type
-		float turnCountingCompareValue = DataAnalyzer.getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size() - 1);
-		for(int i = turnDegreesArray.size() - 1; i > 0; i--) {
-			float floatingMeanDegrees = DataAnalyzer.getFloatingAverage(turnDegreesArray, meanOffset, i);
-			float changeSinceLastTurnPush = floatingMeanDegrees - turnCountingCompareValue;
-			if(changeSinceLastTurnPush > 90) {
-				int consecutiveCount;
-				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Left"))
-					consecutiveCount = 1;
-				else 
-					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
-				turnHistory.add(new TurnCount("Left", consecutiveCount, i));
-				turnCountingCompareValue += 90;
-			} else if (changeSinceLastTurnPush < -90) {
-				int consecutiveCount;
-				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Right"))
-					consecutiveCount = 1;
-				else 
-					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
-				turnHistory.add(new TurnCount("Right", consecutiveCount, i));
-				turnCountingCompareValue += -90;
+			ArrayList<TurnCount> turnHistory = dataAnalyzer.getAllTurns();
+			for(TurnCount turn : turnHistory) {
+				System.out.println(turn.direction + "\t" + turn.count + "\t" + turn.index + "\t" + turn.latitude + " " + turn.longitude);
 			}
-		}
-		return turnHistory;
-	}
-	
-	class TurnCount {
-		String direction;
-		int count;
-		int index;
-		
-		TurnCount(String newDirection, int newCount, int newIndex) {
-			direction = newDirection;
-			count = newCount;
-			index = newIndex;
+
+			
 		}
 	}
-	
 	
 	public static float getCertainty(float turnCount) {
 		turnCount = turnCount % 2;

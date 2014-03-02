@@ -30,6 +30,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.ethanai.parkinggarageapp.HistoryActivity" >
+        </activity>
         <service 
             android:name=".SensorService" />
         <receiver android:name=".DaemonReceiver" >

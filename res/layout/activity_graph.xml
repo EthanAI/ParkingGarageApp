@@ -17,8 +17,8 @@
 			<Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="Text"
-				android:onClick="changeToTextActivity" />
+				android:text="History"
+				android:onClick="changeToHistoryActivity" />
 			<Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"

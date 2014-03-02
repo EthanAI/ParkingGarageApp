@@ -8,6 +8,8 @@ import android.location.Location;
 public class UserSettings {
 	public static ArrayList<UserLocation> allUserLocations = new ArrayList<UserLocation>();
 	public static int recentDataHistoryCount = 2000;
+	public static final int FLOOR_COLUMN_INDEX = 3;
+	public final static String STORAGE_DIRECTORY_NAME = "Documents";
 	
 	UserSettings() {
 		for(int i = 0; i < 1; i++) { //TODO iterate through all of stored persistent data

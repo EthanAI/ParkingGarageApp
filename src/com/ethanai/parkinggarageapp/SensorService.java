@@ -50,7 +50,6 @@ public class SensorService extends Service implements SensorEventListener {
     private Sensor mCompass;
     private Sensor mPressure;
     	
-    private final String STORAGE_DIRECTORY_NAME = "Documents";
     private File accelerometerFile = null;
     private File magnFile = null;
     private File compassFile = null;
@@ -135,13 +134,13 @@ public class SensorService extends Service implements SensorEventListener {
 	    Float distanceFromHome = recentData.newestPhoneLocation.location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location);
 	    
 	    //set up files to hold the data
-	    accelerometerFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " accelReadings.csv");
-	    magnFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " magReadings.csv"); 
-	    compassFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " compassReadings.csv"); 
+	    accelerometerFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " accelReadings.csv");
+	    magnFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " magReadings.csv"); 
+	    compassFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " compassReadings.csv"); 
 	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
-	    orientFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " orientationReadings.csv"); 
+	    orientFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " orientationReadings.csv"); 
 	    //signalFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " signalStrength.csv");
-	    parkingLogFile = createExternalFile(STORAGE_DIRECTORY_NAME, "parkingLog.csv");
+	    parkingLogFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, "parkingLog.csv");
 	    
 		appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
 		appendToFile(orientFile, recentData.orientHeader);
@@ -149,7 +148,8 @@ public class SensorService extends Service implements SensorEventListener {
 		appendToFile(accelerometerFile, recentData.accHeader);
 		appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
 		appendToFile(magnFile, recentData.magnHeader);
-		appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");
+		if(parkingLogFile.length() == 0)
+			appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");
 		
 		//create notifier and notify sensors running
 		myNotifier = new ParkingNotificationManager(this, recentData);

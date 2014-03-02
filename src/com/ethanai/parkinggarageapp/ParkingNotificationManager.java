@@ -56,6 +56,10 @@ public class ParkingNotificationManager {
 			    .setContentText("You parked there on: " + recentData.parkedDateString);
 			    //.setNumber(9.5);
 		
+		Intent resultIntent = new Intent(context, HistoryActivity.class);
+		PendingIntent resultPendingIntent = PendingIntent.getActivity(context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		mBuilder.setContentIntent(resultPendingIntent);
+		
 		//mBuilder.setContentText("Modified")
         //.setNumber(2);
 	    // Because the ID remains unchanged, the existing notification is

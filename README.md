@@ -66,11 +66,13 @@ Primary mechanics:
         	
     	//patern notes
     		xWork backwards from end
-    		+Cut off last 90 degrees regardless of direction (turn into stall)
+    		xCut off last 90 degrees regardless of direction (turn into stall)
     		Check accelerometer for possible speed indications? Enter the gate?
-    		-Ignore weird phone movements since working backwards. 
-    		Subtract out gravity from accelerometer, build cumulative values. See if we can ID stopping
+    		/Ignore weird phone movements since working backwards. 
+    		-Subtract out gravity from accelerometer, build cumulative values. See if we can ID stopping
+    			-this looks very challenging
     		+use compass bearing to identify entry to garage (can we manage varying phone positions?)
+    			GPS bearing is immune to phone orientation changes
     		+assume confusion means first floor
     		99 final signal strength means in garage?
     			Check for correlation
@@ -82,24 +84,30 @@ Primary mechanics:
     		Acceleration seems not useful. y is acceleration? (who knows, phone can move)
         	
         	+Use GPS speed to activate disactivate if no BT in car 
+        		Reduce distance from garage where it activates
+        		Practice plotting things on maps
+        			+Activate if within 500m of target. Disactivate if outside 1000m of target (only passed by)
         	+Make dataAnalyzer count all turns for my use
+        	
+        	Does seem in garage correlates with gps (Accuracy degrades, then all stops updating)
+        	Slowing down correlates with turns, and parking. Speed could be very useful
   
 	Bugs:
 		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
 			XWas a problem to appending final info to the front of the file
 			Bug returned 2/28. Long time analyzing the completed csv? Threading should be applied
-		GPS info not updating on the output. Pretty sure we're listening, not getting saved?
-			We're just feeding itself its own value -_-. 
-			Expand headers to have network and gps versions
-			Store each location type in each reading
-			Output both location types in toFormattedString
-			Adjust dataAnalyzer to use the new column
+		XGPS info not updating on the output. Pretty sure we're listening, not getting saved?
+			XWe're just feeding itself its own value -_-. 
+			XExpand headers to have network and gps versions
+			XStore each location type in each reading
+			XOutput both location types in toFormattedString
+			XAdjust dataAnalyzer to use the new column
 				Eventually pick a single location as winner and discard the other one
         xSignal strength seems to be recording after the sensors should be turned off.
     	+Strange jumps sometimes
     		Maybe problems with low refresh rate?
     		Add safety override to:
     			Rate of degree change
-    			xRate of azimuth change - 20 degree max per tick (0.2 s)
+    			-Rate of azimuth change - 20 degree max per tick (0.2 s) -this causes problems, do other way
         
         

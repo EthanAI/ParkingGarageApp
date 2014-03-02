@@ -17,7 +17,6 @@ import com.ethanai.parkinggarageapp.UserSettings.UserLocation;
  * For now, just let them select 'Right Turn structure' 'Left turn structure' or 'Split' and have split go to TBC screen
  */
 public class DataAnalyzer {
-
 	//for csv retrieval 
 	private static final int DEGREE_COL = 11;
 	
@@ -102,6 +101,8 @@ public class DataAnalyzer {
 	
 	//Important we have a long history. CSV has all, but recentData structure has less. Maybe 2k is enough
 	//takes values as degrees, returns value as fraction of quarter turns
+	/*  3/1/14 Adding guts so this effectively counts all turns
+	 */
 	public static float getConsecutiveRightTurns(ArrayList<Float> turnDegreesArray) {
 		//Time threshold - if we didnt turn after xxx readings ... maybe not good measure
 		
@@ -115,6 +116,7 @@ public class DataAnalyzer {
 		//adding more lefts
 		float runningLowCount = getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size()-1) / 90;
 		float parkingEndCount = runningLowCount; //will need modified by the removeFidgit() method in future
+		
 		for(int i = turnDegreesArray.size() - 1; i > 0 && leftConsecutiveCount < leftThreshold; i--) {
 			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i);
 			float quarterTurnCount = floatingMeanDegrees / 90; //net quarter turns according to sensors
@@ -125,7 +127,7 @@ public class DataAnalyzer {
 			leftConsecutiveCount = quarterTurnCount - runningLowCount;
 			
 			//System.out.println(i+3 + "\tleftCount "+ leftConsecutiveCount + "\trightCount " + rightConsecutiveCount + "\tparkingEndCount " + parkingEndCount + "\trunningLowCount " + runningLowCount);
-
+			
 		}
 		/*
 		float turnThreshold = 0.75f; //threshold 75% of a turn will be considered enough that a weak left turn will trigger end of right turn chain
@@ -152,7 +154,9 @@ public class DataAnalyzer {
 		return rightConsecutiveCount;
 	}
 	
-	private static float getFloatingAverage(ArrayList<Float> turnDegreesArray, int searchOffset, int idx) {
+
+	
+	public static float getFloatingAverage(ArrayList<Float> turnDegreesArray, int searchOffset, int idx) {
 		float mean = 0;
 		int summedCount = 0;
 		for(int i = idx - searchOffset; i <= idx + searchOffset; i++) {

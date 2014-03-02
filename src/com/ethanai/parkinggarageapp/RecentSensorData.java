@@ -8,7 +8,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
-import android.util.Log;
+//import android.util.Log;
 
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -259,8 +259,12 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	// Derived from coursera Class example CompassActivity
 		//Also contains turn history. this will evolve to be more than just an angle. Might want to force unlimited length in recording?
 		//or have final step be read the full data from the stored file? Break out into a separate object?
+	/*
+	 * Updated with my convention from the beginning. It's just too unintuitive to view on graph and have a raw and opposite 
+	 * convention somwehwer else. Now right = negative, left = positive
+	 */
 	class DerivedOrientation {
-		private final double MAX_ADJACENT_CHANGE = 25;
+		//private final double MAX_ADJACENT_CHANGE = 25;
 		
 		public String dateString;
 		public Location location;
@@ -306,6 +310,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				SensorManager.getOrientation(rotationMatrix, orientationMatrix); //
 				// Convert from radians to degrees and store in our target values
 				azimuthInDegrees = Math.toDegrees(orientationMatrix[0]);
+				azimuthInDegrees *= -1; //convert to my convention
 				
 				//get previous azimuth if available
 				//Double previousAzimuth = orientRecent.size() > 0 
@@ -399,8 +404,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	                Double.toString(pitchInDegrees) + "," +
 	                Double.toString(rollInDegrees) + "," +
 	                Double.toString(inclinationInDegrees) + "," +
-	                Double.toString(totalTurnDegrees * -1) + "," +
-	                Double.toString(totalTurnDegrees / -90) +
+	                Double.toString(totalTurnDegrees) + "," +
+	                Double.toString(totalTurnDegrees / 90) +
 	                "\n";
 		}
 		

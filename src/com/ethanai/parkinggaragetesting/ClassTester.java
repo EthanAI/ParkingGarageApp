@@ -19,12 +19,17 @@ public class ClassTester {
 				"2014-02-22 15.47 Unknown orientationReadings",
 				"2014-02-22 21.33 2F Unknown orientationReadings"};
 		
-		test(pathB, fileName);
-	
+		
+		
+		//test(pathB, fileName);
+		testB(pathB, fileName);
+		
 		//test individual 
 		//test(pathB, fileName[0]);
+		//testB(pathB, fileName[1]);
 		
 		//test(pathA, "2014-02-22 21.33 Unknown orientationReadings");
+		//testB(pathB, "2014-02-22 21.33 Unknown orientationReadings");
 	}
 	
 	
@@ -44,6 +49,64 @@ public class ClassTester {
 			System.out.println();
 		}
 	}
+	
+	
+	public void testB(String path, String... fileName) {
+		for(String name : fileName) {
+			ArrayList<Float> turnDegreesArray = DataAnalyzer.readTurnDegreesFromFile(new File(path + name + ".csv"));
+			//String currentFloor = DataAnalyzer.getCurrentFloorFinal(new File(path + name + ".csv"));
+
+			System.out.print(getAllTurns(turnDegreesArray));
+
+			System.out.println();
+			System.out.println(name + ".csv");
+			System.out.println();
+		}
+	}
+	
+	public ArrayList<TurnCount> getAllTurns(ArrayList<Float> turnDegreesArray) {
+		int meanOffset = 10; //how far left and right to include in the smoothing averaging process
+		
+		ArrayList<TurnCount> turnHistory = new ArrayList<TurnCount>(); //hold the detected turns
+
+		//variable to we compare against to see if we've competed more than one turn of a type
+		float turnCountingCompareValue = DataAnalyzer.getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size() - 1);
+		for(int i = turnDegreesArray.size() - 1; i > 0; i--) {
+			float floatingMeanDegrees = DataAnalyzer.getFloatingAverage(turnDegreesArray, meanOffset, i);
+			float changeSinceLastTurnPush = floatingMeanDegrees - turnCountingCompareValue;
+			if(changeSinceLastTurnPush > 90) {
+				int consecutiveCount;
+				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Left"))
+					consecutiveCount = 1;
+				else 
+					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
+				turnHistory.add(new TurnCount("Left", consecutiveCount, i));
+				turnCountingCompareValue += 90;
+			} else if (changeSinceLastTurnPush < -90) {
+				int consecutiveCount;
+				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Right"))
+					consecutiveCount = 1;
+				else 
+					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
+				turnHistory.add(new TurnCount("Right", consecutiveCount, i));
+				turnCountingCompareValue += -90;
+			}
+		}
+		return turnHistory;
+	}
+	
+	class TurnCount {
+		String direction;
+		int count;
+		int index;
+		
+		TurnCount(String newDirection, int newCount, int newIndex) {
+			direction = newDirection;
+			count = newCount;
+			index = newIndex;
+		}
+	}
+	
 	
 	public static float getCertainty(float turnCount) {
 		turnCount = turnCount % 2;

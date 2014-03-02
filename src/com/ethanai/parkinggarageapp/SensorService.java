@@ -165,7 +165,7 @@ public class SensorService extends Service implements SensorEventListener {
 		
 		//display result to user
 		myNotifier.cancelRunStateNotification(); //turn off sensor notification
-		myNotifier.daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
+		//myNotifier.daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
 		myNotifier.floorNotification();
 		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
 

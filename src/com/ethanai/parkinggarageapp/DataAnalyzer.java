@@ -163,17 +163,17 @@ public class DataAnalyzer {
 		float rightConsecutiveCount = 0; //total amount turned right without significant left
 		//right is high. As we work back in time to 'unwind' we should be decreasing. This tracks how far the lowest point is so far before we find an inflextion point
 		//adding more lefts
-		float runningLowCount = getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size()-1) / 90;
-		float parkingEndCount = runningLowCount; //will need modified by the removeFidgit() method in future
+		float runningHighCount = getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size()-1) / 90;
+		float parkingEndCount = runningHighCount; //will need modified by the removeFidgit() method in future
 		
 		for(int i = turnDegreesArray.size() - 1; i > 0 && leftConsecutiveCount < leftThreshold; i--) {
 			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i);
 			float quarterTurnCount = floatingMeanDegrees / 90; //net quarter turns according to sensors
-			if(quarterTurnCount > runningLowCount) { //keep consistent with current sign convention
-				runningLowCount = quarterTurnCount;
+			if(quarterTurnCount > runningHighCount) { //keep consistent with current sign convention
+				runningHighCount = quarterTurnCount;
 			}
-			rightConsecutiveCount = parkingEndCount - runningLowCount;
-			leftConsecutiveCount = quarterTurnCount - runningLowCount;
+			rightConsecutiveCount = runningHighCount - parkingEndCount;
+			leftConsecutiveCount =  runningHighCount - quarterTurnCount;
 			
 			//System.out.println(i+3 + "\tleftCount "+ leftConsecutiveCount + "\trightCount " + rightConsecutiveCount + "\tparkingEndCount " + parkingEndCount + "\trunningLowCount " + runningLowCount);
 			

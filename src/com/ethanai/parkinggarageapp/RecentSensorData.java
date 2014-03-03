@@ -10,6 +10,7 @@ import android.location.Location;
 import android.location.LocationManager;
 //import android.util.Log;
 
+
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -18,6 +19,8 @@ import java.util.ArrayList;
 //import java.util.Date;
 import java.util.Date;
 import java.util.TimeZone;
+
+import com.ethanai.parkinggarageapp.UserSettings.UserLocation;
 
 @SuppressLint("SimpleDateFormat")
 public class RecentSensorData implements Serializable { //must specify serializable so it can be passed by our intents neatly
@@ -60,6 +63,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public PhoneLocation newestPhoneLocation; //hold our final best location decision
 	public PhoneLocation currentGPSLocation;
 	public PhoneLocation currentNetworkLocation;
+	public float distanceNearestGarage = 0; //assume we're in a garage until we get a proper piece of data to confirm
 	public final String HOME_TAG = "Home";
 	
 	public String recentLocationString = "";
@@ -268,7 +272,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//private final double MAX_ADJACENT_CHANGE = 25;
 		
 		public String dateString;
-		public Location location;
+		public PhoneLocation location;
 		public String locationString;
 		//public float gpsAccuracy;
 		//public float distance; //distance from labeled target for debugging
@@ -288,6 +292,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		DerivedOrientation(SensorEvent accEvent, SensorEvent magnEvent) {
 			this.dateString = format.format(new Date());
 			this.location = newestPhoneLocation;
+			distanceNearestGarage = location.getDistanceNearestGarage();
 			this.locationString =  recentLocationString; //new PhoneLocation(location).locationString; // location.getLatitude() + " " + location.getLongitude();
 	    	
 			//this.gpsAccuracy = newestPhoneLocation.getAccuracy();
@@ -576,6 +581,18 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public boolean isAtHome() {
 			return (location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location) < MATCH_DISTANCE);
+		}
+		
+		public float getDistanceNearestGarage() {
+			//TODO get all locations in users list
+			float closestDistance = 10000;
+			for(UserLocation userLocation : UserSettings.allUserLocations) {
+				float checkDistance = this.distanceTo(userLocation.location);
+				if(checkDistance < closestDistance) {
+					closestDistance = checkDistance;
+				}
+			}
+			return closestDistance;
 		}
 		
 		public String getLocationString() {

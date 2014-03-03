@@ -102,6 +102,10 @@ public class ParkingNotificationManager {
 	public void cancelRunStateNotification() {
 		cancelNotification(RUN_STATE_NOTIFICATION_ID);
 	}
+	
+	public void cancelFloorNotification() {
+		cancelNotification(FLOOR_NOTIFICATION_ID);
+	}
 
 }
 

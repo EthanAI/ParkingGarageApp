@@ -87,15 +87,25 @@ Primary mechanics:
         		Reduce distance from garage where it activates
         		Practice plotting things on maps
         			+Activate if within 500m of target. Disactivate if outside 1000m of target (only passed by)
-        	+Make dataAnalyzer count all turns for my use
+        	xMake dataAnalyzer count all turns for my use
         	
         	Does seem in garage correlates with gps (Accuracy degrades, then all stops updating)
         	Slowing down correlates with turns, and parking. Speed could be very useful
+        	
+        	++Better on/off control. Have GPS ping more frequently when near than far. 
+        		Only run sensors when close to a garage. 
+    		+Threads to run file read operations even if gps data reduction helps
+    			Thread for datarecord building, just run the sensor, fire it off to the thread to store it
+    			Thread for data analysis. Could be time intensive
+    			
+    			
+			oOption for only frequent garages or all garages on database to save battery
   
 	Bugs:
 		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
 			XWas a problem to appending final info to the front of the file
 			Bug returned 2/28. Long time analyzing the completed csv? Threading should be applied
+				Down to 12 minutes to lag out
 		XGPS info not updating on the output. Pretty sure we're listening, not getting saved?
 			XWe're just feeding itself its own value -_-. 
 			XExpand headers to have network and gps versions
@@ -109,5 +119,9 @@ Primary mechanics:
     		Add safety override to:
     			Rate of degree change
     			-Rate of azimuth change - 20 degree max per tick (0.2 s) -this causes problems, do other way
+			Jumps seem to happen around the river bridge of 99/H1 around 21.33497179	-157.8951345
+				(mag field seems crazy!) probably a bit west of river since not much GPS under the river
+				Limit the mag values? Recorded amounts are hundreds of times normal values
+				Accelerometer seems fine
         
         

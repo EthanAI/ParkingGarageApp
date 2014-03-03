@@ -75,16 +75,8 @@ public class SensorService extends Service implements SensorEventListener {
 	ParkingNotificationManager myNotifier;
 	
 	private LocationManager locationManager;
+	public long locationUpdateMinTime = -1; 
 	
-	//private Location gpsLocation;
-	//private Location networkLocation;	
-	
-	/* VERY temporary implementation. We will want the on/off triggered in other ways. 
-	 * 1. Want to have this guy hide in the background pretty much permenantly (upon app creation?)
-	 * 2. Want it to hide/sleep until connecting to bluetooth. Then checks decide if it's truly time 
-	 * turn on (drive home vs drive out)
-	 * 3. Turn off when bluetooth disabled
-	 */
 	public int onStartCommand(Intent intent, int flags, int startID) {
 		Toast.makeText(this, "Sensors Started", Toast.LENGTH_SHORT).show();
 
@@ -98,28 +90,11 @@ public class SensorService extends Service implements SensorEventListener {
         	}
         }
         */
-	
-		//set up sensor listeners
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mMagn = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD); //TODO break out into its own listener 
-        mCompass = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-        mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-        
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(this, mMagn, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(this, mCompass, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
-        
-        //Listen for signal strength
-        	//temp disabled for debugging. Not using this data anyhow. 
-        //((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS); //register the phone state listener
-
+	        
         //location listeners
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, gpsListener);
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, networkListener);  
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, locationUpdateMinTime, 0f, gpsListener);
+		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationUpdateMinTime, 0f, networkListener);  
 		
 		//get initial location and date for file naming
 	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(new Date());
@@ -151,8 +126,13 @@ public class SensorService extends Service implements SensorEventListener {
 		if(parkingLogFile.length() == 0)
 			appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");
 		
+		//set up sensor manager (sensor listeners only activate if we're close to a garage)
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        reviseUpdateFrequency();
+		
 		//create notifier and notify sensors running
 		myNotifier = new ParkingNotificationManager(this, recentData);
+		myNotifier.cancelFloorNotification();
 		myNotifier.sensorRunningNotification();
                         				
 		return START_STICKY; //keep running until specifically stopped
@@ -175,22 +155,69 @@ public class SensorService extends Service implements SensorEventListener {
 				+ ", " + recentData.newestPhoneLocation.getLocationName() + ", " + recentData.parkedFloor + "," 
 				+ orientFile.getName().toString() + "\n");
 		
-		mSensorManager.unregisterListener(this); //undo sensor listeners
 		locationManager.removeUpdates(gpsListener); //undo location listeners
 		locationManager.removeUpdates(networkListener);
+		
+		unregisterSensors();
 		
 		//((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_NONE); //unregister the phone state listener
 		//unregisterReceiver(receiver);
 	}
 	
-	/*
-	public void storeFinalLocation() {
-		insertAtFileTop(orientFile, "Parked at: " + recentData.newestPhoneLocation.getLocationName() + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
-				+ ", Distance: " + Float.toString(recentData.newestPhoneLocation.location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location)) 
-				+ ", Parked Floor: " + recentData.parkedFloor + ", ");
+	public void registerSensors() {
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mMagn = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);  
+        mCompass = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        mPressure = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+        
+        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mMagn, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mCompass, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, mPressure, SensorManager.SENSOR_DELAY_NORMAL);
+        
+        //Listen for signal strength
+        	//temp disabled for debugging. Not using this data anyhow. 
+        //((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS); //register the phone state listener
 	}
-	*/
+	
+	public void unregisterSensors() {
+		mSensorManager.unregisterListener(this); //undo sensor listeners
+	}
 
+    public void reviseUpdateFrequency() {
+    	long newLocationUpdateMinTime;
+    	//decide whats best based on our distance from nearest garage. Involve speed in the calculation?
+    	if(recentData.distanceNearestGarage < 1000) {
+    		newLocationUpdateMinTime = 0;
+    	} else if(recentData.distanceNearestGarage < 5000) {
+    		newLocationUpdateMinTime = 30 * 1000;
+    	} else if(recentData.distanceNearestGarage < 5000) {
+    		newLocationUpdateMinTime = 2 * 60 * 1000;
+    	} else {
+    		newLocationUpdateMinTime = 6 * 60 * 1000;
+    	}
+    	
+    	//check if we should turn off the sensors
+    	if(locationUpdateMinTime == 0 && newLocationUpdateMinTime != 0) {
+    		unregisterSensors();
+    	}
+    	//check if we should turn on the sensors
+    	if(locationUpdateMinTime != 0 && newLocationUpdateMinTime == 0) {
+    		registerSensors();
+    	}
+    	
+    	//if new distance means we should slow down or speed up updates, change it
+    	if(newLocationUpdateMinTime != locationUpdateMinTime) {
+    		locationUpdateMinTime = newLocationUpdateMinTime;
+    		Log.i("SensorService", "GPS frequency: " + locationUpdateMinTime);
+        	locationManager.removeUpdates(gpsListener);
+        	//locationManager.removeUpdates(networkListener);
+
+        	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, locationUpdateMinTime, 0f, gpsListener);
+        	//locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationUpdateMinTime, 0f, networkListener);
+    	}
+        	
+    }
 	
 	public LocationListener gpsListener = new LocationListener() {
         public void onLocationChanged(Location location) {
@@ -198,6 +225,10 @@ public class SensorService extends Service implements SensorEventListener {
         	recentData.addUpToLimit(location);
         	recentData.setGPSLocation(location);
             //appendToFile(gpsFile, recentData.newestPhoneLocation.locationString);
+        	
+        	//Make updates more frequent if close, less frequent if far
+        	reviseUpdateFrequency();
+        	
         	notifyUpdate(GPS_TAG);
         }
         public void onStatusChanged(String s, int i, Bundle bundle) {
@@ -369,10 +400,8 @@ public class SensorService extends Service implements SensorEventListener {
 	    	file.delete();
 	    	appendToFile(file, newText);
 		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}    	
     }

@@ -16,10 +16,7 @@ import com.ethanai.parkinggarageapp.UserSettings.UserLocation;
  * Eventually I'd like to let the user drive in their structure to the top floor. Record the path. Use that as a pattern to match
  * For now, just let them select 'Right Turn structure' 'Left turn structure' or 'Split' and have split go to TBC screen
  */
-public class DataAnalyzer {
-	//for csv retrieval 
-	private static final int DEGREE_COL = 11;
-	
+public class DataAnalyzer {	
 	ArrayList<Float> turnDegreesArray = new ArrayList<Float>();
 	ArrayList<Double> latArray = new ArrayList<Double>();
 	ArrayList<Double> longArray = new ArrayList<Double>();
@@ -260,17 +257,25 @@ public class DataAnalyzer {
 	//temporary file functions for the design phase
 	//
 	public void readFile(File dataFile) {
-		
+		int degreeIndex = -1;
 		try {
 			FileReader fr = new FileReader(dataFile);
 			BufferedReader br = new BufferedReader(fr);
-			br.readLine();//skip the two header lines
-			br.readLine();
+			br.readLine();//skip the first of two header lines
+			
+			//get the correct column out of this one (also skips the last header line)
+			String headers[] = br.readLine().split(",");
+			for(int i = 0; i < headers.length; i++) {
+				//System.out.println(headers[i] + " " + degreeIndex + " " + i);
+				if(headers[i].contains("turn degrees")) {
+					degreeIndex = i;
+				}
+			}
 			String line;
 			while((line = br.readLine()) != null) {
 				String tokens[] = line.split(",");
 				//System.out.println(tokens[8]);
-				turnDegreesArray.add(Float.parseFloat(tokens[DEGREE_COL]));
+				turnDegreesArray.add(Float.parseFloat(tokens[degreeIndex]));
 				
 				latArray.add(Double.parseDouble(tokens[1]));
 				longArray.add(Double.parseDouble(tokens[2]));

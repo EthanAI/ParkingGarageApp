@@ -9,7 +9,21 @@ Primary mechanics:
 3. Detect when driving stops
 4. Use sensor data from 2 to 3 to analyze parked floor 
 
-    Goals:
+	Floor Finder Goals:
+		I. Load up correct garage description (each entrance should have different floor borders signature)
+			1. Identify entry vector
+				Bearing/turn TRAIL (cannot guarantee where GPS will get cut off)
+				Match against historical signatures
+			2. Identify lat and long
+		II. Identify location within that garage
+			1. turn history (what if loops? Just guarantee no loops?)
+		III. Create data to match against
+			1. Allow user to register a location
+			2. Record entries to that location
+			3. Allow user to drive through garage mapping its floors
+		
+
+    General Goals:
         xRead sensors
         xRecord sensors
         xGraphical View
@@ -18,7 +32,7 @@ Primary mechanics:
             Subgoals to achieve this:
                 xRun in background
                 XGPS/BT to trigger it on and off
-                	Xreciever class to trigger this?
+                	Xreceiver class to trigger this?
                 	+check what type of BT we connected to (vs pebble watch)
                 		store in options
             	xCheck GPS for start daemon
@@ -100,6 +114,8 @@ Primary mechanics:
     		Name locations based on last available GPS location. Network is just too inaccurate	
     			
 			oOption for only frequent garages or all garages on database to save battery
+			
+			Add ads
 			
   
 	Bugs:

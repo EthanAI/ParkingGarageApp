@@ -45,13 +45,14 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public ArrayList<PhoneLocation> networkRecent = new ArrayList<PhoneLocation>();
 	
 	//headers for each data type:
-    public final String orientHeader = "Time, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, raw azimuth, smoothed azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
-    public final String accHeader = "Time, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
-    public final String magnHeader = "Date, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, x, y, z\n";
-    public final String compassHeader = "Date, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, x, y, z, total, accuracy\n";
-	public final String pressureHeader = "Date, Glat, long, accuracy, distance, bearing, altitude, speed, Nlat, long, accuracy, distance, bearing, altitude, speed, Pressure(millibars)\n";
-	public final String locationHeader = "Date, lat, long, accuracy, distance, bearing, altitude, speed \n";
+    public final String orientHeader = "Time, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, raw azimuth, smoothed azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
+    public final String accHeader = "Time, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
+    public final String magnHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, x, y, z\n";
+    public final String compassHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, x, y, z, total, accuracy\n";
+	public final String pressureHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Pressure(millibars)\n";
+	public final String locationHeader = "Date, lat, long, accuracy, distance garage, garage name, bearing, altitude, speed \n";
 
+	private final String BLANK_GPS_RESULT = "0,0,0,0,0,0,0,0,";
 	//parts needed to be collected before creating a new DerivedOrientation
 	private SensorEvent accRecentEvent = null;
 	private SensorEvent magnRecentEvent = null;
@@ -75,11 +76,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		//initialize string with all gps location
 		if(null == currentGPSLocation)
-			recentLocationString = "0,0,0,0,0,0,0" + ", ";
+			recentLocationString = BLANK_GPS_RESULT;
 		else
 			recentLocationString = currentGPSLocation.locationString + ", ";
 		if(null == currentNetworkLocation)
-			recentLocationString += "0,0,0,0,0,0,0";
+			recentLocationString += BLANK_GPS_RESULT;
 		else
 			recentLocationString += currentNetworkLocation.locationString;
 	}
@@ -202,11 +203,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//initialize string with all gps location
 		recentLocationString = "";
 		if(null == currentGPSLocation)
-			recentLocationString += "0,0,0,0,0,0,0,";
+			recentLocationString += BLANK_GPS_RESULT;
 		else
-			recentLocationString += currentGPSLocation.locationString + ", ";
+			recentLocationString += currentGPSLocation.locationString;
 		if(null == currentNetworkLocation)
-			recentLocationString += "0,0,0,0,0,0,0,";
+			recentLocationString += "BLANK_GPS_RESULT";
 		else
 			recentLocationString += currentNetworkLocation.locationString;
 	}
@@ -218,11 +219,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//initialize string with all gps location
 		recentLocationString = "";
 		if(null == currentGPSLocation)
-			recentLocationString += "0,0,0,0,0,0,0,";
+			recentLocationString += BLANK_GPS_RESULT;
 		else
-			recentLocationString += currentGPSLocation.locationString + ", ";
+			recentLocationString += currentGPSLocation.locationString;
 		if(null == currentNetworkLocation)
-			recentLocationString += "0,0,0,0,0,0,0,";
+			recentLocationString += BLANK_GPS_RESULT;
 		else
 			recentLocationString += currentNetworkLocation.locationString;
 	}
@@ -254,7 +255,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public String toFormattedString() {
 			return dateString + ", " +
-					locationString + ", " +
+					locationString +
 	                Float.toString(x) + "," + 
 	                Float.toString(y) + "," +
 	                Float.toString(z) + "," +
@@ -406,7 +407,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//Output converts degrees into quarter turns. Easier to eyeball. Also turn convention switched to my preference
 		public String toFormattedString() {
 			return  dateString + ", " +
-					recentLocationString + "," +
+					recentLocationString +
 	                Double.toString(azimuthInDegrees) + "," +
 	                Double.toString(0.0) + "," +
 	                Double.toString(pitchInDegrees) + "," +
@@ -534,7 +535,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public String toFormattedString() {
 			return  dateString + ", " +
-					locationString + ", " +
+					locationString +
 	                Float.toString(x) + ", " +
 	                Float.toString(y) + ", " +
 	                Float.toString(z) + ", " +
@@ -607,9 +608,10 @@ public class RecentSensorData implements Serializable { //must specify serializa
 					+ location.getLongitude() + ", " 
 					+ location.getAccuracy() + ", " 
 					+ getDistanceNearestGarage() + ", " 
+					+ getNearestGarage().name + ", "
 					+ location.getBearing() + ", " 
 					+ location.getAltitude() + ", " 
-					+ location.getSpeed();
+					+ location.getSpeed() + ", ";
 		}
 		
 		public String toFormattedString() {

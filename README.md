@@ -13,7 +13,6 @@ Primary mechanics:
         xRead sensors
         xRecord sensors
         xGraphical View
-          Needs prettier graphing. achart needs studying
         
         Run only when in parking garage
             Subgoals to achieve this:
@@ -22,10 +21,10 @@ Primary mechanics:
                 	Xreciever class to trigger this?
                 	+check what type of BT we connected to (vs pebble watch)
                 		store in options
-            	Check GPS for start daemon
-            		Check GPS for near home
+            	xCheck GPS for start daemon
+            		xCheck GPS for near home
             		Check gps travel speed?
-            		Turn on when GPS accuracy goes down?
+            		xTurn on when GPS accuracy goes down?
         xExport data
         	xStore locally in a way accessible by pc via usb
         	-Button export via internet/wifi
@@ -53,12 +52,13 @@ Primary mechanics:
 	        	xStart simple
 	        	x1. Get told when entering garage, just calculate total rotations 
 	        	x2. azimuth from ortientation calculation seems pretty good. Needs compensation for crossing 180 to -180 and back
-        /Record history of parking location/times
-        	Organize somehow
+        xRecord history of parking location/times
+        	xOrganize somehow
         /Notification Icon
-        	Make better art
+        	xMake better art
         	stronger test that broadcastReceiver is actually running
-        Widget to show most recent floor
+        xWidget to show most recent floor
+        	improve its appearance
         Confirm battery usage is minimal
         	xCurrently less than AndroidOS usage
         	Confirm low as I can go
@@ -67,19 +67,17 @@ Primary mechanics:
     	//patern notes
     		xWork backwards from end
     		xCut off last 90 degrees regardless of direction (turn into stall)
-    		Check accelerometer for possible speed indications? Enter the gate?
-    		/Ignore weird phone movements since working backwards. 
+    		-Check accelerometer for possible speed indications? Enter the gate?
     		-Subtract out gravity from accelerometer, build cumulative values. See if we can ID stopping
-    			-this looks very challenging
+    			-this looks unproductive and is already done by the getOrientation() api
     		+use compass bearing to identify entry to garage (can we manage varying phone positions?)
     			GPS bearing is immune to phone orientation changes
     		+assume confusion means first floor
     		99 final signal strength means in garage?
     			Check for correlation
-    		Record gps altitude? 
-    		Record gps bearing?
+    		xRecord gps altitude? 
+    		xRecord gps bearing?
     		+Increase GPS update rate
-    		Sync all sensors to single line? 
     		+orientation only 5x per second. Fix it
     		Acceleration seems not useful. y is acceleration? (who knows, phone can move)
         	

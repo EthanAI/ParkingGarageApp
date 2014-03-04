@@ -28,7 +28,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-//TODO add reciever for orientation also add that graph, probably our important one
 @SuppressLint("SimpleDateFormat")
 public class GraphActivity extends Activity {
 	
@@ -72,7 +71,6 @@ public class GraphActivity extends Activity {
 	//http://stackoverflow.com/questions/8802157/how-to-use-localbroadcastmanager
 	// Our handler for received Intents. This will be called whenever an Intent
 	// with an action named "custom-event-name" is broadcasted.
-    //TODO move this to another class or clean up
 	private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -151,50 +149,6 @@ public class GraphActivity extends Activity {
 		mRenderer.setXLabelsColor(Color.BLACK);
 		mRenderer.setApplyBackgroundColor(true);
 		mRenderer.setBackgroundColor(Color.BLACK);
-		
-    	/*
-        //mCurrentSeries = new TimeSeries("Accelerometer");
-        mXSeries = new TimeSeries("X");
-        mYSeries = new TimeSeries("Y");
-        mZSeries = new TimeSeries("Z");
-        mAngleSeries = new TimeSeries("Angle");
-
-        mDataset.addSeries(mXSeries);
-        mDataset.addSeries(mYSeries);
-        mDataset.addSeries(mZSeries);
-        mDataset.addSeries(mAngleSeries);
-
-        mXRenderer = new XYSeriesRenderer();
-        mXRenderer.setColor(Color.RED);
-        mYRenderer = new XYSeriesRenderer();
-        mYRenderer.setColor(Color.YELLOW);
-        mZRenderer = new XYSeriesRenderer();
-        mZRenderer.setColor(Color.GREEN);
-        mAngleRenderer = new XYSeriesRenderer();
-        mAngleRenderer.setColor(Color.WHITE);
-
-        mRenderer.addSeriesRenderer(mXRenderer);
-		mRenderer.addSeriesRenderer(mYRenderer);
-		mRenderer.addSeriesRenderer(mZRenderer);
-		mRenderer.addSeriesRenderer(mAngleRenderer);
-        
-		//mRenderer.setYTitle("gs of force");
-		mRenderer.setYTitle("Angle");
-		mRenderer.setAxisTitleTextSize(MEDIUM_TEXT_SIZE);
-		mRenderer.setLegendTextSize(MEDIUM_TEXT_SIZE);
-		
-		mRenderer.setShowGridX(true);
-		//TODO add button to restore view to following
-		
-		mRenderer.setLabelsTextSize(MEDIUM_TEXT_SIZE);
-		mRenderer.setXLabelsColor(Color.BLACK);
-		mRenderer.setApplyBackgroundColor(true);
-		mRenderer.setBackgroundColor(Color.BLACK);
-		//mRenderer.setMarginsColor(Color.RED);
-		
-    	//mCurrentRenderer.setChartValuesTextSize(val);
-		*/
-
     }
 
     private void loadData() {

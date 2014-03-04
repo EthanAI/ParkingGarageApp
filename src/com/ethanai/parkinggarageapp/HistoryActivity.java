@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Intent;
 //import android.content.Intent;
 //import android.content.pm.ActivityInfo;
 //import android.content.pm.PackageManager;
@@ -100,8 +101,9 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
      * Function for the button
      */
     public void changeToGraphActivity(View view) {
-    	//Intent intent = new Intent(TextActivity.this, GraphActivity.class);
-        //startActivity(intent);
+    	Intent intent = new Intent(HistoryActivity.this, GraphActivity.class);
+    	intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); //Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
         this.finish();
     }
 

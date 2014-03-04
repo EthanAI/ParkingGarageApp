@@ -21,6 +21,7 @@ import java.util.Date;
 
 import android.annotation.SuppressLint;
 import android.app.Service;
+import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -142,14 +143,12 @@ public class SensorService extends Service implements SensorEventListener {
 
 
 	public void onDestroy() {
-		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
 		super.onDestroy();		
 		
 		//display result to user
 		myNotifier.cancelRunStateNotification(); //turn off sensor notification
 		//myNotifier.daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
 		myNotifier.floorNotification();
-		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
 
 		//keep result somewhere
 		//storeFinalLocation();
@@ -164,6 +163,13 @@ public class SensorService extends Service implements SensorEventListener {
 		
 		//((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_NONE); //unregister the phone state listener
 		//unregisterReceiver(receiver);
+		
+		// Tell widget to update 
+		 Intent brIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+         sendBroadcast(brIntent);
+         
+ 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
 	}
 	
 	public void registerSensors() {

@@ -93,7 +93,7 @@ public class DataAnalyzer {
 			PhoneLocation currentLocation = phoneLocation[0];
 			currentLocationName = currentLocation.getLocationName();
 		} else {
-			currentLocationName = "Home";
+			currentLocationName = "Home"; //hardcode for offline testing. Code should not be used in the wild
 		}
 		UserLocation userLocation = UserSettings.getUserLocation(currentLocationName);
 		ArrayList<FloorBorder> floorBorders = userLocation.floorBorders;

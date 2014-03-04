@@ -11,6 +11,7 @@ import android.location.LocationManager;
 //import android.util.Log;
 
 
+
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -64,7 +65,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public PhoneLocation currentGPSLocation;
 	public PhoneLocation currentNetworkLocation;
 	public float distanceNearestGarage = 0; //assume we're in a garage until we get a proper piece of data to confirm
-	public final String HOME_TAG = "Home";
+	//public final String HOME_TAG = "Home";
 	
 	public String recentLocationString = "";
 
@@ -156,9 +157,10 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public void addUpToLimit(Location newLocation) {
 		if(newLocation.getProvider().equalsIgnoreCase(LocationManager.GPS_PROVIDER)) {
 			addUpToLimit(gpsRecent, new PhoneLocation(newLocation));
+			setGPSLocation(newLocation);
 		} else {
 			addUpToLimit(networkRecent, new PhoneLocation(newLocation));
-
+			setNetworkLocation(newLocation);
 		}
 	}
 	
@@ -573,33 +575,38 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String getLocationName() {
-			if(isAtHome()) 
-				return HOME_TAG;
+			if(isAtGarage()) 
+				return getNearestGarage().name;
 			else
 				return getLocationCoordinates();
 		}
 		
-		public boolean isAtHome() {
-			return (location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location) < MATCH_DISTANCE);
+		public boolean isAtGarage() {
+			return (getDistanceNearestGarage() < MATCH_DISTANCE);
 		}
 		
 		public float getDistanceNearestGarage() {
-			//TODO get all locations in users list
-			float closestDistance = 10000;
+			return this.distanceTo(getNearestGarage().location);
+		}
+		
+		public UserLocation getNearestGarage() {
+			UserLocation closestLocation = null; //= UserSettings.allUserLocations.get(0).location;
+			float closestDistance = 100000000;
 			for(UserLocation userLocation : UserSettings.allUserLocations) {
 				float checkDistance = this.distanceTo(userLocation.location);
 				if(checkDistance < closestDistance) {
 					closestDistance = checkDistance;
+					closestLocation = userLocation;
 				}
 			}
-			return closestDistance;
+			return closestLocation;
 		}
 		
 		public String getLocationString() {
 			return location.getLatitude() + ", " 
 					+ location.getLongitude() + ", " 
 					+ location.getAccuracy() + ", " 
-					+ location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location) + ", " 
+					+ getDistanceNearestGarage() + ", " 
 					+ location.getBearing() + ", " 
 					+ location.getAltitude() + ", " 
 					+ location.getSpeed();

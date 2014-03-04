@@ -14,6 +14,11 @@
                 android:layout_width="wrap_content"
                 android:text="Delete CSVs"
                 android:onClick="deleteFiles" />
+            <Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Settings"
+				android:onClick="changeToSettingsActivity" />
 			<Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"

@@ -31,12 +31,31 @@ public class UserSettings {
 							new FloorBorder(11, 4, "4"),
 							new FloorBorder(13, 99, "High?")
 							)); 
-			//form new Location
-			UserLocation newLocation = new UserLocation(name, location, borders);
-			//add to list
-			allUserLocations.add(newLocation);
+			//form new Location and add it
+			allUserLocations.add(new UserLocation(name, location, borders));
+			
+			name = "UH Lot 20";
+			location = new Location(name);
+			location.setLatitude(21.295819); 
+			location.setLongitude(-157.818232); 
+			//21.2930909	-157.8171503
+
+			borders = new ArrayList<FloorBorder>(
+					Arrays.asList(
+							new FloorBorder(-5, 3, "3L"),
+							new FloorBorder(-3, 2, "2L"),
+							new FloorBorder(-1, 1, "1L"),
+							new FloorBorder(1, 1, "1R"),
+							new FloorBorder(3, 2, "1R Looping?")
+							)); 
+			//form new Location and add it
+			allUserLocations.add(new UserLocation(name, location, borders));
 		}
 	}	
+	
+	public void addUserLocation(String name, Location location, ArrayList<FloorBorder> borders) {
+		allUserLocations.add(new UserLocation(name, location, borders));
+	}
 	
 	public static UserLocation getUserLocation(String searchName) {
 		UserLocation returnValue = null;
@@ -51,6 +70,16 @@ public class UserSettings {
 			returnValue = allUserLocations.get(0);
 		
 		return returnValue;
+	}
+	
+	public static ArrayList<String> toArrayList() {
+		ArrayList<String> settingData = new ArrayList<String>();
+		for(UserLocation userLocation : allUserLocations) {
+			String text = "";
+			text += userLocation.name + " " + userLocation.location.getLatitude() + " " + userLocation.location.getLatitude();
+			settingData.add(text);
+		}
+		return settingData;
 	}
 	
 	class UserLocation {

@@ -281,6 +281,12 @@ public class GraphActivity extends Activity {
 		//this.finish();
 	}
 	
+	public void changeToSettingsActivity(View view) {
+	    Intent intent = new Intent(GraphActivity.this, SettingsActivity.class);
+	    startActivity(intent);
+		//this.finish();
+	}
+	
 	public void startSensorService(View view) { 
 		Intent intent = new Intent(getBaseContext(), SensorService.class);
 		//intent.putExtra("maxReadingHistoryCount", plotDataCount); //later restore this so we can control the graph view easily

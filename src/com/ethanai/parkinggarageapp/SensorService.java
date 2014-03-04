@@ -70,7 +70,7 @@ public class SensorService extends Service implements SensorEventListener {
 	private final String GPS_TAG			= "gps";
 	private final String NETWORK_TAG		= "network";
 	
-	private final String HOME_TAG			= "Home";
+	//private final String HOME_TAG			= "Home";
 	
 	ParkingNotificationManager myNotifier;
 	
@@ -92,6 +92,7 @@ public class SensorService extends Service implements SensorEventListener {
         */
 	        
         //location listeners
+		locationUpdateMinTime = 0; //temporary hard coding
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, locationUpdateMinTime, 0f, gpsListener);
 		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationUpdateMinTime, 0f, networkListener);  
@@ -106,7 +107,7 @@ public class SensorService extends Service implements SensorEventListener {
 
 	    String locationName = recentData.newestPhoneLocation.getLocationName();
 	    String locationCoords = recentData.newestPhoneLocation.getLocationCoordinates();
-	    Float distanceFromHome = recentData.newestPhoneLocation.location.distanceTo(UserSettings.getUserLocation(HOME_TAG).location);
+	    Float distanceFromNearestGarage = recentData.newestPhoneLocation.getDistanceNearestGarage();
 	    
 	    //set up files to hold the data
 	    accelerometerFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " accelReadings.csv");
@@ -117,18 +118,19 @@ public class SensorService extends Service implements SensorEventListener {
 	    //signalFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " signalStrength.csv");
 	    parkingLogFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, "parkingLog.csv");
 	    
-		appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
+		appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
 		appendToFile(orientFile, recentData.orientHeader);
-		appendToFile(accelerometerFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
+		appendToFile(accelerometerFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
 		appendToFile(accelerometerFile, recentData.accHeader);
-		appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromHome + "\n");
+		appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
 		appendToFile(magnFile, recentData.magnHeader);
 		if(parkingLogFile.length() == 0)
 			appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");
 		
 		//set up sensor manager (sensor listeners only activate if we're close to a garage)
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        reviseUpdateFrequency();
+        //reviseUpdateFrequency();
+        registerSensors(); //temporary hard coded
 		
 		//create notifier and notify sensors running
 		myNotifier = new ParkingNotificationManager(this, recentData);
@@ -223,7 +225,6 @@ public class SensorService extends Service implements SensorEventListener {
         public void onLocationChanged(Location location) {
         	//gpsLocation = location;
         	recentData.addUpToLimit(location);
-        	recentData.setGPSLocation(location);
             //appendToFile(gpsFile, recentData.newestPhoneLocation.locationString);
         	
         	//Make updates more frequent if close, less frequent if far
@@ -246,7 +247,7 @@ public class SensorService extends Service implements SensorEventListener {
         public void onLocationChanged(Location location) {
         	//networkLocation = location;
         	recentData.addUpToLimit(location);
-        	recentData.setNetworkLocation(location);
+        	
         	notifyUpdate(NETWORK_TAG);
         }
         public void onStatusChanged(String s, int i, Bundle bundle) {

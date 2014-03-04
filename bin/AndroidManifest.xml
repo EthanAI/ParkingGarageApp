@@ -33,6 +33,9 @@
         <activity
             android:name="com.ethanai.parkinggarageapp.HistoryActivity" >
         </activity>
+        <activity
+            android:name="com.ethanai.parkinggarageapp.SettingsActivity" >
+        </activity>
         <service 
             android:name=".SensorService" />
         <receiver android:name=".DaemonReceiver" >

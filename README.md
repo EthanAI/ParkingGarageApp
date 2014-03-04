@@ -97,9 +97,12 @@ Primary mechanics:
     		+Threads to run file read operations even if gps data reduction helps
     			Thread for datarecord building, just run the sensor, fire it off to the thread to store it
     			Thread for data analysis. Could be time intensive
-    			
+    		
+    		some garages may have loops on the same floor (UHM)
+    		Name locations based on last available GPS location. Network is just too inaccurate	
     			
 			oOption for only frequent garages or all garages on database to save battery
+			
   
 	Bugs:
 		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.

@@ -76,7 +76,8 @@ public class SensorService extends Service implements SensorEventListener {
 	ParkingNotificationManager myNotifier;
 	
 	private LocationManager locationManager;
-	public long locationUpdateMinTime = -1; 
+	public long locationUpdateMinTime = 10000; 
+	//private boolean isSensorsRuning
 	
 	public int onStartCommand(Intent intent, int flags, int startID) {
 		Toast.makeText(this, "Sensors Started", Toast.LENGTH_SHORT).show();
@@ -93,10 +94,10 @@ public class SensorService extends Service implements SensorEventListener {
         */
 	        
         //location listeners
-		locationUpdateMinTime = 0; //temporary hard coding
+		//locationUpdateMinTime = 0; //temporary hard coding
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, locationUpdateMinTime, 0f, gpsListener);
-		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationUpdateMinTime, 0f, networkListener);  
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, gpsListener);
+		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, networkListener);  
 		
 		//get initial location and date for file naming
 	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(new Date());
@@ -130,13 +131,14 @@ public class SensorService extends Service implements SensorEventListener {
 		
 		//set up sensor manager (sensor listeners only activate if we're close to a garage)
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        //reviseUpdateFrequency();
-        registerSensors(); //temporary hard coded
+        // disabled to see if the GPS signal will trigger the sensors
+        //reviseUpdateFrequency(); //decide if we should start the sensors or not
+        //registerSensors(); //temporary hard coded
 		
-		//create notifier and notify sensors running
+		//create notifier 
 		myNotifier = new ParkingNotificationManager(this, recentData);
 		myNotifier.cancelFloorNotification();
-		myNotifier.sensorRunningNotification();
+		myNotifier.gpsRunningNotification();
                         				
 		return START_STICKY; //keep running until specifically stopped
 	}
@@ -145,11 +147,6 @@ public class SensorService extends Service implements SensorEventListener {
 	public void onDestroy() {
 		super.onDestroy();		
 		
-		//display result to user
-		myNotifier.cancelRunStateNotification(); //turn off sensor notification
-		//myNotifier.daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
-		myNotifier.floorNotification();
-
 		//keep result somewhere
 		//storeFinalLocation();
 		appendToFile(parkingLogFile, recentData.parkedDateString + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
@@ -163,6 +160,12 @@ public class SensorService extends Service implements SensorEventListener {
 		
 		//((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_NONE); //unregister the phone state listener
 		//unregisterReceiver(receiver);
+		
+		//display result to user
+		myNotifier.cancelSensorNotification(); //turn off sensor notification
+		myNotifier.cancelGPSNotification();
+		//myNotifier.daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
+		myNotifier.floorNotification();
 		
 		// Tell widget to update 
 		 Intent brIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
@@ -186,10 +189,17 @@ public class SensorService extends Service implements SensorEventListener {
         //Listen for signal strength
         	//temp disabled for debugging. Not using this data anyhow. 
         //((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS); //register the phone state listener
+	
+        //notification 
+        myNotifier.cancelGPSNotification();
+        myNotifier.sensorRunningNotification();
 	}
 	
 	public void unregisterSensors() {
 		mSensorManager.unregisterListener(this); //undo sensor listeners
+		
+        myNotifier.cancelSensorNotification();
+        myNotifier.gpsRunningNotification();
 	}
 
     public void reviseUpdateFrequency() {
@@ -204,20 +214,28 @@ public class SensorService extends Service implements SensorEventListener {
     	} else {
     		newLocationUpdateMinTime = 6 * 60 * 1000;
     	}
+		Log.i("SensorService", "GPS frequency: " + locationUpdateMinTime + " " + newLocationUpdateMinTime 
+				+ (locationUpdateMinTime != 0 && newLocationUpdateMinTime == 0) + " "
+				+ (locationUpdateMinTime == 0 && newLocationUpdateMinTime != 0)
+				+ " " + recentData.distanceNearestGarage);
+
     	
-    	//check if we should turn off the sensors
-    	if(locationUpdateMinTime == 0 && newLocationUpdateMinTime != 0) {
-    		unregisterSensors();
-    	}
+
     	//check if we should turn on the sensors
     	if(locationUpdateMinTime != 0 && newLocationUpdateMinTime == 0) {
     		registerSensors();
+    		Log.i("SensorService", "sensors on");
+    	}
+    	//check if we should turn off the sensors
+    	if(locationUpdateMinTime == 0 && newLocationUpdateMinTime != 0) {
+    		unregisterSensors();
+    		Log.i("SensorService", "sensors off");
     	}
     	
     	//if new distance means we should slow down or speed up updates, change it
     	if(newLocationUpdateMinTime != locationUpdateMinTime) {
     		locationUpdateMinTime = newLocationUpdateMinTime;
-    		Log.i("SensorService", "GPS frequency: " + locationUpdateMinTime);
+    		//Log.i("SensorService", "GPS frequency: " + locationUpdateMinTime);
         	locationManager.removeUpdates(gpsListener);
         	//locationManager.removeUpdates(networkListener);
 

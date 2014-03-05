@@ -88,6 +88,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	RecentSensorData(Location location) {
 		this();
 		newestPhoneLocation = new PhoneLocation(location);
+		distanceNearestGarage = newestPhoneLocation.getDistanceNearestGarage();
 	}
 	
 	/*
@@ -199,6 +200,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public void setGPSLocation(Location location) {
 		currentGPSLocation = new PhoneLocation(location);
 		newestPhoneLocation = getBestLocation();
+		distanceNearestGarage = newestPhoneLocation.getDistanceNearestGarage();
 		
 		//initialize string with all gps location
 		recentLocationString = "";
@@ -215,6 +217,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public void setNetworkLocation(Location location) {
 		currentNetworkLocation = new PhoneLocation(location);
 		newestPhoneLocation = getBestLocation();
+		distanceNearestGarage = newestPhoneLocation.getDistanceNearestGarage();
 		
 		//initialize string with all gps location
 		recentLocationString = "";
@@ -229,7 +232,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	}
 	
 	public PhoneLocation getBestLocation() {
-		return currentNetworkLocation; //assuming true for now
+		return currentGPSLocation == null ? currentNetworkLocation : currentGPSLocation; //assuming true for now
 	}
 	
 	class MagnetReading {
@@ -587,12 +590,15 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public float getDistanceNearestGarage() {
-			return this.distanceTo(getNearestGarage().location);
+			if(null == getNearestGarage())
+				return 999999999;
+			else
+				return this.distanceTo(getNearestGarage().location);
 		}
 		
 		public UserLocation getNearestGarage() {
-			UserLocation closestLocation = null; //= UserSettings.allUserLocations.get(0).location;
-			float closestDistance = 100000000;
+			UserLocation closestLocation = UserSettings.allUserLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
+			float closestDistance = closestLocation.location.distanceTo(location);
 			for(UserLocation userLocation : UserSettings.allUserLocations) {
 				float checkDistance = this.distanceTo(userLocation.location);
 				if(checkDistance < closestDistance) {
@@ -604,14 +610,17 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String getLocationString() {
-			return location.getLatitude() + ", " 
-					+ location.getLongitude() + ", " 
-					+ location.getAccuracy() + ", " 
-					+ getDistanceNearestGarage() + ", " 
-					+ getNearestGarage().name + ", "
-					+ location.getBearing() + ", " 
-					+ location.getAltitude() + ", " 
-					+ location.getSpeed() + ", ";
+			if(null == location)
+				return BLANK_GPS_RESULT;
+			else
+				return location.getLatitude() + ", " 
+						+ location.getLongitude() + ", " 
+						+ location.getAccuracy() + ", " 
+						+ getDistanceNearestGarage() + ", " 
+						+ getNearestGarage().name + ", "
+						+ location.getBearing() + ", " 
+						+ location.getAltitude() + ", " 
+						+ location.getSpeed() + ", ";
 		}
 		
 		public String toFormattedString() {

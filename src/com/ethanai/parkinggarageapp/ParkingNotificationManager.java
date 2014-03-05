@@ -8,8 +8,10 @@ import android.support.v4.app.NotificationCompat;
 
 public class ParkingNotificationManager {
 	// Sets an ID for the notification
-	final int RUN_STATE_NOTIFICATION_ID = 001;
+	final int SENSOR_NOTIFICATION_ID 	= 001;
 	final int FLOOR_NOTIFICATION_ID 	= 002;
+	final int GPS_NOTIFICATION_ID		= 003;
+	final int DAEMON_NOTIFICATION_ID	= 004;
 	
 	Context context;
 	RecentSensorData recentData;
@@ -41,8 +43,35 @@ public class ParkingNotificationManager {
         //.setNumber(7);
 	    // Because the ID remains unchanged, the existing notification is
 	    // updated.
-		mNotifyMgr.notify(RUN_STATE_NOTIFICATION_ID, mBuilder.build());
+		mNotifyMgr.notify(SENSOR_NOTIFICATION_ID, mBuilder.build());
 	}
+	
+	public void gpsRunningNotification() {
+		//modify notification http://developer.android.com/training/notify-user/managing.html
+		NotificationManager mNotifyMgr = 
+		        (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+		
+		NotificationCompat.Builder mBuilder =
+			    new NotificationCompat.Builder(context)
+				.setSmallIcon(R.drawable.ic_launcher)
+			    .setContentTitle("GPS Running")
+			    .setContentText("GPS running at reduced frequency. Sensors off.");
+		
+		Intent resultIntent = new Intent(context, GraphActivity.class);
+		// Because clicking the notification opens a new ("special") activity, there's
+		// no need to create an artificial back stack.
+		PendingIntent resultPendingIntent = PendingIntent.getActivity(context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		//set click behavior
+		mBuilder.setContentIntent(resultPendingIntent);
+		
+		//mBuilder.setContentText("Modified")
+        //.setNumber(7);
+	    // Because the ID remains unchanged, the existing notification is
+	    // updated.
+		mNotifyMgr.notify(GPS_NOTIFICATION_ID, mBuilder.build());
+	}
+	
+	
 	
 	public void floorNotification() {
 		//modify notification http://developer.android.com/training/notify-user/managing.html
@@ -89,18 +118,22 @@ public class ParkingNotificationManager {
 		NotificationManager mNotifyMgr = 
 		        (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 		// Builds the notification and issues it.
-		mNotifyMgr.notify(RUN_STATE_NOTIFICATION_ID, mBuilder.build());
+		mNotifyMgr.notify(DAEMON_NOTIFICATION_ID, mBuilder.build());
 	}
 	
 	public void cancelNotification(int notificationLabel) {
 		//delete notification http://developer.android.com/reference/android/app/NotificationManager.html#cancel(int)
 		NotificationManager mNotifyMgr = 
 		        (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-		mNotifyMgr.cancel(notificationLabel);;
+		mNotifyMgr.cancel(notificationLabel);
 	}
 	
-	public void cancelRunStateNotification() {
-		cancelNotification(RUN_STATE_NOTIFICATION_ID);
+	public void cancelSensorNotification() {
+		cancelNotification(SENSOR_NOTIFICATION_ID);
+	}
+	
+	public void cancelGPSNotification() {
+		cancelNotification(GPS_NOTIFICATION_ID);
 	}
 	
 	public void cancelFloorNotification() {

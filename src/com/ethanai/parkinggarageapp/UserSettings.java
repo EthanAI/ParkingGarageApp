@@ -23,7 +23,7 @@ public class UserSettings {
 			ArrayList<FloorBorder> borders = new ArrayList<FloorBorder>(
 					Arrays.asList(
 							new FloorBorder(-1, -1, "Low?"),
-							new FloorBorder(1, 1, "1 Default"),
+							new FloorBorder(1, 1, "1 Def"),
 							new FloorBorder(3, 2, "2"),
 							new FloorBorder(5, 2.5f, "2B"),
 							new FloorBorder(7, 3, "3"),

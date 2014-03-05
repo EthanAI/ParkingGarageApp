@@ -90,6 +90,12 @@ public class GraphActivity extends Activity {
 		    	TextView tvFloor = (TextView) findViewById(R.id.floorField);
 		    	tvFloor.setText("Floor: " + recentData.parkedFloor);
 		    	
+		    	TextView tvDistance = (TextView) findViewById(R.id.distanceField);
+		    	tvDistance.setText("D: " + Float.toString(recentData.distanceNearestGarage));
+		    	
+		    	//TextView tvName = (TextView) findViewById(R.id.distanceField);
+		    	//tvName.setText("N: " + recentData.newestPhoneLocation.getNearestGarage().name);
+		    	
 		    	updateChart();	
 		    } else if (sensorType.equals(COMPASS_TAG)) {
 		    	

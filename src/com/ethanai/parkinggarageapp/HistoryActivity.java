@@ -7,12 +7,14 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 //import android.content.Intent;
 //import android.content.pm.ActivityInfo;
 //import android.content.pm.PackageManager;
 //import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -24,15 +26,15 @@ import android.widget.ListView;
 
 public class HistoryActivity extends Activity implements OnItemClickListener {
 
-	//TODO list view. Adapters. Click to ...map it?
-    /** Called when the activity is first created. */
+	ArrayList<String> adapterStrings;
+	/** Called when the activity is first created. */
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);   //get the overall layout
 
         ArrayList<String> listStrings = readColumns(UserSettings.FLOOR_COLUMN_INDEX, 1);
-        ArrayList<String> adapterStrings = getSortedRecent(listStrings, 10);
+        adapterStrings = getSortedRecent(listStrings, 10);
         
         //pass the layout for the individual items (kinda mundane but expandable in the future)
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.history_list_item, adapterStrings);
@@ -40,7 +42,7 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
         ListView listView = (ListView) findViewById(R.id.listview); // get the field for the listview within the overall layout
         listView.setAdapter(adapter);
         
-        //listView.setOnClickListener(this);
+        listView.setOnItemClickListener(this);
         
         /*
         //for debugging
@@ -108,13 +110,26 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
     }
 
 
-
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View view, int position, long id) {
-		// TODO Auto-generated method stub
 		//Object o = lv.getItemAtPosition(position);
+		String viewText = adapterStrings.get((int) id);
+		String coordinates = viewText.split("\n")[2];
+		Log.i("HistoryActivity", coordinates);
+		try {
+			//String address = addrText.getText().toString();
+			//address = address.replace(' ', '+');
+			
+			Intent geoIntent = new Intent(
+					android.content.Intent.ACTION_VIEW, Uri.parse(
+							"geo:0,0?q=" + coordinates));
+			startActivity(geoIntent);
+		} catch (Exception e) {
+			Log.e("HistoryActivity", e.toString());
+		}
 		
 	}
+
 	
 	
 }

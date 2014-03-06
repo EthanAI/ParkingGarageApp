@@ -582,7 +582,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			if(isAtGarage()) 
 				return getNearestGarage().name;
 			else
-				return getLocationCoordinates();
+				return "Other"; //getLocationCoordinates();
 		}
 		
 		public boolean isAtGarage() {

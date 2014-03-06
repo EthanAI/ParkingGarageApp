@@ -250,6 +250,7 @@ public class SensorService extends Service implements SensorEventListener {
         	//gpsLocation = location;
         	recentData.addUpToLimit(location);
             //appendToFile(gpsFile, recentData.newestPhoneLocation.locationString);
+        	Log.i("SensorService", "Distance: " + recentData.distanceNearestGarage);
         	
         	//Make updates more frequent if close, less frequent if far
         	reviseUpdateFrequency();
@@ -271,6 +272,9 @@ public class SensorService extends Service implements SensorEventListener {
         public void onLocationChanged(Location location) {
         	//networkLocation = location;
         	recentData.addUpToLimit(location);
+        	Log.i("SensorService", "Distance: " + recentData.distanceNearestGarage);
+        	reviseUpdateFrequency();
+
         	
         	notifyUpdate(NETWORK_TAG);
         }

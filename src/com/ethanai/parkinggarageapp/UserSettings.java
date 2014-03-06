@@ -66,8 +66,9 @@ public class UserSettings {
 		}
 		
 		//catch case just for testing
-		if(returnValue == null) 
+		if(returnValue == null) {
 			returnValue = allUserLocations.get(0);
+		}
 		
 		return returnValue;
 	}

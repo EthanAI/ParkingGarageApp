@@ -33,7 +33,7 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);   //get the overall layout
 
-        ArrayList<String> listStrings = readColumns(UserSettings.FLOOR_COLUMN_INDEX, 1);
+        ArrayList<String> listStrings = readLog(1);
         adapterStrings = getSortedRecent(listStrings, 10);
         
         //pass the layout for the individual items (kinda mundane but expandable in the future)
@@ -74,7 +74,7 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 		return sortedArrayList;
 	}
 	
-	public ArrayList<String> readColumns(int targetColumnIndex, int headerRowCount) {
+	public ArrayList<String> readLog(int headerRowCount) {
 		ArrayList<String> arrayList = new ArrayList<String>();
 		File file = new File(Environment.getExternalStorageDirectory().toString() + "/" + UserSettings.STORAGE_DIRECTORY_NAME 
 				+ "/parkingLog.csv");
@@ -87,7 +87,8 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 			String line = "";
 			while((line = br.readLine()) != null) {
 				String entries[] = line.split(",");
-				arrayList.add(entries[UserSettings.FLOOR_COLUMN_INDEX] + "\n" + entries[0] + "\n" + entries[2]);
+				arrayList.add(entries[UserSettings.FLOOR_COLUMN_INDEX] + "\n" + entries[0] + "\n" + entries[1]
+						+ "\n" + entries[2]);
 			}
 			br.close();			
 		}

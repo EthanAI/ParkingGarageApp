@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+
 //import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 import com.ethanai.parkinggarageapp.RecentSensorData.PhoneLocation;
 import com.ethanai.parkinggarageapp.UserSettings.FloorBorder;
@@ -116,14 +117,17 @@ public class DataAnalyzer {
 	
 	public String getCurrentFloor() {
 		String currentLocationName;
+		ArrayList<FloorBorder> floorBorders;
 		if(null != currentPhoneLocation) {
 			PhoneLocation currentLocation = currentPhoneLocation;
 			currentLocationName = currentLocation.getLocationName();
 		} else {
 			currentLocationName = "Home"; //default 
 		}
+		
 		UserLocation userLocation = UserSettings.getUserLocation(currentLocationName);
-		ArrayList<FloorBorder> floorBorders = userLocation.floorBorders;
+		floorBorders = userLocation.floorBorders;
+		
 		
 		String parkedFloor = "";
 		float quarterTurnCount = getConsecutiveRightTurns();
@@ -131,12 +135,12 @@ public class DataAnalyzer {
 
 		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
 		quarterTurnCount += parkTurnCorrection();
-		int roundedTurnCount = Math.round(quarterTurnCount);
-		System.out.println("Corrected Right Turns: " + roundedTurnCount);
+		//int roundedTurnCount = Math.round(quarterTurnCount);
+		System.out.println("Corrected Right Turns: " + quarterTurnCount);
 		
 		//iterate through the floor borders until we find our first, minimum floor hit.
 		for(FloorBorder border : floorBorders) {
-			if(roundedTurnCount < border.maxTurns && parkedFloor == "") {
+			if(quarterTurnCount < border.maxTurns && parkedFloor == "") {
 				parkedFloor = border.floorString;
 			}
 		}
@@ -190,19 +194,19 @@ public class DataAnalyzer {
 			float changeSinceLastTurnPush = floatingMeanDegrees - turnCountingCompareValue;
 			if(changeSinceLastTurnPush > 90) {
 				int consecutiveCount;
-				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Left"))
-					consecutiveCount = 1;
-				else 
-					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
-				turnHistory.add(new TurnCount("Left", consecutiveCount, i, latArray.get(i), longArray.get(i)));
-				turnCountingCompareValue += 90;
-			} else if (changeSinceLastTurnPush < -90) {
-				int consecutiveCount;
 				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Right"))
 					consecutiveCount = 1;
 				else 
 					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
 				turnHistory.add(new TurnCount("Right", consecutiveCount, i, latArray.get(i), longArray.get(i)));
+				turnCountingCompareValue += 90;
+			} else if (changeSinceLastTurnPush < -90) {
+				int consecutiveCount;
+				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Left"))
+					consecutiveCount = 1;
+				else 
+					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
+				turnHistory.add(new TurnCount("Left", consecutiveCount, i, latArray.get(i), longArray.get(i)));
 				turnCountingCompareValue += -90;
 			}
 		}
@@ -290,4 +294,5 @@ public class DataAnalyzer {
 			e.printStackTrace();
 		}
 	}	
+	
 }

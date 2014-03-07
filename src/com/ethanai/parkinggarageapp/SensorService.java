@@ -64,12 +64,14 @@ public class SensorService extends Service implements SensorEventListener {
 	//private int maxReadingHistoryCount = 100;
 	private RecentSensorData recentData; 
 
-	private final String ACCELEROMETER_TAG 	= "accelerometer";
-	private final String MAGNETIC_TAG 		= "magnetic";
+	//private final String ACCELEROMETER_TAG 	= "accelerometer";
+	//private final String MAGNETIC_TAG 		= "magnetic";
 	private final String ORIENTATION_TAG 	= "orientation";
-	private final String COMPASS_TAG 		= "compass";
-	private final String GPS_TAG			= "gps";
-	private final String NETWORK_TAG		= "network";
+	//private final String COMPASS_TAG 		= "compass";
+
+	private final String GPS_UPDATE_TAG			= "gpsUpdate";
+	private final String NETWORK_UPDATE_TAG	= "networkUpdate";
+
 	
 	//private final String HOME_TAG			= "Home";
 	
@@ -171,8 +173,7 @@ public class SensorService extends Service implements SensorEventListener {
 		 Intent brIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
          sendBroadcast(brIntent);
          
- 		Toast.makeText(this, "Sensors Stopped", Toast.LENGTH_SHORT).show();
-		Toast.makeText(this, recentData.parkedFloor, Toast.LENGTH_SHORT).show();
+         Toast.makeText(this, "Sensors Stopped\n" + recentData.parkedFloor, Toast.LENGTH_SHORT).show();
 	}
 	
 	public void registerSensors() {
@@ -208,21 +209,22 @@ public class SensorService extends Service implements SensorEventListener {
     	if(recentData.distanceNearestGarage < 1000) {
     		newLocationUpdateMinTime = 0;
     	} else if(recentData.distanceNearestGarage < 5000) {
-    		newLocationUpdateMinTime = 30 * 1000;
-    	} else if(recentData.distanceNearestGarage < 5000) {
-    		newLocationUpdateMinTime = 2 * 60 * 1000;
+    		newLocationUpdateMinTime = 15 * 1000;
+    	} else if(recentData.distanceNearestGarage < 10000) {
+    		newLocationUpdateMinTime = 1 * 60 * 1000;
     	} else {
-    		newLocationUpdateMinTime = 6 * 60 * 1000;
+    		newLocationUpdateMinTime = 3 * 60 * 1000;
     	}
-		Log.i("SensorService", "GPS frequency: " + locationUpdateMinTime + " " + newLocationUpdateMinTime 
-				+ (locationUpdateMinTime != 0 && newLocationUpdateMinTime == 0) + " "
-				+ (locationUpdateMinTime == 0 && newLocationUpdateMinTime != 0)
-				+ " " + recentData.distanceNearestGarage);
-
     	
-
+    	if(recentData.initialLocationName != null)
+    		Log.i("sensorService", "initial location: " + recentData.initialLocationName + " current: " + recentData.newestPhoneLocation.getLocationName());
+    	else
+    		Log.i("sensorService", "initial location null");
     	//check if we should turn on the sensors
-    	if(locationUpdateMinTime != 0 && newLocationUpdateMinTime == 0) {
+    	if(locationUpdateMinTime != 0 && newLocationUpdateMinTime == 0)
+    			//&& recentData.initialLocationName != null 
+    			//&& !recentData.initialLocationName.equalsIgnoreCase(recentData.newestPhoneLocation.getLocationName())) 
+    			{
     		registerSensors();
     		Log.i("SensorService", "sensors on");
     	}
@@ -234,13 +236,17 @@ public class SensorService extends Service implements SensorEventListener {
     	
     	//if new distance means we should slow down or speed up updates, change it
     	if(newLocationUpdateMinTime != locationUpdateMinTime) {
+    		Log.i("SensorService", "Update frequency: GPS frequency: " + locationUpdateMinTime + " " + newLocationUpdateMinTime 
+    				+ " " + (locationUpdateMinTime != 0 && newLocationUpdateMinTime == 0) + " "
+    				+ (locationUpdateMinTime == 0 && newLocationUpdateMinTime != 0)
+    				+ " " + recentData.distanceNearestGarage);
+    		
     		locationUpdateMinTime = newLocationUpdateMinTime;
-    		//Log.i("SensorService", "GPS frequency: " + locationUpdateMinTime);
         	locationManager.removeUpdates(gpsListener);
-        	//locationManager.removeUpdates(networkListener);
+        	locationManager.removeUpdates(networkListener);
 
         	locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, locationUpdateMinTime, 0f, gpsListener);
-        	//locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationUpdateMinTime, 0f, networkListener);
+        	locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationUpdateMinTime, 0f, networkListener);
     	}
         	
     }
@@ -249,13 +255,15 @@ public class SensorService extends Service implements SensorEventListener {
         public void onLocationChanged(Location location) {
         	//gpsLocation = location;
         	recentData.addUpToLimit(location);
+        	if(recentData.initialLocationName == null)
+        		recentData.initialLocationName = recentData.newestPhoneLocation.getLocationName();
             //appendToFile(gpsFile, recentData.newestPhoneLocation.locationString);
-        	Log.i("SensorService", "Distance: " + recentData.distanceNearestGarage);
+        	Log.i("SensorService", "GPS update:\tDistance: " + recentData.distanceNearestGarage);
         	
         	//Make updates more frequent if close, less frequent if far
         	reviseUpdateFrequency();
         	
-        	notifyUpdate(GPS_TAG);
+        	notifyUpdate(GPS_UPDATE_TAG);
         }
         public void onStatusChanged(String s, int i, Bundle bundle) {
 
@@ -272,11 +280,11 @@ public class SensorService extends Service implements SensorEventListener {
         public void onLocationChanged(Location location) {
         	//networkLocation = location;
         	recentData.addUpToLimit(location);
-        	Log.i("SensorService", "Distance: " + recentData.distanceNearestGarage);
+        	Log.i("SensorService", "NetworkUpdate:\tDistance: " + recentData.distanceNearestGarage);
         	reviseUpdateFrequency();
 
         	
-        	notifyUpdate(NETWORK_TAG);
+        	notifyUpdate(NETWORK_UPDATE_TAG);
         }
         public void onStatusChanged(String s, int i, Bundle bundle) {
 
@@ -331,7 +339,7 @@ public class SensorService extends Service implements SensorEventListener {
         switch (sensorType) {
 	        case Sensor.TYPE_ACCELEROMETER: 
 	            appendToFile(accelerometerFile, recentData.accRecent.get(recentData.accRecent.size() - 1).toFormattedString());
-	            notifyUpdate(ACCELEROMETER_TAG); 
+	            //notifyUpdate(ACCELEROMETER_TAG); 
 	            
 	            //check if this reading generated a new orientation reading
 	            if(recentData.isOrientationNew()) {
@@ -342,7 +350,7 @@ public class SensorService extends Service implements SensorEventListener {
 	            break;
 	        case Sensor.TYPE_MAGNETIC_FIELD:
 	            appendToFile(magnFile, recentData.magnRecent.get(recentData.magnRecent.size() - 1).toFormattedString());
-	            notifyUpdate(MAGNETIC_TAG);
+	            //notifyUpdate(MAGNETIC_TAG);
 	            
 	            //check if this reading generated a new orientation reading
 	            if(recentData.isOrientationNew()) {
@@ -353,17 +361,17 @@ public class SensorService extends Service implements SensorEventListener {
 	            break;
 	        case Sensor.TYPE_ROTATION_VECTOR:
 	        	appendToFile(compassFile, recentData.compassRecent.get(recentData.compassRecent.size() - 1).toFormattedString());
-	        	notifyUpdate(COMPASS_TAG);
+	        	//notifyUpdate(COMPASS_TAG);
 	        	break;
         }
     }
     
 	 // broadcast notice that this sensor has updated. Also give the updated recent data 
-	 private void notifyUpdate(String sensorName) {
-		 //Log.i("sender", "Broadcasting message " + sensorName);
-		 Intent brIntent = new Intent(sensorName);
+	 private void notifyUpdate(String updateTag) {
+		 Log.i("sender", "Broadcasting message " + updateTag);
+		 Intent brIntent = new Intent(updateTag);
 		 // Include data & label with the intent we send
-		 brIntent.putExtra("sensorType", sensorName);
+		 brIntent.putExtra("updateType", updateTag);
 		 brIntent.putExtra("recentData", (Serializable)recentData);
 		 LocalBroadcastManager.getInstance(this).sendBroadcast(brIntent);
 	 }

@@ -35,6 +35,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public DateFormat format = new SimpleDateFormat("'Date 'yyyy-MM-dd HH:mm:ss.SSS");
     
     public Date initialDate; //date this structure initialized. 
+    public String initialLocationName; //just for testing, some use cases better off without this
 	public ArrayList<AccelerometerReading> accRecent = new ArrayList<AccelerometerReading>();
 	public ArrayList<MagnetReading> magnRecent = new ArrayList<MagnetReading>();
 	public ArrayList<CompassReading> compassRecent = new ArrayList<CompassReading>();
@@ -296,9 +297,16 @@ public class RecentSensorData implements Serializable { //must specify serializa
 
 		
 		DerivedOrientation(SensorEvent accEvent, SensorEvent magnEvent) {
+			
+			
 			this.dateString = format.format(new Date());
 			this.location = newestPhoneLocation;
+			
+			//for the recentData structure
 			distanceNearestGarage = location.getDistanceNearestGarage();
+			if(initialLocationName == null)
+				initialLocationName = newestPhoneLocation.getNearestGarage().name;
+			
 			this.locationString =  recentLocationString; //new PhoneLocation(location).locationString; // location.getLatitude() + " " + location.getLongitude();
 	    	
 			//this.gpsAccuracy = newestPhoneLocation.getAccuracy();

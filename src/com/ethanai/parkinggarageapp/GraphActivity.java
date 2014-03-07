@@ -36,26 +36,12 @@ public class GraphActivity extends Activity {
     private GraphicalView mChart;
     
     private TimeSeries rotationCountSeries;
-    /*
-    private TimeSeries mXSeries;
-    private TimeSeries mYSeries;
-    private TimeSeries mZSeries;
-    private TimeSeries mAngleSeries;
-    */
 
     private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
     
     private XYSeriesRenderer rotationCountRenderer;
-    /*
-    private XYSeriesRenderer mXRenderer;
-    private XYSeriesRenderer mYRenderer;
-    private XYSeriesRenderer mZRenderer;
-    private XYSeriesRenderer mAngleRenderer;
-    */
 
     private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
-       
-    //int plotDataCount = 2000; //passed to sensor service then to recentsensordata. if we want to overrride defaults in sensorservice //move to user settings
     
     RecentSensorData recentData = new RecentSensorData();
         
@@ -64,6 +50,10 @@ public class GraphActivity extends Activity {
 	private final String ORIENTATION_TAG 	= "orientation";
 	private final String COMPASS_TAG 		= "compass";
 	private final String PRESSURE_TAG 		= "pressure";
+	
+	private final String GPS_UPDATE_TAG		= "gpsUpdate";
+	private final String NETWORK_UPDATE_TAG	= "networkUpdate";
+
 	
 	private LocalBroadcastManager lbManager; //only handles messages sent from this app
     
@@ -75,32 +65,25 @@ public class GraphActivity extends Activity {
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// Get extra data included in the Intent
-		    String sensorType = intent.getStringExtra("sensorType");
-		    Log.i("GraphActivityReceiver", "Got message: " + sensorType);
+		    String updateType = intent.getStringExtra("updateType");
+		    Log.i("GraphActivityReceiver", "Got message: " + updateType);
 		    recentData = (RecentSensorData) intent.getSerializableExtra("recentData");
 		    
-		    if(sensorType.equals(ACCELEROMETER_TAG)) {
+		    if(updateType.equals(ACCELEROMETER_TAG)) {
  
-		    } else if (sensorType.equals(MAGNETIC_TAG)) {
+		    } else if (updateType.equals(MAGNETIC_TAG)) {
 		    		    	
-		    } else if (sensorType.equals(ORIENTATION_TAG)) {
-		    	TextView tvTurn = (TextView) findViewById(R.id.turnField);
-		    	tvTurn.setText("Raw Turns: " + recentData.turnConsecutiveCount);
-		    	
-		    	TextView tvFloor = (TextView) findViewById(R.id.floorField);
-		    	tvFloor.setText("Floor: " + recentData.parkedFloor);
-		    	
-		    	TextView tvDistance = (TextView) findViewById(R.id.distanceField);
-		    	tvDistance.setText("D: " + Float.toString(recentData.distanceNearestGarage));
-		    	
-		    	//TextView tvName = (TextView) findViewById(R.id.distanceField);
-		    	//tvName.setText("N: " + recentData.newestPhoneLocation.getNearestGarage().name);
-		    	
+		    } else if (updateType.equals(ORIENTATION_TAG)) {
+		    	updateTextViews();
 		    	updateChart();	
-		    } else if (sensorType.equals(COMPASS_TAG)) {
+		    } else if (updateType.equals(COMPASS_TAG)) {
 		    	
-		    } else if (sensorType.equals(PRESSURE_TAG)) {	
+		    } else if (updateType.equals(PRESSURE_TAG)) {	
+		    	
+		    } else if (updateType.equals(GPS_UPDATE_TAG) || updateType.equals(NETWORK_UPDATE_TAG)) {
+		    	updateTextViews();
 		    }
+		    	
 		    
 		}
 	};
@@ -123,6 +106,8 @@ public class GraphActivity extends Activity {
 	    lbManager.registerReceiver(mMessageReceiver, new IntentFilter(ORIENTATION_TAG));
 	    lbManager.registerReceiver(mMessageReceiver, new IntentFilter(COMPASS_TAG));
 		lbManager.registerReceiver(mMessageReceiver, new IntentFilter(PRESSURE_TAG));	
+		lbManager.registerReceiver(mMessageReceiver, new IntentFilter(GPS_UPDATE_TAG));	
+		lbManager.registerReceiver(mMessageReceiver, new IntentFilter(NETWORK_UPDATE_TAG));	
 		
 	}
 	
@@ -132,6 +117,33 @@ public class GraphActivity extends Activity {
 	  // Unregister since the activity is about to be closed.
 	  //LocalBroadcastManager.getInstance(this).unregisterReceiver(mMessageReceiver);
 	  super.onDestroy();
+	}
+	
+	public void updateTextViews()	{
+		TextView tvTurn = (TextView) findViewById(R.id.turnField);
+    	tvTurn.setText("Raw Turns: " + recentData.turnConsecutiveCount);
+    	
+    	TextView tvFloor = (TextView) findViewById(R.id.floorField);
+    	tvFloor.setText("Floor: " + recentData.parkedFloor);
+    	
+    	
+    	
+
+    	int newLocationUpdateMinTime = 0;
+    	if(recentData.distanceNearestGarage < 2000) {
+    		newLocationUpdateMinTime = 0;
+    	} else if(recentData.distanceNearestGarage < 5000) {
+    		newLocationUpdateMinTime = 30 * 1000;
+    	} else if(recentData.distanceNearestGarage < 10000) {
+    		newLocationUpdateMinTime = 2 * 60 * 1000;
+    	} else {
+    		newLocationUpdateMinTime = 6 * 60 * 1000;
+    	}
+    	
+    	TextView tvGarage = (TextView) findViewById(R.id.garageField);
+    	tvGarage.setText("D: " + Float.toString(recentData.distanceNearestGarage) + "\n" 
+    			+ "N: " + recentData.newestPhoneLocation.getNearestGarage().name
+    			+ "\n" + "updates: " + newLocationUpdateMinTime);
 	}
 	
     private void initChart() {

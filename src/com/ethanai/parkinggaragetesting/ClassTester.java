@@ -42,7 +42,7 @@ public class ClassTester {
 	        if (!file.isDirectory()) {        	
 				DataAnalyzer dataAnalyzer = new DataAnalyzer(file);
 				//String currentFloor = DataAnalyzer.getCurrentFloorFinal(new File(path + name + ".csv"));
-				Float turnCount = dataAnalyzer.getConsecutiveRightTurns();
+				Float turnCount = dataAnalyzer.getConsecutiveTurns();
 				System.out.print("RawTurnCount: " + turnCount);
 				turnCount += dataAnalyzer.fidgitingCorrection();
 				turnCount += dataAnalyzer.parkTurnCorrection();
@@ -63,7 +63,7 @@ public class ClassTester {
 		for(String name : fileName) {
 			DataAnalyzer dataAnalyzer = new DataAnalyzer(new File(path + name + ".csv"));
 			//String currentFloor = DataAnalyzer.getCurrentFloorFinal(new File(path + name + ".csv"));
-			Float turnCount = dataAnalyzer.getConsecutiveRightTurns();
+			Float turnCount = dataAnalyzer.getConsecutiveTurns();
 			System.out.print("RawTurnCount: " + turnCount);
 			turnCount += dataAnalyzer.fidgitingCorrection();
 			turnCount += dataAnalyzer.parkTurnCorrection();

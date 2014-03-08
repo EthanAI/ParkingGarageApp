@@ -118,6 +118,7 @@ Primary mechanics:
 			Add ads
 			
 	Next Steps:
+		+get age of location, see if old gps matches up with entry point
 		UI interaction for getting difficulty level of garage and save in UserSettings
 			Button - remember garage
 			'how many car entrances does this garage have?' 1-2-3-4+

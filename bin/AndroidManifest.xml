@@ -36,6 +36,9 @@
         <activity
             android:name="com.ethanai.parkinggarageapp.SettingsActivity" >
         </activity>
+        <activity
+            android:name=".FloorBorderActivity" >
+        </activity>
         <service 
             android:name=".SensorService" />
         <receiver android:name=".DaemonReceiver" >

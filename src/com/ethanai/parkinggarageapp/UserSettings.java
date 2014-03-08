@@ -1,11 +1,16 @@
 package com.ethanai.parkinggarageapp;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import android.location.Location;
 
-public class UserSettings {
+public class UserSettings implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1790572649218348232L;
 	public static ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
 	public static int recentDataHistoryCount = 1000;
 	public static final int FLOOR_COLUMN_INDEX = 3;
@@ -50,11 +55,27 @@ public class UserSettings {
 							)); 
 			//form new Location and add it
 			allGarageLocations.add(new GarageLocation(name, location, borders));
+			
+			name = "TestGarage";
+			location = new Location(name);
+			location.setLatitude(21.29871750); 
+			location.setLongitude(-157.82012939); 
+
+			borders = new ArrayList<FloorBorder>(); 
+			//form new Location and add it
+			allGarageLocations.add(new GarageLocation(name, location, borders));
 		}
 	}	
 	
 	public void addGarageLocation(String name, Location location, ArrayList<FloorBorder> borders) {
 		allGarageLocations.add(new GarageLocation(name, location, borders));
+	}
+	
+	public void addFloorRecord(String garageName, String floorName, float turnCount) {
+		GarageLocation editingGarage = getGarageLocation(garageName);
+		int floorNumber = Integer.parseInt(floorName.split("[a-zA-Z]")[0]);
+		FloorBorder newBorder = new FloorBorder(turnCount, floorNumber, floorName);
+		editingGarage.floorBorders.add(newBorder); //might not be in order, we should do better deryption method
 	}
 	
 	public static GarageLocation getGarageLocation(String searchName) {
@@ -77,13 +98,17 @@ public class UserSettings {
 		ArrayList<String> settingData = new ArrayList<String>();
 		for(GarageLocation location : allGarageLocations) {
 			String text = "";
-			text += location.name + " " + location.location.getLatitude() + " " + location.location.getLatitude();
+			text += location.name + " " + location.location.getLatitude() + " " + location.location.getLongitude();
 			settingData.add(text);
 		}
 		return settingData;
 	}
 	
-	class GarageLocation {
+	class GarageLocation implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 6855129699792130834L;
 		public String name = "";
 		public Location location;
 		public ArrayList<FloorBorder> floorBorders; //structure to hold all the borders between floors for this particular garages
@@ -93,18 +118,31 @@ public class UserSettings {
 			name = newName;
 			location = newLocation;
 			floorBorders = newBorders;
-		}		
+		}	
+		
+		public String toString() {
+			return name + " " + location.getLatitude() + " " + location.getLongitude();
+		}
 	}
 	
-	class FloorBorder {
-		public int maxTurns; //max number of quarter turns before crossing to the next floor positive is right, negative is left
+	class FloorBorder implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -8248771055332604053L;
+
+		public float maxTurns; //max number of quarter turns before crossing to the next floor positive is right, negative is left
 		public float floorNum; //numerical representation of a floor
 		public String floorString; //text representation of a floor
 		
-		FloorBorder (int maxTurns, float floorNum, String floorString) {
-			this.maxTurns = maxTurns;
+		FloorBorder (float turnCount, float floorNum, String floorString) {
+			this.maxTurns = turnCount;
 			this.floorNum = floorNum;
 			this.floorString = floorString;
+		}
+		
+		public String toString() {
+			return maxTurns + ", " + floorNum + ", " + floorString;
 		}
 		
 	}

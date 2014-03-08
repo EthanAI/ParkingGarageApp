@@ -382,7 +382,7 @@ public class SensorService extends Service implements SensorEventListener {
 		 Intent brIntent = new Intent(updateTag);
 		 // Include data & label with the intent we send
 		 brIntent.putExtra("updateType", updateTag);
-		 brIntent.putExtra("recentData", (Serializable)recentData);
+		 brIntent.putExtra("recentData", (Serializable) recentData);
 		 LocalBroadcastManager.getInstance(this).sendBroadcast(brIntent);
 	 }
 

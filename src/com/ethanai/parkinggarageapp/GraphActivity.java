@@ -245,11 +245,22 @@ public class GraphActivity extends Activity {
     public void storeFloorData(View view) {
     	EditText floorTextField = (EditText) findViewById(R.id.floorEntryField);
     	String floorText = floorTextField.getText().toString();
+    	
+    	DataAnalyzer dataAnalyzer = new DataAnalyzer(recentData);
+    	float turnCount = dataAnalyzer.getConsecutiveTurns();
     	Log.i("GraphActivity", "Got Floor: " + floorText);
     	floorTextField.setText("");
     	
     	//get current garage location
-    	Toast.makeText(getBaseContext(), "Stored Floor: " + floorText, Toast.LENGTH_SHORT).show();
+    	//get current entry location
+    	//get current borderfile
+    	
+    	//get current turn history since ... garage entrance? (Just do consecutive turns for now)
+    	//find middle between this border and previous/most similar floor
+    	//insert a border with averaged value OR refactor code to take floor data and find nearest match
+    	mySettings.addFloorRecord("TestGarage", floorText, turnCount);
+    	
+    	Toast.makeText(getBaseContext(), "Stored Floor: " + floorText + "\n" + "TurnCount: " + turnCount, Toast.LENGTH_SHORT).show();
     }
     
     public void clearFloor(View view) {

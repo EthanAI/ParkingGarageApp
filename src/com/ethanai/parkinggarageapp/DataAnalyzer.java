@@ -36,6 +36,19 @@ public class DataAnalyzer {
 		
 		currentPhoneLocation = newCurrentPhoneLocation;
 	}
+	
+	DataAnalyzer(RecentSensorData recentData) { 
+		for(int i = 0; i < recentData.orientRecent.size()-1; i++) {
+			turnDegreesArray.add((float)recentData.orientRecent.get(i).totalTurnDegrees);
+		}
+		
+		for(int i = 0; i < recentData.orientRecent.size() - 1; i++) {
+			latArray.add(recentData.orientRecent.get(i).location.getLatitude());
+			longArray.add(recentData.orientRecent.get(i).location.getLongitude());
+		}
+		
+		currentPhoneLocation = recentData.newestPhoneLocation;
+	}
 
 	/*
 	DataAnalyzer(ArrayList<DerivedOrientation> orientRecent) { 
@@ -98,7 +111,7 @@ public class DataAnalyzer {
 		ArrayList<FloorBorder> floorBorders = garageLocation.floorBorders;
 		
 		String parkedFloor = "";
-		float quarterTurnCount = getConsecutiveRightTurns();
+		float quarterTurnCount = getConsecutiveTurns();
 		System.out.println("Raw right turns: " + quarterTurnCount);
 
 		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
@@ -131,7 +144,7 @@ public class DataAnalyzer {
 		
 		
 		String parkedFloor = "";
-		float quarterTurnCount = getConsecutiveRightTurns();
+		float quarterTurnCount = getConsecutiveTurns();
 		System.out.println("Raw right turns: " + quarterTurnCount);
 
 		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
@@ -153,8 +166,8 @@ public class DataAnalyzer {
 	//takes values as degrees, returns value as fraction of quarter turns
 	/*  3/1/14 Adding guts so this effectively counts all turns
 	 */
-	
-	public float getConsecutiveRightTurns() {
+	//todo - modify it to find positive or negative counts
+	public float getConsecutiveTurns() {
 		//Time threshold - if we didnt turn after xxx readings ... maybe not good measure
 		
 		//Intensity threshold - work back from end, until we find a left turn

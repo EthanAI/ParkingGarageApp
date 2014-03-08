@@ -29,12 +29,31 @@
 				android:layout_width="wrap_content"
 				android:text="Start"
 				android:onClick="startSensorService" />
+
+		</TableRow>    
+		<TableRow>
+   			<Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Force S."
+				android:onClick="forceStartSensors" />
 			<Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
 				android:text="Stop"
 				android:onClick="stopSensorService" />
-		</TableRow>        
+			<EditText
+			    android:id="@+id/floorEntryField" 
+			    android:text="UnPkd F#"
+			    android:onClick="clearFloor"  
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content" />
+			<Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Record Fl."
+				android:onClick="storeFloorData" />
+		</TableRow>    
 	</TableLayout>
 	
     <LinearLayout

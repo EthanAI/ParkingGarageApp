@@ -12,6 +12,7 @@ import android.location.LocationManager;
 
 
 
+
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -21,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimeZone;
 
-import com.ethanai.parkinggarageapp.UserSettings.UserLocation;
+import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 @SuppressLint("SimpleDateFormat")
 public class RecentSensorData implements Serializable { //must specify serializable so it can be passed by our intents neatly
@@ -604,14 +605,14 @@ public class RecentSensorData implements Serializable { //must specify serializa
 				return this.distanceTo(getNearestGarage().location);
 		}
 		
-		public UserLocation getNearestGarage() {
-			UserLocation closestLocation = UserSettings.allUserLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
+		public GarageLocation getNearestGarage() {
+			GarageLocation closestLocation = UserSettings.allGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
 			float closestDistance = closestLocation.location.distanceTo(location);
-			for(UserLocation userLocation : UserSettings.allUserLocations) {
-				float checkDistance = this.distanceTo(userLocation.location);
+			for(GarageLocation garageLocation : UserSettings.allGarageLocations) {
+				float checkDistance = this.distanceTo(garageLocation.location);
 				if(checkDistance < closestDistance) {
 					closestDistance = checkDistance;
-					closestLocation = userLocation;
+					closestLocation = garageLocation;
 				}
 			}
 			return closestLocation;

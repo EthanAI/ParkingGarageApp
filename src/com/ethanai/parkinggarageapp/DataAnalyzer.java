@@ -8,10 +8,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 
+
 //import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 import com.ethanai.parkinggarageapp.RecentSensorData.PhoneLocation;
 import com.ethanai.parkinggarageapp.UserSettings.FloorBorder;
-import com.ethanai.parkinggarageapp.UserSettings.UserLocation;
+import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 /*
  * Eventually I'd like to let the user drive in their structure to the top floor. Record the path. Use that as a pattern to match
@@ -93,8 +94,8 @@ public class DataAnalyzer {
 		} else {
 			currentLocationName = "Home"; //hardcode for offline testing. Code should not be used in the wild
 		}
-		UserLocation userLocation = UserSettings.getUserLocation(currentLocationName);
-		ArrayList<FloorBorder> floorBorders = userLocation.floorBorders;
+		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
+		ArrayList<FloorBorder> floorBorders = garageLocation.floorBorders;
 		
 		String parkedFloor = "";
 		float quarterTurnCount = getConsecutiveRightTurns();
@@ -125,8 +126,8 @@ public class DataAnalyzer {
 			currentLocationName = "Home"; //default 
 		}
 		
-		UserLocation userLocation = UserSettings.getUserLocation(currentLocationName);
-		floorBorders = userLocation.floorBorders;
+		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
+		floorBorders = garageLocation.floorBorders;
 		
 		
 		String parkedFloor = "";

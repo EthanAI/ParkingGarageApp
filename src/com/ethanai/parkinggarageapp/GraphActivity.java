@@ -24,6 +24,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -239,6 +240,25 @@ public class GraphActivity extends Activity {
     	for(File file: dir.listFiles()) 
     		file.delete();
     	Toast.makeText(getBaseContext(), "CSVs deleted.", Toast.LENGTH_SHORT).show();
+    }
+    
+    public void storeFloorData(View view) {
+    	EditText floorTextField = (EditText) findViewById(R.id.floorEntryField);
+    	String floorText = floorTextField.getText().toString();
+    	Log.i("GraphActivity", "Got Floor: " + floorText);
+    	floorTextField.setText("");
+    	
+    	//get current garage location
+    	Toast.makeText(getBaseContext(), "Stored Floor: " + floorText, Toast.LENGTH_SHORT).show();
+    }
+    
+    public void clearFloor(View view) {
+    	EditText floorTextField = (EditText) findViewById(R.id.floorEntryField);
+    	floorTextField.setText("");
+    }
+    
+    public void forceStartSensors(View view) {
+    	Toast.makeText(getBaseContext(), "Not Impelemented Yet", Toast.LENGTH_SHORT).show();
     }
     
 	public void changeToTextActivity(View view) {

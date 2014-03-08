@@ -57,7 +57,7 @@ public class TextActivity extends Activity {
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);   
+        setContentView(R.layout.activity_text);   
         
         //attach to the messages about the sensor data
 		LocalBroadcastManager.getInstance(this).registerReceiver(mMessageReceiver, new IntentFilter(ACCELEROMETER_TAG));

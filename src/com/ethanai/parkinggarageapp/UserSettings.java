@@ -6,7 +6,7 @@ import java.util.Arrays;
 import android.location.Location;
 
 public class UserSettings {
-	public static ArrayList<UserLocation> allUserLocations = new ArrayList<UserLocation>();
+	public static ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
 	public static int recentDataHistoryCount = 1000;
 	public static final int FLOOR_COLUMN_INDEX = 3;
 	public final static String STORAGE_DIRECTORY_NAME = "Documents";
@@ -32,7 +32,7 @@ public class UserSettings {
 							new FloorBorder(13, 99, "High?")
 							)); 
 			//form new Location and add it
-			allUserLocations.add(new UserLocation(name, location, borders));
+			allGarageLocations.add(new GarageLocation(name, location, borders));
 			
 			name = "UH Lot 20";
 			location = new Location(name);
@@ -49,17 +49,17 @@ public class UserSettings {
 							new FloorBorder(3, 2, "1R Looping?")
 							)); 
 			//form new Location and add it
-			allUserLocations.add(new UserLocation(name, location, borders));
+			allGarageLocations.add(new GarageLocation(name, location, borders));
 		}
 	}	
 	
-	public void addUserLocation(String name, Location location, ArrayList<FloorBorder> borders) {
-		allUserLocations.add(new UserLocation(name, location, borders));
+	public void addGarageLocation(String name, Location location, ArrayList<FloorBorder> borders) {
+		allGarageLocations.add(new GarageLocation(name, location, borders));
 	}
 	
-	public static UserLocation getUserLocation(String searchName) {
-		UserLocation returnValue = null;
-		for(UserLocation location : allUserLocations) {
+	public static GarageLocation getGarageLocation(String searchName) {
+		GarageLocation returnValue = null;
+		for(GarageLocation location : allGarageLocations) {
 			if(location.name.equalsIgnoreCase(searchName)) {
 				returnValue = location;
 			}
@@ -67,7 +67,7 @@ public class UserSettings {
 		
 		//catch case just for testing
 		if(returnValue == null) {
-			returnValue = allUserLocations.get(0);
+			returnValue = allGarageLocations.get(0);
 		}
 		
 		return returnValue;
@@ -75,21 +75,21 @@ public class UserSettings {
 	
 	public static ArrayList<String> toArrayList() {
 		ArrayList<String> settingData = new ArrayList<String>();
-		for(UserLocation userLocation : allUserLocations) {
+		for(GarageLocation location : allGarageLocations) {
 			String text = "";
-			text += userLocation.name + " " + userLocation.location.getLatitude() + " " + userLocation.location.getLatitude();
+			text += location.name + " " + location.location.getLatitude() + " " + location.location.getLatitude();
 			settingData.add(text);
 		}
 		return settingData;
 	}
 	
-	class UserLocation {
+	class GarageLocation {
 		public String name = "";
 		public Location location;
 		public ArrayList<FloorBorder> floorBorders; //structure to hold all the borders between floors for this particular garages
 		//add location address etc?
 		
-		UserLocation(String newName, Location newLocation, ArrayList<FloorBorder> newBorders) {
+		GarageLocation(String newName, Location newLocation, ArrayList<FloorBorder> newBorders) {
 			name = newName;
 			location = newLocation;
 			floorBorders = newBorders;

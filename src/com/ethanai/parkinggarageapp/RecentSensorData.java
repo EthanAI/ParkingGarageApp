@@ -15,6 +15,8 @@ import android.location.LocationManager;
 
 
 
+import android.util.Log;
+
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -82,11 +84,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		if(null == currentGPSLocation)
 			recentLocationString = BLANK_GPS_RESULT;
 		else
-			recentLocationString = currentGPSLocation.locationString + ", ";
+			recentLocationString = currentGPSLocation.getLocationString() + ", ";
 		if(null == currentNetworkLocation)
 			recentLocationString += BLANK_GPS_RESULT;
 		else
-			recentLocationString += currentNetworkLocation.locationString;
+			recentLocationString += currentNetworkLocation.getLocationString();
 	}
 	
 	RecentSensorData(Context context) {
@@ -215,11 +217,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		if(null == currentGPSLocation)
 			recentLocationString += BLANK_GPS_RESULT;
 		else
-			recentLocationString += currentGPSLocation.locationString;
+			recentLocationString += currentGPSLocation.getLocationString();
 		if(null == currentNetworkLocation)
 			recentLocationString += "BLANK_GPS_RESULT";
 		else
-			recentLocationString += currentNetworkLocation.locationString;
+			recentLocationString += currentNetworkLocation.getLocationString();
 	}
 	
 	public void setNetworkLocation(Location location) {
@@ -232,11 +234,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		if(null == currentGPSLocation)
 			recentLocationString += BLANK_GPS_RESULT;
 		else
-			recentLocationString += currentGPSLocation.locationString;
+			recentLocationString += currentGPSLocation.getLocationString();
 		if(null == currentNetworkLocation)
 			recentLocationString += BLANK_GPS_RESULT;
 		else
-			recentLocationString += currentNetworkLocation.locationString;
+			recentLocationString += currentNetworkLocation.getLocationString();
 	}
 	
 	public PhoneLocation getBestLocation() {
@@ -575,7 +577,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public Date date;
 
 		public String dateString;
-		public String locationString;
+		//public String locationString;
 		public float age = 0;
 		
 		PhoneLocation (Location location) {
@@ -584,13 +586,14 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			this.location = location;
 			this.date = new Date(location.getTime());			
 			this.dateString = format.format(date);
-			this.locationString = getLocationString();
-			
+
 			if(orientRecent != null && orientRecent.size() > 0) {
 				this.age = (location.getElapsedRealtimeNanos() - orientRecent.get(orientRecent.size()-1).location.getElapsedRealtimeNanos());
 				this.age /= 1000000000f;
 			}
-					
+			
+			//Log.i("RecentData", "Age: " + age + " " + location.getProvider());
+								
 		}	
 
 		public String getLocationCoordinates() {
@@ -631,16 +634,25 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String getLocationString() {
-			if(null == location)
-				return BLANK_GPS_RESULT;
-			else
-				return location.getLatitude() + ", " 
+			Log.i("RecentData", "Age: " + age + " " + location.getProvider());
+			Log.i("RecentData", location.getLatitude() + ", " 
 						+ location.getLongitude() + ", " 
 						+ age + ", " // temp change + location.getAccuracy() + ", " 
 						+ getDistanceNearestGarage() + ", " 
 						+ getNearestGarage().name + ", "
 						+ location.getBearing() + ", " 
 						+ location.getAltitude() + ", " 
+						+ location.getSpeed() + ", ");
+			if(null == location)
+				return BLANK_GPS_RESULT;
+			else
+				return location.getLatitude() + ", " 
+						+ location.getLongitude() + ", " 
+						+ location.getAccuracy() + ", " 
+						+ getDistanceNearestGarage() + ", " 
+						+ getNearestGarage().name + ", "
+						+ location.getBearing() + ", " 
+						+ age + ", " //location.getAltitude() + ", " 
 						+ location.getSpeed() + ", ";
 		}
 		

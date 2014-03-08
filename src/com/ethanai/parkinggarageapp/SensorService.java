@@ -44,6 +44,9 @@ import android.widget.Toast;
 @SuppressLint("SimpleDateFormat")
 public class SensorService extends Service implements SensorEventListener {
 	
+	//for debugging
+	public boolean forceSensorStart = true;
+	
     private SensorManager mSensorManager;
     
     private Sensor mAccelerometer;
@@ -100,37 +103,10 @@ public class SensorService extends Service implements SensorEventListener {
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, gpsListener);
 		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, networkListener);  
-		
-		//get initial location and date for file naming
-	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(new Date());
-	    Location initialLocation = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER); //assume this will get us something useful always
 	    
 	    //set up structure to hold recent data (not all data so we can run for unlimited time)
-        recentData =  new RecentSensorData(initialLocation);
-	    //recentData.newestPhoneLocation = recentData.new PhoneLocation(initialLocation); //good object for getting data about locations
-
-	    String locationName = recentData.newestPhoneLocation.getLocationName();
-	    String locationCoords = recentData.newestPhoneLocation.getLocationCoordinates();
-	    Float distanceFromNearestGarage = recentData.newestPhoneLocation.getDistanceNearestGarage();
+        recentData =  new RecentSensorData(getBaseContext());
 	    
-	    //set up files to hold the data
-	    accelerometerFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " accelReadings.csv");
-	    magnFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " magReadings.csv"); 
-	    compassFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " compassReadings.csv"); 
-	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
-	    orientFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " orientationReadings.csv"); 
-	    //signalFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " signalStrength.csv");
-	    parkingLogFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, "parkingLog.csv");
-	    
-		appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
-		appendToFile(orientFile, recentData.orientHeader);
-		appendToFile(accelerometerFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
-		appendToFile(accelerometerFile, recentData.accHeader);
-		appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
-		appendToFile(magnFile, recentData.magnHeader);
-		if(parkingLogFile.length() == 0)
-			appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");
-		
 		//set up sensor manager (sensor listeners only activate if we're close to a garage)
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         // disabled to see if the GPS signal will trigger the sensors
@@ -151,7 +127,8 @@ public class SensorService extends Service implements SensorEventListener {
 		
 		//keep result somewhere
 		//storeFinalLocation();
-		appendToFile(parkingLogFile, recentData.parkedDateString + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
+		if(parkingLogFile != null && parkingLogFile.exists())
+			appendToFile(parkingLogFile, recentData.parkedDateString + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
 				+ ", " + recentData.newestPhoneLocation.getLocationName() + ", " + recentData.parkedFloor + "," 
 				+ orientFile.getName().toString() + "\n");
 		
@@ -252,13 +229,17 @@ public class SensorService extends Service implements SensorEventListener {
     }
     
     public boolean isNonOriginatingGarage() {
+    	boolean isNotOriginating = false;
     	String originatingGarage = recentData.initialLocationName;
     	
     	//Note doesn not have to be position location ( within < 150 m) within our sensor start radius (1000m)
     	//The 1000m limit will be handled by related logic to check the speed of the GPS polling
     	String closestGarage = recentData.newestPhoneLocation.getNearestGarage().name; 
-    	return  originatingGarage != null 
+    	isNotOriginating = originatingGarage != null 
     			&& !closestGarage.equalsIgnoreCase(originatingGarage); 
+    	if(forceSensorStart == true)
+    		isNotOriginating = true;
+    	return isNotOriginating;
     }
 	
 	public LocationListener gpsListener = new LocationListener() {
@@ -329,6 +310,32 @@ public class SensorService extends Service implements SensorEventListener {
 	};	
 	*/
 	
+	public void createDataFiles() {
+		//get initial location and date for file naming
+	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(new Date());
+	    String locationName = recentData.newestPhoneLocation.getLocationName();
+	    String locationCoords = recentData.newestPhoneLocation.getLocationCoordinates();
+	    Float distanceFromNearestGarage = recentData.newestPhoneLocation.getDistanceNearestGarage();
+		
+	    //set up files to hold the data
+	    accelerometerFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " accelReadings.csv");
+	    magnFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " magReadings.csv"); 
+	    compassFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " compassReadings.csv"); 
+	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
+	    orientFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " orientationReadings.csv"); 
+	    //signalFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " signalStrength.csv");
+	    parkingLogFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, "parkingLog.csv");
+	    
+		appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
+		appendToFile(orientFile, recentData.orientHeader);
+		appendToFile(accelerometerFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
+		appendToFile(accelerometerFile, recentData.accHeader);
+		appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
+		appendToFile(magnFile, recentData.magnHeader);
+		if(parkingLogFile.length() == 0)
+			appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");
+		
+	}
 	
 	
 	@Override
@@ -345,6 +352,9 @@ public class SensorService extends Service implements SensorEventListener {
         int sensorType = sensor.getType();
         
         recentData.addUpToLimit(event);
+        
+        if(orientFile == null || !orientFile.exists())
+        	createDataFiles();
 
         switch (sensorType) {
 	        case Sensor.TYPE_ACCELEROMETER: 

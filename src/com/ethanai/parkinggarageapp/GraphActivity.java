@@ -126,9 +126,6 @@ public class GraphActivity extends Activity {
     	
     	TextView tvFloor = (TextView) findViewById(R.id.floorField);
     	tvFloor.setText("Floor: " + recentData.parkedFloor);
-    	
-    	
-    	
 
     	int newLocationUpdateMinTime = 0;
     	if(recentData.distanceNearestGarage < 2000) {
@@ -143,7 +140,7 @@ public class GraphActivity extends Activity {
     	
     	TextView tvGarage = (TextView) findViewById(R.id.garageField);
     	tvGarage.setText("D: " + Float.toString(recentData.distanceNearestGarage) + "\n" 
-    			+ "N: " + recentData.newestPhoneLocation.getNearestGarage().name
+    			+ recentData.newestPhoneLocation.location.getProvider() + " " + recentData.newestPhoneLocation.getNearestGarage().name
     			+ "\n" + "updates: " + newLocationUpdateMinTime);
 	}
 	
@@ -292,8 +289,7 @@ public class GraphActivity extends Activity {
 	
 	public void startSensorService(View view) { 
 		Intent intent = new Intent(getBaseContext(), SensorService.class);
-		//intent.putExtra("maxReadingHistoryCount", plotDataCount); //later restore this so we can control the graph view easily
-		startService(intent); //start Accelerometer Service. Pass it info
+		startService(intent); //start Accelerometer Service. 
 	}
 	
 	public void stopSensorService(View view) {

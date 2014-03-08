@@ -1,6 +1,7 @@
 package com.ethanai.parkinggarageapp;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 //import android.util.Log;
@@ -9,6 +10,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
 //import android.util.Log;
+
 
 
 
@@ -47,12 +49,12 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public ArrayList<PhoneLocation> networkRecent = new ArrayList<PhoneLocation>();
 	
 	//headers for each data type:
-    public final String orientHeader = "Time, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, raw azimuth, smoothed azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
-    public final String accHeader = "Time, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
-    public final String magnHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, x, y, z\n";
-    public final String compassHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, x, y, z, total, accuracy\n";
-	public final String pressureHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Nlat, long, accuracy, distance garage, garage name, bearing, altitude, speed, Pressure(millibars)\n";
-	public final String locationHeader = "Date, lat, long, accuracy, distance garage, garage name, bearing, altitude, speed \n";
+    public final String orientHeader = "Time, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, raw azimuth, smoothed azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
+    public final String accHeader = "Time, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
+    public final String magnHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, x, y, z\n";
+    public final String compassHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, x, y, z, total, accuracy\n";
+	public final String pressureHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, Pressure(millibars)\n";
+	public final String locationHeader = "Date, lat, long, accuracy, distance garage, garage name, bearing, age, speed \n";
 
 	private final String BLANK_GPS_RESULT = "0,0,0,0,0,0,0,0,";
 	//parts needed to be collected before creating a new DerivedOrientation
@@ -87,8 +89,12 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			recentLocationString += currentNetworkLocation.locationString;
 	}
 	
-	RecentSensorData(Location location) {
+	RecentSensorData(Context context) {
 		this();
+		
+		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+		Location location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+		
 		newestPhoneLocation = new PhoneLocation(location);
 		distanceNearestGarage = newestPhoneLocation.getDistanceNearestGarage();
 	}
@@ -570,6 +576,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 
 		public String dateString;
 		public String locationString;
+		public float age = 0;
 		
 		PhoneLocation (Location location) {
 			super(location);
@@ -578,6 +585,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			this.date = new Date(location.getTime());			
 			this.dateString = format.format(date);
 			this.locationString = getLocationString();
+			
+			if(orientRecent != null && orientRecent.size() > 0) {
+				this.age = (location.getElapsedRealtimeNanos() - orientRecent.get(orientRecent.size()-1).location.getElapsedRealtimeNanos());
+				this.age /= 1000000000f;
+			}
 					
 		}	
 
@@ -624,7 +636,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			else
 				return location.getLatitude() + ", " 
 						+ location.getLongitude() + ", " 
-						+ location.getAccuracy() + ", " 
+						+ age + ", " // temp change + location.getAccuracy() + ", " 
 						+ getDistanceNearestGarage() + ", " 
 						+ getNearestGarage().name + ", "
 						+ location.getBearing() + ", " 

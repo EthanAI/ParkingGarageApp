@@ -220,14 +220,14 @@ public class SensorService extends Service implements SensorEventListener {
     		Log.i("sensorService", "initial location: " + recentData.initialLocationName + " current: " + recentData.newestPhoneLocation.getLocationName());
     	else
     		Log.i("sensorService", "initial location null");
+    	
     	//check if we should turn on the sensors
-    	if(locationUpdateMinTime != 0 && newLocationUpdateMinTime == 0)
-    			//&& recentData.initialLocationName != null 
-    			//&& !recentData.initialLocationName.equalsIgnoreCase(recentData.newestPhoneLocation.getLocationName())) 
-    			{
+    		//FUTURE NOTE: users might forget something and park in the same garage the started. Re-enable this someday
+    	if(locationUpdateMinTime != 0 && newLocationUpdateMinTime == 0 && isNonOriginatingGarage()) {
     		registerSensors();
     		Log.i("SensorService", "sensors on");
     	}
+    	
     	//check if we should turn off the sensors
     	if(locationUpdateMinTime == 0 && newLocationUpdateMinTime != 0) {
     		unregisterSensors();
@@ -249,6 +249,16 @@ public class SensorService extends Service implements SensorEventListener {
         	locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, locationUpdateMinTime, 0f, networkListener);
     	}
         	
+    }
+    
+    public boolean isNonOriginatingGarage() {
+    	String originatingGarage = recentData.initialLocationName;
+    	
+    	//Note doesn not have to be position location ( within < 150 m) within our sensor start radius (1000m)
+    	//The 1000m limit will be handled by related logic to check the speed of the GPS polling
+    	String closestGarage = recentData.newestPhoneLocation.getNearestGarage().name; 
+    	return  originatingGarage != null 
+    			&& !closestGarage.equalsIgnoreCase(originatingGarage); 
     }
 	
 	public LocationListener gpsListener = new LocationListener() {

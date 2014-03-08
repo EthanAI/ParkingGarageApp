@@ -117,12 +117,36 @@ Primary mechanics:
 			
 			Add ads
 			
+	Next Steps:
+		UI interaction for getting difficulty level of garage and save in UserSettings
+			Button - remember garage
+			'how many car entrances does this garage have?' 1-2-3-4+
+		Recognize different entry vectors
+			Different directions of approach
+			Different locations of parking start
+				Gps loss
+				Recognizable back pattern? Can I do this for UH looping garage?
+			Expand Garage Location to have multiple entry directions map to the same data
+			Expand Garage location to contain multiple border data structures for various entry points
+				Merge entry direction into the pattern? Different entry points share any common patterns?
+		UI for mapping floor borders (umm, get middles and build borders as splitting to the difference)
+		
+		
+		speed up finish analysis - put into separate thread
+add location if exit car without sensors activated?
+Share parking locations?
+Master the most crowded garage
+			
+			 
+			
   
 	Bugs:
 		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
 			XWas a problem to appending final info to the front of the file
 			Bug returned 2/28. Long time analyzing the completed csv? Threading should be applied
 				Down to 12 minutes to lag out
+				Not much of a problem now that we record less data. Fix for future stability
+			
 		XGPS info not updating on the output. Pretty sure we're listening, not getting saved?
 			XWe're just feeding itself its own value -_-. 
 			XExpand headers to have network and gps versions
@@ -131,7 +155,7 @@ Primary mechanics:
 			XAdjust dataAnalyzer to use the new column
 				Eventually pick a single location as winner and discard the other one
         xSignal strength seems to be recording after the sensors should be turned off.
-    	+Strange jumps sometimes
+    	/Strange jumps sometimes
     		Maybe problems with low refresh rate?
     		Add safety override to:
     			Rate of degree change
@@ -140,5 +164,10 @@ Primary mechanics:
 				(mag field seems crazy!) probably a bit west of river since not much GPS under the river
 				Limit the mag values? Recorded amounts are hundreds of times normal values
 				Accelerometer seems fine
+			Depreciated. Does not seem to occur near any of my garages
+		Fix startup bug
+			First connect of the day from home crashes
+			
+			
         
         

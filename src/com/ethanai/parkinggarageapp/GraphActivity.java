@@ -179,8 +179,10 @@ public class GraphActivity extends Activity {
     	//for(int i = 0; i < plotDataCount && i < recentData.accRecent.size(); i++) {
     	//	mCurrentSeries.add(i, recentData.accRecent.get(i).x);
     	//}
-    	
-    	for(int i = 0; i < recentData.orientRecent.size(); i++) {
+    	int i = 0;
+    	if(recentData.orientRecent.size() > UserSettings.graphHistoryCount)
+    		i = recentData.orientRecent.size() - UserSettings.graphHistoryCount;
+    	for(; i < recentData.orientRecent.size(); i++) {
     		//if(rotationCountSeries.getItemCount() > plotDataCount) { //limit size of what we want to plot
     		//	rotationCountSeries.remove(0); //remove oldest item
     		//}

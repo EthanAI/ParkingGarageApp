@@ -93,10 +93,12 @@ public class DataAnalyzer {
 	/*
 	 * Uses the data stored in the csv, most likely to be correct
 	 */
+	/*
 	public String getCurrentFloorFinal(File dataFile) {
 		readFile(dataFile);
 		return getCurrentFloor();
 	}
+	*/
 	
 	
 	public String getCurrentFloor(ArrayList<Float> turnDegreesArray, PhoneLocation... phoneLocation) {

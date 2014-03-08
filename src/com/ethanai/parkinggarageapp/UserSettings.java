@@ -12,7 +12,8 @@ public class UserSettings implements Serializable {
 	 */
 	private static final long serialVersionUID = -1790572649218348232L;
 	public static ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
-	public static int recentDataHistoryCount = 1000;
+	public static int recentDataHistoryCount = 2000;
+	public static int graphHistoryCount = 2000;
 	public static final int FLOOR_COLUMN_INDEX = 3;
 	public final static String STORAGE_DIRECTORY_NAME = "Documents";
 	

@@ -31,6 +31,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -125,20 +126,21 @@ public class SensorService extends Service implements SensorEventListener {
 	public void onDestroy() {
 		super.onDestroy();		
 		
-		//keep result somewhere
-		//storeFinalLocation();
-		if(parkingLogFile != null && parkingLogFile.exists())
-			appendToFile(parkingLogFile, recentData.parkedDateString + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
-				+ ", " + recentData.newestPhoneLocation.getLocationName() + ", " + recentData.parkedFloor + "," 
-				+ orientFile.getName().toString() + "\n");
-		
+		//stop everything
+		//stop GPS/Location listeners
 		locationManager.removeUpdates(gpsListener); //undo location listeners
 		locationManager.removeUpdates(networkListener);
-		
+		//stop sensors
 		unregisterSensors();
 		
 		//((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_NONE); //unregister the phone state listener
 		//unregisterReceiver(receiver);
+		
+		Toast.makeText(this, "Sensors Stopped\n" + recentData.parkedFloor, Toast.LENGTH_SHORT).show();
+		
+		//possibly update using the file so we have a longer data timeframe.
+		if(orientFile != null && orientFile.exists())
+			new AnalyzeAllDataTask().execute(orientFile);
 		
 		//display result to user
 		myNotifier.cancelSensorNotification(); //turn off sensor notification
@@ -150,8 +152,37 @@ public class SensorService extends Service implements SensorEventListener {
 		 Intent brIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
          sendBroadcast(brIntent);
          
-         Toast.makeText(this, "Sensors Stopped\n" + recentData.parkedFloor, Toast.LENGTH_SHORT).show();
+ 		//keep result somewhere
+ 		//storeFinalLocation();
+ 		if(parkingLogFile != null && parkingLogFile.exists())
+ 			appendToFile(parkingLogFile, recentData.parkedDateString + ", " + recentData.newestPhoneLocation.getLocationCoordinates() 
+ 				+ ", " + recentData.newestPhoneLocation.getLocationName() + ", " + recentData.parkedFloor + "," 
+ 				+ orientFile.getName().toString() + "\n");
+ 		
+ 		renameFiles();
 	}
+	
+	private class AnalyzeAllDataTask extends AsyncTask<File, Void, String> {
+		  
+		public AnalyzeAllDataTask() {
+			super();
+		}
+  
+	    @Override
+	    protected String doInBackground(File... files) {
+	    	for (File file : files) {
+	    		DataAnalyzer dataAnalyzer = new DataAnalyzer(file);
+	    		recentData.parkedFloor = dataAnalyzer.getCurrentFloor();
+	    	}
+	    	return recentData.parkedFloor;
+	    }
+	
+	    @Override
+	    protected void onPostExecute(String result) {
+	    	Toast.makeText(getApplicationContext(), "Parked on:\n" + recentData.parkedFloor, Toast.LENGTH_SHORT).show();
+	    }
+	}
+
 	
 	public void registerSensors() {
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -335,6 +366,31 @@ public class SensorService extends Service implements SensorEventListener {
 		if(parkingLogFile.length() == 0)
 			appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");
 		
+	}
+	
+	public void renameFiles() {
+	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(recentData.initialDate);
+
+		String name = UserSettings.STORAGE_DIRECTORY_NAME + "/" 
+				+ dateString 
+				+ " End " + recentData.newestPhoneLocation.getLocationName() 
+				+ " Fl " + recentData.parkedFloor
+				+ " Orig " + recentData.initialLocationName + " "; 
+		File newFileName = new File(Environment.getExternalStorageDirectory(), name + "orientationReadings.csv");
+		if(null != orientFile && orientFile.exists() && !newFileName.exists())
+			orientFile.renameTo(newFileName);
+		
+		newFileName = new File(Environment.getExternalStorageDirectory(), name + "accelReadings.csv");
+		if(null != accelerometerFile && accelerometerFile.exists() && !newFileName.exists())
+			accelerometerFile.renameTo(newFileName);
+		
+		newFileName = new File(Environment.getExternalStorageDirectory(), name + "magReadings.csv");
+		if(null != magnFile && magnFile.exists() && !newFileName.exists())
+			magnFile.renameTo(newFileName);
+		
+		newFileName = new File(Environment.getExternalStorageDirectory(), name + "compassReadings.csv");
+		if(null != compassFile && compassFile.exists() && !newFileName.exists())
+			compassFile.renameTo(newFileName);
 	}
 	
 	

@@ -249,7 +249,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public String dateString;
 		public Date date;
-		public Location location;
+		public PhoneLocation phoneLocation;
 		public String locationString;
 		public float x;
 		public float y;
@@ -258,7 +258,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		MagnetReading(SensorEvent event) {
 			this.date = new Date(event.timestamp);			
 			this.dateString = format.format(new Date()); //format.format(date);
-			this.location = newestPhoneLocation;
+			this.phoneLocation = newestPhoneLocation;
 			this.locationString =  recentLocationString; //new PhoneLocation(location).locationString; // location.getLatitude() + " " + location.getLongitude();
 			this.x = event.values[0];
 			this.y = event.values[1];
@@ -288,7 +288,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//private final double MAX_ADJACENT_CHANGE = 25;
 		
 		public String dateString;
-		public PhoneLocation location;
+		public PhoneLocation phoneLocation;
 		public String locationString;
 		//public float gpsAccuracy;
 		//public float distance; //distance from labeled target for debugging
@@ -309,10 +309,10 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			
 			
 			this.dateString = format.format(new Date());
-			this.location = newestPhoneLocation;
+			this.phoneLocation = newestPhoneLocation;
 			
 			//for the recentData structure
-			distanceNearestGarage = location.getDistanceNearestGarage();
+			distanceNearestGarage = phoneLocation.getDistanceNearestGarage();
 			if(initialLocationName == null)
 				initialLocationName = newestPhoneLocation.getNearestGarage().name;
 			
@@ -509,7 +509,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		//public Date date; //might be nice to return this someday so I can do math, but probably not in the near future
 		public String dateString;
 		public Date date;
-		public Location location;
+		public PhoneLocation phoneLocation;
 		public String locationString;
 		public float x;
 		public float y;
@@ -524,7 +524,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		AccelerometerReading(SensorEvent event) {
 			this.date = new Date(event.timestamp);			
 			this.dateString = format.format(new Date()); //format.format(date);
-			this.location = newestPhoneLocation;
+			this.phoneLocation = newestPhoneLocation;
 			this.locationString =  recentLocationString; //new PhoneLocation(location).locationString; // location.getLatitude() + " " + location.getLongitude();
 			x = event.values[0];
 	        y = event.values[1];
@@ -568,9 +568,23 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}		
 	}
 	
-	class PhoneLocation extends Location {
+	/*
+	 * Cant save any location fields/constructor anything or else cannot serialize. This is so awkward
+	 */
+	class PhoneLocation implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 4019620007238814716L;
 		public String provider;
-		public Location location;
+		//public Location location; //cant have
+		public double latitude;
+		public double longitude;
+		public double altitude;
+		public float bearing;
+		public float speed;
+		public float accuracy;
+		public long elapsedRealtimeNanos;
 		
 		public final int MATCH_DISTANCE = 150;
 		
@@ -581,23 +595,42 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public float age = 0;
 		
 		PhoneLocation (Location location) {
-			super(location);
+			//super(location);
 			this.provider = location.getProvider();
-			this.location = location;
+			this.latitude = location.getLatitude();
+			this.longitude = location.getLongitude();
+			this.altitude = location.getAltitude();
+			this.bearing = location.getBearing();
+			this.speed = location.getSpeed();
+			this.accuracy = location.getAccuracy();
+			this.elapsedRealtimeNanos = location.getElapsedRealtimeNanos();
+			
 			this.date = new Date(location.getTime());			
 			this.dateString = format.format(date);
 
 			if(orientRecent != null && orientRecent.size() > 0) {
-				this.age = (location.getElapsedRealtimeNanos() - orientRecent.get(orientRecent.size()-1).location.getElapsedRealtimeNanos());
+				//recent phone location of this time = orientRecent.get(orientRecent.size()-1).location
+				PhoneLocation lastLocationSameProvider  = getLastLocationSameProvider();
+				this.age = (location.getElapsedRealtimeNanos() - lastLocationSameProvider.getElapsedRealtimeNanos());
 				this.age /= 1000000000f;
 			}
 			
 			//Log.i("RecentData", "Age: " + age + " " + location.getProvider());
 								
 		}	
+		
+		public PhoneLocation getLastLocationSameProvider() {
+			PhoneLocation lastLocation = null;
+			for(int i = orientRecent.size()-1; orientRecent != null && lastLocation == null && i >= 0; i--) {
+				if(provider.equalsIgnoreCase(orientRecent.get(i).phoneLocation.getProvider())) {
+					lastLocation = orientRecent.get(i).phoneLocation;
+				}
+			}
+			return lastLocation;
+		}
 
 		public String getLocationCoordinates() {
-			String locationString = location.getLatitude() + " " + location.getLongitude();
+			String locationString = getLatitude() + " " + getLongitude();
 			//Log.i("GarageAppGPS", locationString);
 			return locationString;
 		}
@@ -617,43 +650,78 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			if(null == getNearestGarage())
 				return 999999999;
 			else
-				return this.distanceTo(getNearestGarage().location);
+				return this.distanceTo(getNearestGarage().phoneLocation);
 		}
 		
 		public GarageLocation getNearestGarage() {
-			GarageLocation closestLocation = UserSettings.allGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
-			float closestDistance = closestLocation.location.distanceTo(location);
+			GarageLocation closestGarage = UserSettings.allGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
+			float closestDistance = distanceTo(closestGarage.phoneLocation); //closestLocation.location.distanceTo(location);
 			for(GarageLocation garageLocation : UserSettings.allGarageLocations) {
-				float checkDistance = this.distanceTo(garageLocation.location);
+				float checkDistance = distanceTo(garageLocation.phoneLocation);
 				if(checkDistance < closestDistance) {
 					closestDistance = checkDistance;
-					closestLocation = garageLocation;
+					closestGarage = garageLocation;
 				}
 			}
-			return closestLocation;
+			return closestGarage;
+		}
+		
+		//implement replacements for Location class methods .. -_-
+		public String getProvider() {
+			return provider;
+		}
+		public double getLatitude() {
+			return latitude;
+		}
+		public double getLongitude() {
+			return longitude;
+		}
+		public float distanceTo(PhoneLocation phoneLocation) {
+			Location here = new Location("here"); //temp for math
+			Location there = new Location("there"); //also needed
+			here.setLatitude(latitude);
+			here.setLongitude(longitude);
+			there.setLatitude(phoneLocation.latitude);
+			there.setLongitude(phoneLocation.longitude);
+			return here.distanceTo(there);
+		}
+		public double getAltitude() {
+			return altitude;
+		}
+		public float getBearing() {
+			return bearing;
+		}
+		public float getSpeed() {
+			return speed;
+		}
+		public float getAccuracy() {
+			return accuracy;
+		}
+		public long getElapsedRealtimeNanos() {
+			return elapsedRealtimeNanos;
 		}
 		
 		public String getLocationString() {
-			Log.i("RecentData", "Age: " + age + " " + location.getProvider());
-			Log.i("RecentData", location.getLatitude() + ", " 
-						+ location.getLongitude() + ", " 
+			Log.i("RecentData", "Age: " + age + " " + getProvider());
+			Log.i("RecentData", getLatitude() + ", " 
+						+ getLongitude() + ", " 
 						+ age + ", " // temp change + location.getAccuracy() + ", " 
 						+ getDistanceNearestGarage() + ", " 
 						+ getNearestGarage().name + ", "
-						+ location.getBearing() + ", " 
-						+ location.getAltitude() + ", " 
-						+ location.getSpeed() + ", ");
-			if(null == location)
-				return BLANK_GPS_RESULT;
-			else
-				return location.getLatitude() + ", " 
-						+ location.getLongitude() + ", " 
-						+ location.getAccuracy() + ", " 
+						+ getBearing() + ", " 
+						+ getAltitude() + ", " 
+						+ getSpeed() + ", ");
+			//if(null == )
+			//	return BLANK_GPS_RESULT;
+			//else
+				return getLatitude() + ", " 
+						+ getLongitude() + ", " 
+						+ getAccuracy() + ", " 
 						+ getDistanceNearestGarage() + ", " 
 						+ getNearestGarage().name + ", "
-						+ location.getBearing() + ", " 
+						+ getBearing() + ", " 
 						+ age + ", " //location.getAltitude() + ", " 
-						+ location.getSpeed() + ", ";
+						+ getSpeed() + ", ";
 		}
 		
 		public String toFormattedString() {

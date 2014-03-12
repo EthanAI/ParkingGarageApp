@@ -124,6 +124,19 @@ Primary mechanics:
 			Button - remember garage
 			'how many car entrances does this garage have?' 1-2-3-4+
 		Recognize different entry vectors
+			Recognize entry time
+				GPS not Changing / Accuracy (error) rises and stays fixed
+					This seems most reliable measure (at home, how about for school?)
+					Sometimes flucutation at the end (park near window) need to cut off
+				Age?
+					Network seems to be working,
+						..sometimes
+					Not so great with gps
+				Slow speed, then speed not changing
+					Humans:
+						Walk - 1.5 m/s
+						Run - 7 m/s
+				
 			Different directions of approach
 			Different locations of parking start
 				Gps loss
@@ -134,7 +147,16 @@ Primary mechanics:
 		UI for mapping floor borders (umm, get middles and build borders as splitting to the difference)
 		
 		
-		speed up finish analysis - put into separate thread
+		+switch to floor centers not floor borders and match closest
+		+move garageLocation records to stored/loaded data
+		+add dialog/activity for making new floor records / add garage
+			Partially complete
+			Saves to storage (serialing is slow. Try SQLite or put in separate task)
+			Add floor data, need to allow add garage.
+		+make left turn count
+		+switch from raw count to turn history from entry point (need id entry point time)
+		
+		
 add location if exit car without sensors activated?
 Share parking locations?
 Master the most crowded garage

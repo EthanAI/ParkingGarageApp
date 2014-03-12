@@ -140,7 +140,7 @@ public class GraphActivity extends Activity {
     	
     	TextView tvGarage = (TextView) findViewById(R.id.garageField);
     	tvGarage.setText("D: " + Float.toString(recentData.distanceNearestGarage) + "\n" 
-    			+ recentData.newestPhoneLocation.location.getProvider() + " " + recentData.newestPhoneLocation.getNearestGarage().name
+    			+ recentData.newestPhoneLocation.getProvider() + " " + recentData.newestPhoneLocation.getNearestGarage().name
     			+ "\n" + "updates: " + newLocationUpdateMinTime);
 	}
 	
@@ -231,13 +231,15 @@ public class GraphActivity extends Activity {
   /*
    * Function for the buttons
    */
-    public void deleteFiles(View view) {
+    public void deleteCSVFiles(View view) {
     	//TODO make this softcoded once user settings is in a final implementation
     	String folderName = "Documents";
     	String sdCard = Environment.getExternalStorageDirectory().toString(); //get root of external storage
         File dir = new File(sdCard, folderName);
-    	for(File file: dir.listFiles()) 
-    		file.delete();
+    	for(File file: dir.listFiles()) {
+    		if(file.getName().endsWith(".csv"))
+    			file.delete();
+    	}
     	Toast.makeText(getBaseContext(), "CSVs deleted.", Toast.LENGTH_SHORT).show();
     }
     

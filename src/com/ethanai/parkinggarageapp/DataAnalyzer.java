@@ -30,8 +30,8 @@ public class DataAnalyzer {
 		}
 		
 		for(int i = 0; i < recentData.orientRecent.size() - 1; i++) {
-			latArray.add(recentData.orientRecent.get(i).location.getLatitude());
-			longArray.add(recentData.orientRecent.get(i).location.getLongitude());
+			latArray.add(recentData.orientRecent.get(i).phoneLocation.getLatitude());
+			longArray.add(recentData.orientRecent.get(i).phoneLocation.getLongitude());
 		}
 		
 		currentPhoneLocation = newCurrentPhoneLocation;
@@ -43,8 +43,8 @@ public class DataAnalyzer {
 		}
 		
 		for(int i = 0; i < recentData.orientRecent.size() - 1; i++) {
-			latArray.add(recentData.orientRecent.get(i).location.getLatitude());
-			longArray.add(recentData.orientRecent.get(i).location.getLongitude());
+			latArray.add(recentData.orientRecent.get(i).phoneLocation.getLatitude());
+			longArray.add(recentData.orientRecent.get(i).phoneLocation.getLongitude());
 		}
 		
 		currentPhoneLocation = recentData.newestPhoneLocation;
@@ -281,10 +281,13 @@ public class DataAnalyzer {
 		try {
 			FileReader fr = new FileReader(dataFile);
 			BufferedReader br = new BufferedReader(fr);
-			br.readLine();//skip the first of two header lines
+			
+			String headers[] = br.readLine().split(",");
+			if(headers[0].contains("Departed")) { //if this exists we have the older header style with 2 lines
+				headers = br.readLine().split(","); //throw that away, replace with next header line
+			}
 			
 			//get the correct column out of this one (also skips the last header line)
-			String headers[] = br.readLine().split(",");
 			for(int i = 0; i < headers.length; i++) {
 				//System.out.println(headers[i] + " " + degreeIndex + " " + i);
 				if(headers[i].contains("turn degrees")) {

@@ -78,22 +78,26 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 		ArrayList<String> arrayList = new ArrayList<String>();
 		File file = new File(Environment.getExternalStorageDirectory().toString() + "/" + UserSettings.STORAGE_DIRECTORY_NAME 
 				+ "/parkingLog.csv");
-		try {
-			FileReader fr = new FileReader(file);
-			BufferedReader br = new BufferedReader(fr);
-			for(int i = 0; i < headerRowCount; i++) //skip headers
-				br.readLine();
-			
-			String line = "";
-			while((line = br.readLine()) != null) {
-				String entries[] = line.split(",");
-				arrayList.add(entries[UserSettings.FLOOR_COLUMN_INDEX] + "\n" + entries[0] + "\n" + entries[1]
-						+ "\n" + entries[2]);
+		if(null != file && file.exists()) {
+			try {
+				FileReader fr = new FileReader(file);
+				BufferedReader br = new BufferedReader(fr);
+				for(int i = 0; i < headerRowCount; i++) //skip headers
+					br.readLine();
+				
+				String line = "";
+				while((line = br.readLine()) != null) {
+					String entries[] = line.split(",");
+					arrayList.add(entries[UserSettings.FLOOR_COLUMN_INDEX] + "\n" + entries[0] + "\n" + entries[1]
+							+ "\n" + entries[2]);
+				}
+				br.close();			
 			}
-			br.close();			
-		}
-		catch (Exception e) {
-			System.err.println(e.getMessage());
+			catch (Exception e) {
+				System.err.println(e.getMessage());
+			}
+		} else {
+			arrayList.add("None");
 		}
 		return arrayList;
 	}

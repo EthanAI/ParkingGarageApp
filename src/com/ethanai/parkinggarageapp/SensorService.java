@@ -345,8 +345,8 @@ public class SensorService extends Service implements SensorEventListener {
 		//get initial location and date for file naming
 	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(new Date());
 	    String locationName = recentData.newestPhoneLocation.getLocationName();
-	    String locationCoords = recentData.newestPhoneLocation.getLocationCoordinates();
-	    Float distanceFromNearestGarage = recentData.newestPhoneLocation.getDistanceNearestGarage();
+	    //String locationCoords = recentData.newestPhoneLocation.getLocationCoordinates();
+	    //Float distanceFromNearestGarage = recentData.newestPhoneLocation.getDistanceNearestGarage();
 		
 	    //set up files to hold the data
 	    accelerometerFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " accelReadings.csv");
@@ -357,11 +357,11 @@ public class SensorService extends Service implements SensorEventListener {
 	    //signalFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " signalStrength.csv");
 	    parkingLogFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, "parkingLog.csv");
 	    
-		appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
+		//appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
 		appendToFile(orientFile, recentData.orientHeader);
-		appendToFile(accelerometerFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
+		//appendToFile(accelerometerFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
 		appendToFile(accelerometerFile, recentData.accHeader);
-		appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
+		//appendToFile(magnFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
 		appendToFile(magnFile, recentData.magnHeader);
 		if(parkingLogFile.length() == 0)
 			appendToFile(parkingLogFile, "Date, location, locationName, floor, sourceFile \n");

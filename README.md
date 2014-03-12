@@ -147,7 +147,8 @@ Primary mechanics:
 		UI for mapping floor borders (umm, get middles and build borders as splitting to the difference)
 		
 		
-		+Better final turn removal
+		+test at home, all directions, package release
+		xBetter final turn removal
 		+switch to floor centers not floor borders and match closest
 		xmove garageLocation records to stored/loaded data
 		xadd dialog/activity for making new floor records / add garage

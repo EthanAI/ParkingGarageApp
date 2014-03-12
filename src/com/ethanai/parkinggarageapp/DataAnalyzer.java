@@ -132,6 +132,7 @@ public class DataAnalyzer {
 	}
 	
 	public String getCurrentFloor() {
+		String parkedFloor = "None gcf";
 		String currentLocationName;
 		ArrayList<FloorBorder> floorBorders;
 		if(null != currentPhoneLocation) {
@@ -142,22 +143,22 @@ public class DataAnalyzer {
 		}
 		
 		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
-		floorBorders = garageLocation.floorBorders;
-		
-		
-		String parkedFloor = "";
-		float quarterTurnCount = getConsecutiveTurns();
-		System.out.println("Raw right turns: " + quarterTurnCount);
-
-		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
-		quarterTurnCount += parkTurnCorrection();
-		//int roundedTurnCount = Math.round(quarterTurnCount);
-		System.out.println("Corrected Right Turns: " + quarterTurnCount);
-		
-		//iterate through the floor borders until we find our first, minimum floor hit.
-		for(FloorBorder border : floorBorders) {
-			if(quarterTurnCount < border.maxTurns && parkedFloor == "") {
-				parkedFloor = border.floorString;
+		if(null != garageLocation && null != garageLocation.floorBorders) {
+			floorBorders = garageLocation.floorBorders;
+			
+			float quarterTurnCount = getConsecutiveTurns();
+			System.out.println("Raw right turns: " + quarterTurnCount);
+	
+			quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
+			quarterTurnCount += parkTurnCorrection();
+			//int roundedTurnCount = Math.round(quarterTurnCount);
+			System.out.println("Corrected Right Turns: " + quarterTurnCount);
+			
+			//iterate through the floor borders until we find our first, minimum floor hit.
+			for(FloorBorder border : floorBorders) {
+				if(quarterTurnCount < border.maxTurns && parkedFloor == "") {
+					parkedFloor = border.floorString;
+				}
 			}
 		}
 		
@@ -169,7 +170,7 @@ public class DataAnalyzer {
 	/*  3/1/14 Adding guts so this effectively counts all turns
 	 */
 	//todo - modify it to find positive or negative counts
-	public float getConsecutiveTurns() {
+	public float getConsecutiveRightTurns() {
 		//Time threshold - if we didnt turn after xxx readings ... maybe not good measure
 		
 		//Intensity threshold - work back from end, until we find a left turn
@@ -196,6 +197,57 @@ public class DataAnalyzer {
 			
 		}
 		return rightConsecutiveCount;
+	}
+	
+	//positive for left negative right
+	public float getConsecutiveTurns() {
+		//Find the starting point after the parking (could be left or right) movement
+		final int LAST = 0; //turnhistory is in reverse chron order
+		ArrayList<TurnCount> turnHistory = getAllTurns();
+		int finalDriveIndex = turnHistory.get(LAST).index;
+		
+		
+		//Intensity threshold - work back from end, until we find a left turn
+			//try with floating average
+		int meanOffset = 10; //how far left and right to include in the smoothing averaging process
+		float turnThreshold = 0.75f; //max left turn before we stop the count
+		float consecutiveTurns = 0; //total amount turned left without changing directions
+		//right is high. As we work back in time to 'unwind' we should be decreasing. This tracks how far the lowest point is so far before we find an inflection point
+		//adding more lefts
+		float runningHighCount = getFloatingAverage(turnDegreesArray, meanOffset, finalDriveIndex) / 90;
+		float runningLowCount = getFloatingAverage(turnDegreesArray, meanOffset, finalDriveIndex) / 90;
+		float parkingEndCount = runningHighCount; //will need modified by the removeFidgit() method in future
+		boolean isTurningLeft = true;
+		boolean isTurningRight = true;
+		for(int i = finalDriveIndex; i > 0 && (isTurningLeft || isTurningRight); i--) {
+			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i);
+			float quarterTurnCount = floatingMeanDegrees / 90; //net quarter turns according to sensors
+			if(quarterTurnCount > runningHighCount) { //keep consistent with current sign convention
+				runningHighCount = quarterTurnCount;
+			} else if(quarterTurnCount < runningLowCount) {
+				runningLowCount = quarterTurnCount;
+			}
+			
+			//if current turn drops too far below the highest seen value, we've gone into a left turn
+			if(runningHighCount - quarterTurnCount > turnThreshold) {
+				isTurningRight = false;
+				consecutiveTurns = parkingEndCount - runningLowCount; //left turns = positive value 
+			}
+			
+			//if current turn goes too far above the minimum turn seen, we've gone into a right turn
+			if(quarterTurnCount - runningLowCount > turnThreshold) {
+				isTurningLeft = false;
+				consecutiveTurns = (runningHighCount - parkingEndCount) * -1; //right turns - negative value
+			}
+			
+			
+			//rightConsecutiveCount = runningHighCount - parkingEndCount;
+			//leftConsecutiveCount =  runningHighCount - quarterTurnCount;
+			
+			//System.out.println(i+3 + "\tleftCount "+ leftConsecutiveCount + "\trightCount " + rightConsecutiveCount + "\tparkingEndCount " + parkingEndCount + "\trunningLowCount " + runningLowCount);
+			
+		}
+		return consecutiveTurns;
 	}
 	
 	public ArrayList<TurnCount> getAllTurns() {

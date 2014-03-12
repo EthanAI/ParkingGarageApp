@@ -54,14 +54,14 @@ public class UserSettings implements Serializable {
 		PhoneLocation phoneLocation = recentData.new PhoneLocation(location);
 		ArrayList<FloorBorder> borders = new ArrayList<FloorBorder>(
 				Arrays.asList(
-						new FloorBorder(-1, -1, "Low?"),
-						new FloorBorder(1, 1, "1 Def"),
-						new FloorBorder(3, 2, "2"),
-						new FloorBorder(5, 2.5f, "2B"),
-						new FloorBorder(7, 3, "3"),
-						new FloorBorder(9, 3.5f, "3B"),
-						new FloorBorder(11, 4, "4"),
-						new FloorBorder(13, 99, "High?")
+						new FloorBorder(1, -1, "Low?"),
+						new FloorBorder(-1, 1, "1 Def"),
+						new FloorBorder(-3, 2, "2"),
+						new FloorBorder(-5, 2.5f, "2B"),
+						new FloorBorder(-7, 3, "3"),
+						new FloorBorder(-9, 3.5f, "3B"),
+						new FloorBorder(-11, 4, "4"),
+						new FloorBorder(-13, 99, "High?")
 						)); 
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);
@@ -74,11 +74,11 @@ public class UserSettings implements Serializable {
 		phoneLocation = recentData.new PhoneLocation(location);
 		borders = new ArrayList<FloorBorder>(
 				Arrays.asList(
-						new FloorBorder(-5, 3, "3L"),
-						new FloorBorder(-3, 2, "2L"),
-						new FloorBorder(-1, 1, "1L"),
-						new FloorBorder(1, 1, "1R"),
-						new FloorBorder(3, 2, "1R Looping?")
+						new FloorBorder(5, 3, "3L"),
+						new FloorBorder(3, 2, "2L"),
+						new FloorBorder(1, 1, "1L"),
+						new FloorBorder(-1, 1, "1R"),
+						new FloorBorder(-3, 2, "1R Looping?")
 						)); 
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);

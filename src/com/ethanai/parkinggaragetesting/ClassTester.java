@@ -26,9 +26,11 @@ public class ClassTester {
 
 		
 		//test(pathB, fileName);
-		//testA(pathB, "2014-03-05 15.05 21.3027206 -157.8392261 2F orientationReadings");
-	    
+		testA(pathA, "2014-03-12 11.02 End Other Fl None Orig TestGarage orientationReadings");
 		testA(pathB);
+
+	    
+		//testA(pathB);
 		//testB(pathB);
 	    		
 		//test individual 

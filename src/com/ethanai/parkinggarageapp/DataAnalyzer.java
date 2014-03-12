@@ -195,7 +195,7 @@ public class DataAnalyzer {
 			//System.out.println(i+3 + "\tleftCount "+ leftConsecutiveCount + "\trightCount " + rightConsecutiveCount + "\tparkingEndCount " + parkingEndCount + "\trunningLowCount " + runningLowCount);
 			
 		}
-		return Math.abs(rightConsecutiveCount);
+		return rightConsecutiveCount;
 	}
 	
 	public ArrayList<TurnCount> getAllTurns() {
@@ -261,12 +261,23 @@ public class DataAnalyzer {
 	}
 	
 	//remove the last turn
-	//naieve implementation for now
 	public float parkTurnCorrection() {
+		/*
 		//identify continual turn threshold/time/speed/localmean
 		//once last one is identified, remove that amount (could be left, right, 90 stall/angled stall, multiple movements
 		//for now always assume a right quarter turn into the stall
 		return -1; //note data convention is opposite of toString() and csv graphed data. Dont get mixed up
+		*/
+		//better version
+		final int LAST = 0; //array is in reverse chron order
+		ArrayList<TurnCount> turnHistory = getAllTurns();
+		TurnCount lastTurn = turnHistory.get(LAST);
+		if(lastTurn.direction.equalsIgnoreCase("right")) {
+			return -1;
+		} else {
+			return 1;
+		}
+		
 	}
 	
 	//curently no effects
@@ -283,7 +294,7 @@ public class DataAnalyzer {
 			BufferedReader br = new BufferedReader(fr);
 			
 			String headers[] = br.readLine().split(",");
-			if(headers[0].contains("Departed")) { //if this exists we have the older header style with 2 lines
+			if(headers[0].contains("Departed") || headers[0].contains("Parked")) { //if this exists we have the older header style with 2 lines
 				headers = br.readLine().split(","); //throw that away, replace with next header line
 			}
 			

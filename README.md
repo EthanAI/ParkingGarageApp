@@ -147,12 +147,12 @@ Primary mechanics:
 		UI for mapping floor borders (umm, get middles and build borders as splitting to the difference)
 		
 		
+		+Better final turn removal
 		+switch to floor centers not floor borders and match closest
-		+move garageLocation records to stored/loaded data
-		+add dialog/activity for making new floor records / add garage
-			Partially complete
-			Saves to storage (serialing is slow. Try SQLite or put in separate task)
-			Add floor data, need to allow add garage.
+		xmove garageLocation records to stored/loaded data
+		xadd dialog/activity for making new floor records / add garage
+			xSaves to storage (serialing is slow. Try SQLite or put in separate task)
+			xAdd floor data, need to allow add garage.
 		+make left turn count
 		+switch from raw count to turn history from entry point (need id entry point time)
 		

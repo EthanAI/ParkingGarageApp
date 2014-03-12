@@ -14,19 +14,22 @@ public class ClassTester {
 		@SuppressWarnings("unused")
 		String pathA = "C:\\Dropbox\\Computer Science\\IDE Workspaces\\Eclipse\\ParkingGarageApp\\csv\\";
 		String pathB = "C:\\Dropbox\\Computer Science\\IDE Workspaces\\Eclipse\\ParkingGarageApp\\csv\\Home Garage Park\\";
+		/*
 		String fileName[] = {
 				"3F Parking 2014-02-20 13.50 Unknown orientationReadings",
 				"2014-02-20 19.11 Unknown orientationReadings",
 				"2014-02-21 18.42 Unknown orientationReadings",
 				"2014-02-22 15.47 Unknown orientationReadings",
-				"2014-02-22 21.33 2F Unknown orientationReadings"};
+				"2014-02-22 21.33 2F Unknown orientationReadings"}; */
 		
 
 
 		
 		//test(pathB, fileName);
 		//testA(pathB, "2014-03-05 15.05 21.3027206 -157.8392261 2F orientationReadings");
-	    testB(pathA, "2014-03-06 13.15 Home orientationReadings");
+	    
+		testA(pathB);
+		//testB(pathB);
 	    		
 		//test individual 
 		//test(pathB, fileName[0]);
@@ -46,6 +49,7 @@ public class ClassTester {
 				System.out.print("RawTurnCount: " + turnCount);
 				turnCount += dataAnalyzer.fidgitingCorrection();
 				turnCount += dataAnalyzer.parkTurnCorrection();
+				System.out.print(" Last Remover: " + dataAnalyzer.parkTurnCorrection());
 				System.out.print(" Modified TurnCount: " + turnCount);
 				System.out.print(" Dist From Center : " + getCertainty(turnCount));
 				System.out.print(" Floor: " + getFloorName2(turnCount) + " ");

@@ -30,6 +30,7 @@ public class DaemonReceiver extends BroadcastReceiver {
 				//check GPS is not home
 			if(isCarDevice(intent)) {
 				Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
+				
 				startSensors(context); //possibly this getting triggered multiple times by multiple bluetooth devices (if rebooted in the car?)
 				//need detailed GPS work complete with an array of geofences based on user settings
 				//How to get access to all that from boot? Most code in the SensorService service and that doesn't run at boot.

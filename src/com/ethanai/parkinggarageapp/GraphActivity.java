@@ -10,6 +10,9 @@ import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
+import com.ethanai.parkinggarageapp.RecentSensorData.PhoneLocation;
+import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -17,6 +20,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -57,6 +62,8 @@ public class GraphActivity extends Activity {
 
 	
 	private LocalBroadcastManager lbManager; //only handles messages sent from this app
+	
+	private int floorNumber = 1; //for counting which floor we are recording next
     
        	
 	//http://stackoverflow.com/questions/8802157/how-to-use-localbroadcastmanager
@@ -94,6 +101,10 @@ public class GraphActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
+        
+        TextView tvNextFloor = (TextView) findViewById(R.id.nextFloorField);
+    	tvNextFloor.setText(Integer.toString(floorNumber));
+        
 		
 		//make this poll sensor service status and verify if it is running. May need some kind of trigger to repaint
 	    //TextView tvTest = (TextView) findViewById(R.id.floorField);
@@ -126,6 +137,9 @@ public class GraphActivity extends Activity {
     	
     	TextView tvFloor = (TextView) findViewById(R.id.floorField);
     	tvFloor.setText("Floor: " + recentData.parkedFloor);
+    	
+    	TextView tvNextFloor = (TextView) findViewById(R.id.nextFloorField);
+    	tvNextFloor.setText(Integer.toString(floorNumber));
 
     	int newLocationUpdateMinTime = 0;
     	if(recentData.distanceNearestGarage < 2000) {
@@ -269,8 +283,51 @@ public class GraphActivity extends Activity {
     	floorTextField.setText("");
     }
     
-    public void forceStartSensors(View view) {
-    	Toast.makeText(getBaseContext(), "Not Impelemented Yet", Toast.LENGTH_SHORT).show();
+   // public void forceStartSensors(View view) {
+   // 	Toast.makeText(getBaseContext(), "Not Impelemented Yet", Toast.LENGTH_SHORT).show();
+    //}
+    
+    public void createNewGarageLocation(View view) {
+    	LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		Location location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+		
+    	if(null != location) {
+	    	String name = "Temp";
+	    	//PhoneLocation phoneLocation = recentData.newestPhoneLocation;
+	    	GarageLocation garageLocation = mySettings.new GarageLocation(name, location, null);
+	    	UserSettings.allGarageLocations.add(garageLocation);
+	    	mySettings.saveSettings();
+	    	
+	    	Toast.makeText(getBaseContext(), "Created Garage: " + name, Toast.LENGTH_SHORT).show();
+    	} else {
+    		Toast.makeText(getBaseContext(), "No location data yet\nTry later", Toast.LENGTH_SHORT).show();
+    	}
+    }
+    
+    public void resetGarageLocations(View view) {
+    	mySettings.resetGarageLocations();
+    	Toast.makeText(getBaseContext(), "GarageLocations Reset", Toast.LENGTH_SHORT).show();
+    }
+    
+    public void addFloor(View view) {
+		DataAnalyzer dataAnalyzer = new DataAnalyzer(recentData);
+		
+    	if(null == recentData.newestPhoneLocation) {
+    		Toast.makeText(getBaseContext(), "No location data yet\nTurn on sensors", Toast.LENGTH_SHORT).show();
+    	} else if (dataAnalyzer.turnDegreesArray.size() == 0) {
+    		Toast.makeText(getBaseContext(), "Sensors not running\nRestart 1 km away", Toast.LENGTH_SHORT).show();
+    	} else {
+	    	//PhoneLocation phoneLocation = recentData.newestPhoneLocation;
+	    	String locationName = recentData.newestPhoneLocation.getLocationName();
+	    	
+	    	float turnCount = dataAnalyzer.getConsecutiveTurns();
+	    	mySettings.addFloorRecord(locationName, Integer.toString(floorNumber), turnCount);
+	    	floorNumber++;
+	    	Toast.makeText(getBaseContext(), "addfloor Located:" + locationName + "\n" + turnCount, Toast.LENGTH_SHORT).show();
+    	} 
+    	//mySettings.addFloorRecord("TestGarage", floorText, turnCount);
+    	
+    	//Toast.makeText(getBaseContext(), "Stored Floor: " + floorText + "\n" + "TurnCount: " + turnCount, Toast.LENGTH_SHORT).show();
     }
     
 	public void changeToTextActivity(View view) {

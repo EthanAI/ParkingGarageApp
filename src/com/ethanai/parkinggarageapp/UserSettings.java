@@ -41,9 +41,11 @@ public class UserSettings implements Serializable {
 		//debugMakeLocations();
 	}
 	
-	private void debugMakeLocations() {
+	//for testing
+	public void resetGarageLocations() {
 		RecentSensorData recentData = new RecentSensorData();
-
+		allGarageLocations = new ArrayList<GarageLocation>();
+		
 		//temp hardcode to add extra data
 		String name = "Home";
 		Location location = new Location(name);
@@ -132,8 +134,8 @@ public class UserSettings implements Serializable {
 	 * We just add the new one to our array and overwrite the local file
 	 */
 	// good info on serilizable limitations http://www.javacodegeeks.com/2013/03/serialization-in-java.html
-	public void addGarageLocation(String name, PhoneLocation location, ArrayList<FloorBorder> borders) {
-		allGarageLocations.add(new GarageLocation(name, location, borders));
+	public void addGarageLocation(String name, PhoneLocation phoneLocation, ArrayList<FloorBorder> borders) {
+		allGarageLocations.add(new GarageLocation(name, phoneLocation, borders));
 		saveSettings();
 	}
 	
@@ -194,8 +196,15 @@ public class UserSettings implements Serializable {
 		GarageLocation(String newName, PhoneLocation newLocation, ArrayList<FloorBorder> newBorders) {
 			name = newName;
 			phoneLocation = newLocation;
-			floorBorders = newBorders;
+			if(null == newBorders)
+				floorBorders = new ArrayList<FloorBorder>();
+			else
+				floorBorders = newBorders;
 		}	
+		
+		GarageLocation(String newName, Location location, ArrayList<FloorBorder> newBorders) {
+			this(newName, new RecentSensorData().new PhoneLocation(location), newBorders);
+		}
 		
 		public void delete() {
 			removeGarageLocation(this);

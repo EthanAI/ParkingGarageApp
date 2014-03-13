@@ -52,16 +52,16 @@ public class UserSettings implements Serializable {
 		location.setLatitude(21.3474357); 
 		location.setLongitude(-157.9035183); 
 		PhoneLocation phoneLocation = recentData.new PhoneLocation(location);
-		ArrayList<FloorBorder> borders = new ArrayList<FloorBorder>(
+		ArrayList<Floor> borders = new ArrayList<Floor>(
 				Arrays.asList(
-						new FloorBorder(1, -1, "Low?"),
-						new FloorBorder(-1, 1, "1 Def"),
-						new FloorBorder(-3, 2, "2"),
-						new FloorBorder(-5, 2.5f, "2B"),
-						new FloorBorder(-7, 3, "3"),
-						new FloorBorder(-9, 3.5f, "3B"),
-						new FloorBorder(-11, 4, "4"),
-						new FloorBorder(-13, 99, "High?")
+						new Floor(1, -1, "Low?"),
+						new Floor(-1, 1, "1 Def"),
+						new Floor(-3, 2, "2"),
+						new Floor(-5, 2.5f, "2B"),
+						new Floor(-7, 3, "3"),
+						new Floor(-9, 3.5f, "3B"),
+						new Floor(-11, 4, "4"),
+						new Floor(-13, 99, "High?")
 						)); 
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);
@@ -72,13 +72,13 @@ public class UserSettings implements Serializable {
 		location.setLongitude(-157.818232); 
 		//21.2930909	-157.8171503
 		phoneLocation = recentData.new PhoneLocation(location);
-		borders = new ArrayList<FloorBorder>(
+		borders = new ArrayList<Floor>(
 				Arrays.asList(
-						new FloorBorder(5, 3, "3L"),
-						new FloorBorder(3, 2, "2L"),
-						new FloorBorder(1, 1, "1L"),
-						new FloorBorder(-1, 1, "1R"),
-						new FloorBorder(-3, 2, "1R Looping?")
+						new Floor(5, 3, "3L"),
+						new Floor(3, 2, "2L"),
+						new Floor(1, 1, "1L"),
+						new Floor(-1, 1, "1R"),
+						new Floor(-3, 2, "1R Looping?")
 						)); 
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);
@@ -89,7 +89,7 @@ public class UserSettings implements Serializable {
 		location.setLongitude(-157.82012939); 
 		phoneLocation = recentData.new PhoneLocation(location);
 		
-		borders = new ArrayList<FloorBorder>(); 
+		borders = new ArrayList<Floor>(); 
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);
 	}
@@ -134,7 +134,7 @@ public class UserSettings implements Serializable {
 	 * We just add the new one to our array and overwrite the local file
 	 */
 	// good info on serilizable limitations http://www.javacodegeeks.com/2013/03/serialization-in-java.html
-	public void addGarageLocation(String name, PhoneLocation phoneLocation, ArrayList<FloorBorder> borders) {
+	public void addGarageLocation(String name, PhoneLocation phoneLocation, ArrayList<Floor> borders) {
 		allGarageLocations.add(new GarageLocation(name, phoneLocation, borders));
 		saveSettings();
 	}
@@ -148,8 +148,8 @@ public class UserSettings implements Serializable {
 	public void addFloorRecord(String garageName, String floorName, float turnCount) {
 		GarageLocation editingGarage = getGarageLocation(garageName);
 		int floorNumber = Integer.parseInt(floorName.split("[a-zA-Z]")[0]);
-		FloorBorder newBorder = new FloorBorder(turnCount, floorNumber, floorName);
-		editingGarage.floorBorders.add(newBorder); //might not be in order, we should do better deryption method
+		Floor newBorder = new Floor(turnCount, floorNumber, floorName);
+		editingGarage.floors.add(newBorder); //might not be in order, we should do better deryption method
 		
 		saveSettings();
 	}
@@ -172,6 +172,7 @@ public class UserSettings implements Serializable {
 		return returnValue;
 	}
 	
+	
 	public static ArrayList<String> toArrayList() {
 		ArrayList<String> settingData = new ArrayList<String>();
 		for(GarageLocation garageLocation : allGarageLocations) {
@@ -190,19 +191,19 @@ public class UserSettings implements Serializable {
 		private static final long serialVersionUID = 6855129699792130834L;
 		public String name = "";
 		public PhoneLocation phoneLocation;
-		public ArrayList<FloorBorder> floorBorders; //structure to hold all the borders between floors for this particular garages
+		public ArrayList<Floor> floors; //structure to hold all the borders between floors for this particular garages
 		//add location address etc?
 		
-		GarageLocation(String newName, PhoneLocation newLocation, ArrayList<FloorBorder> newBorders) {
+		GarageLocation(String newName, PhoneLocation newLocation, ArrayList<Floor> newBorders) {
 			name = newName;
 			phoneLocation = newLocation;
 			if(null == newBorders)
-				floorBorders = new ArrayList<FloorBorder>();
+				floors = new ArrayList<Floor>();
 			else
-				floorBorders = newBorders;
+				floors = newBorders;
 		}	
 		
-		GarageLocation(String newName, Location location, ArrayList<FloorBorder> newBorders) {
+		GarageLocation(String newName, Location location, ArrayList<Floor> newBorders) {
 			this(newName, new RecentSensorData().new PhoneLocation(location), newBorders);
 		}
 		
@@ -210,12 +211,24 @@ public class UserSettings implements Serializable {
 			removeGarageLocation(this);
 		}
 		
+		public Floor getMatchingFloor(float finalTurnCount) {
+			Floor parkedFloor = null;
+			
+			//iterate through the floor borders until we find our first, minimum floor hit.
+			for(Floor floor : floors) {
+				if(finalTurnCount < floor.maxTurns && parkedFloor == null) {
+					parkedFloor = floor;
+				}
+			}
+			return parkedFloor;
+		}
+		
 		public String toString() {
 			return name + " " + phoneLocation.getLatitude() + " " + phoneLocation.getLongitude();
 		}
 	}
 	
-	class FloorBorder implements Serializable {
+	class Floor implements Serializable {
 		/**
 		 * 
 		 */
@@ -225,7 +238,7 @@ public class UserSettings implements Serializable {
 		public float floorNum; //numerical representation of a floor
 		public String floorString; //text representation of a floor
 		
-		FloorBorder (float turnCount, float floorNum, String floorString) {
+		Floor(float turnCount, float floorNum, String floorString) {
 			this.maxTurns = turnCount;
 			this.floorNum = floorNum;
 			this.floorString = floorString;

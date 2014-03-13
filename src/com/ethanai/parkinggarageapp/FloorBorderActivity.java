@@ -2,7 +2,7 @@ package com.ethanai.parkinggarageapp;
 
 import java.util.ArrayList;
 
-import com.ethanai.parkinggarageapp.UserSettings.FloorBorder;
+import com.ethanai.parkinggarageapp.UserSettings.Floor;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -21,10 +21,10 @@ public class FloorBorderActivity extends Activity {
         //GarageLocation garageLocation = (GarageLocation) intent.getSerializableExtra("floorBorders");
         //ArrayList<FloorBorder> listBorders = garageLocation.floorBorders;
         @SuppressWarnings("unchecked")
-		ArrayList<FloorBorder> listBorders = (ArrayList<FloorBorder>) intent.getSerializableExtra("floorBorders");
+		ArrayList<Floor> listBorders = (ArrayList<Floor>) intent.getSerializableExtra("floorBorders");
 
-        ArrayAdapter<FloorBorder> adapter 
-        	= new ArrayAdapter<FloorBorder>(this, R.layout.floor_border_list_item, listBorders);
+        ArrayAdapter<Floor> adapter 
+        	= new ArrayAdapter<Floor>(this, R.layout.floor_border_list_item, listBorders);
 
         ListView listView = (ListView) findViewById(R.id.listview); // get the field for the listview within the overall layout
         listView.setAdapter(adapter);      

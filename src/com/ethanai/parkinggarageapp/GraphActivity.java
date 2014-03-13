@@ -164,7 +164,7 @@ public class GraphActivity extends Activity {
     	rotationCountSeries = new TimeSeries("Turns"); //add better time element?
     	mDataset.addSeries(rotationCountSeries);
     	rotationCountRenderer = new XYSeriesRenderer();
-    	rotationCountRenderer.setColor(Color.RED);
+    	rotationCountRenderer.setColor(Color.BLACK);
     	mRenderer.addSeriesRenderer(rotationCountRenderer);
     	
 		mRenderer.setYTitle("Quarter Turns");
@@ -177,7 +177,7 @@ public class GraphActivity extends Activity {
 		mRenderer.setLabelsTextSize(MEDIUM_TEXT_SIZE);
 		mRenderer.setXLabelsColor(Color.BLACK);
 		mRenderer.setApplyBackgroundColor(true);
-		mRenderer.setBackgroundColor(Color.BLACK);
+		mRenderer.setBackgroundColor(Color.WHITE);
     }
 
     private void loadData() {

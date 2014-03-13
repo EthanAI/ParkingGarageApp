@@ -42,7 +42,7 @@ public class SettingsActivity extends Activity implements OnItemClickListener, O
 		GarageLocation garageLocation = (GarageLocation) adapterView.getItemAtPosition(position);
 		
 		Intent intent = new Intent(SettingsActivity.this, FloorBorderActivity.class);
-		intent.putExtra("floorBorders", (Serializable) garageLocation.floorBorders);
+		intent.putExtra("floorBorders", (Serializable) garageLocation.floors);
 		startActivity(intent);
 	}
 	

@@ -148,6 +148,7 @@ Primary mechanics:
 		
 		
 		+test at home, all directions, package release
+		+better matching structure, instead of series of comparisons, directly find closest match
 		xBetter final turn removal
 		+switch to floor centers not floor borders and match closest
 		xmove garageLocation records to stored/loaded data

@@ -9,9 +9,10 @@ import java.util.ArrayList;
 
 
 
+
 //import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 import com.ethanai.parkinggarageapp.RecentSensorData.PhoneLocation;
-import com.ethanai.parkinggarageapp.UserSettings.FloorBorder;
+import com.ethanai.parkinggarageapp.UserSettings.Floor;
 import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 /*
@@ -110,7 +111,7 @@ public class DataAnalyzer {
 			currentLocationName = "Home"; //hardcode for offline testing. Code should not be used in the wild
 		}
 		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
-		ArrayList<FloorBorder> floorBorders = garageLocation.floorBorders;
+		ArrayList<Floor> floorBorders = garageLocation.floors;
 		
 		String parkedFloor = "";
 		float quarterTurnCount = getConsecutiveTurns();
@@ -122,9 +123,9 @@ public class DataAnalyzer {
 		System.out.println("Corrected Right Turns: " + roundedTurnCount);
 		
 		//iterate through the floor borders until we find our first, minimum floor hit.
-		for(FloorBorder border : floorBorders) {
-			if(roundedTurnCount < border.maxTurns && parkedFloor == "") {
-				parkedFloor = border.floorString;
+		for(Floor floor : floorBorders) {
+			if(roundedTurnCount < floor.maxTurns && parkedFloor == "") {
+				parkedFloor = floor.floorString;
 			}
 		}
 		
@@ -132,9 +133,8 @@ public class DataAnalyzer {
 	}
 	
 	public String getCurrentFloor() {
-		String parkedFloor = "None gcf";
+		Floor parkedFloor = null;
 		String currentLocationName;
-		ArrayList<FloorBorder> floorBorders;
 		if(null != currentPhoneLocation) {
 			PhoneLocation currentLocation = currentPhoneLocation;
 			currentLocationName = currentLocation.getLocationName();
@@ -142,33 +142,27 @@ public class DataAnalyzer {
 			currentLocationName = "Home"; //default 
 		}
 		
-		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
-		if(null != garageLocation && null != garageLocation.floorBorders) {
-			floorBorders = garageLocation.floorBorders;
-			
-			float quarterTurnCount = getConsecutiveTurns();
-			System.out.println("Raw right turns: " + quarterTurnCount);
-	
-			quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
-			quarterTurnCount += parkTurnCorrection();
-			//int roundedTurnCount = Math.round(quarterTurnCount);
-			System.out.println("Corrected Right Turns: " + quarterTurnCount);
-			
-			//iterate through the floor borders until we find our first, minimum floor hit.
-			for(FloorBorder border : floorBorders) {
-				if(quarterTurnCount < border.maxTurns && parkedFloor == "") {
-					parkedFloor = border.floorString;
-				}
-			}
-		}
+		float quarterTurnCount = getConsecutiveTurns();
+
+		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
+		quarterTurnCount += parkTurnCorrection();
 		
-		return parkedFloor;
+		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
+		if(null != garageLocation && null != garageLocation.floors) {
+			parkedFloor = garageLocation.getMatchingFloor(quarterTurnCount);
+
+		}
+		if(null != parkedFloor)
+			return parkedFloor.toString();
+		else
+			return "None\n(getCurrentFloor)";
 	}
 	
+
+	
+	/*
 	//Important we have a long history. CSV has all, but recentData structure has less. Maybe 2k is enough
 	//takes values as degrees, returns value as fraction of quarter turns
-	/*  3/1/14 Adding guts so this effectively counts all turns
-	 */
 	//todo - modify it to find positive or negative counts
 	public float getConsecutiveRightTurns() {
 		//Time threshold - if we didnt turn after xxx readings ... maybe not good measure
@@ -198,13 +192,19 @@ public class DataAnalyzer {
 		}
 		return rightConsecutiveCount;
 	}
+	*/
 	
 	//positive for left negative right
 	public float getConsecutiveTurns() {
+		//TODO make sure not double dipping on the the parking correction
 		//Find the starting point after the parking (could be left or right) movement
 		final int LAST = 0; //turnhistory is in reverse chron order
 		ArrayList<TurnCount> turnHistory = getAllTurns();
-		int finalDriveIndex = turnHistory.get(LAST).index;
+		int finalDriveIndex;
+		if(turnHistory.size() > 0)
+			finalDriveIndex = turnHistory.get(LAST).index;
+		else
+			finalDriveIndex = turnDegreesArray.size() - 1; //just estimate from the end
 		
 		
 		//Intensity threshold - work back from end, until we find a left turn
@@ -323,11 +323,15 @@ public class DataAnalyzer {
 		//better version
 		final int LAST = 0; //array is in reverse chron order
 		ArrayList<TurnCount> turnHistory = getAllTurns();
-		TurnCount lastTurn = turnHistory.get(LAST);
-		if(lastTurn.direction.equalsIgnoreCase("right")) {
-			return -1;
+		if(turnHistory.size() > 0) {
+			TurnCount lastTurn = turnHistory.get(LAST);
+			if(lastTurn.direction.equalsIgnoreCase("right")) {
+				return -1;
+			} else {
+				return 1;
+			}
 		} else {
-			return 1;
+			return 0;
 		}
 		
 	}

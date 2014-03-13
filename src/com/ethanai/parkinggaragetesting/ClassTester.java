@@ -11,7 +11,6 @@ public class ClassTester {
 	
 	public static void main(String[] args) {
 
-		@SuppressWarnings("unused")
 		String pathA = "C:\\Dropbox\\Computer Science\\IDE Workspaces\\Eclipse\\ParkingGarageApp\\csv\\";
 		String pathB = "C:\\Dropbox\\Computer Science\\IDE Workspaces\\Eclipse\\ParkingGarageApp\\csv\\Home Garage Park\\";
 		/*

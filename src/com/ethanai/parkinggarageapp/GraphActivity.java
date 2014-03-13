@@ -152,8 +152,13 @@ public class GraphActivity extends Activity {
     	}
     	
     	TextView tvGarage = (TextView) findViewById(R.id.garageField);
+    	String nearestGarageName = "";
+    	if(null != recentData.newestPhoneLocation.getNearestGarage()) 
+    		nearestGarageName = recentData.newestPhoneLocation.getNearestGarage().name;
+    	else
+    		nearestGarageName = "none";
     	tvGarage.setText("D: " + Float.toString(recentData.distanceNearestGarage) + "\n" 
-    			+ recentData.newestPhoneLocation.getProvider() + " " + recentData.newestPhoneLocation.getNearestGarage().name
+    			+ recentData.newestPhoneLocation.getProvider() + " " + nearestGarageName
     			+ "\n" + "updates: " + newLocationUpdateMinTime);
 	}
 	

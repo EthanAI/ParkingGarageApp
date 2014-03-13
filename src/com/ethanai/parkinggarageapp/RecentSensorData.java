@@ -654,16 +654,20 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public GarageLocation getNearestGarage() {
-			GarageLocation closestGarage = UserSettings.allGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
-			float closestDistance = distanceTo(closestGarage.phoneLocation); //closestLocation.location.distanceTo(location);
-			for(GarageLocation garageLocation : UserSettings.allGarageLocations) {
-				float checkDistance = distanceTo(garageLocation.phoneLocation);
-				if(checkDistance < closestDistance) {
-					closestDistance = checkDistance;
-					closestGarage = garageLocation;
+			if(null != UserSettings.allGarageLocations && UserSettings.allGarageLocations.size() > 0) {
+				GarageLocation closestGarage = UserSettings.allGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
+				float closestDistance = distanceTo(closestGarage.phoneLocation); //closestLocation.location.distanceTo(location);
+				for(GarageLocation garageLocation : UserSettings.allGarageLocations) {
+					float checkDistance = distanceTo(garageLocation.phoneLocation);
+					if(checkDistance < closestDistance) {
+						closestDistance = checkDistance;
+						closestGarage = garageLocation;
+					}
 				}
+				return closestGarage;
+			} else {
+				return null;
 			}
-			return closestGarage;
 		}
 		
 		//implement replacements for Location class methods .. -_-
@@ -702,26 +706,27 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 		
 		public String getLocationString() {
+			String nearestGarageName = "";
+			if(null == getNearestGarage())
+				nearestGarageName = "None";
+			else
+				nearestGarageName = getNearestGarage().name;
+			String locationString 
+					= getLatitude() + ", " 
+					+ getLongitude() + ", " 
+					+ getAccuracy() + ", " 
+					+ getDistanceNearestGarage() + ", " 
+					+ nearestGarageName + ", "
+					+ getBearing() + ", " 
+					+ age + ", " //location.getAltitude() + ", " 
+					+ getSpeed() + ", ";
+			
 			Log.i("RecentData", "Age: " + age + " " + getProvider());
-			Log.i("RecentData", getLatitude() + ", " 
-						+ getLongitude() + ", " 
-						+ age + ", " // temp change + location.getAccuracy() + ", " 
-						+ getDistanceNearestGarage() + ", " 
-						+ getNearestGarage().name + ", "
-						+ getBearing() + ", " 
-						+ getAltitude() + ", " 
-						+ getSpeed() + ", ");
+			Log.i("RecentData", locationString);
 			//if(null == )
 			//	return BLANK_GPS_RESULT;
 			//else
-				return getLatitude() + ", " 
-						+ getLongitude() + ", " 
-						+ getAccuracy() + ", " 
-						+ getDistanceNearestGarage() + ", " 
-						+ getNearestGarage().name + ", "
-						+ getBearing() + ", " 
-						+ age + ", " //location.getAltitude() + ", " 
-						+ getSpeed() + ", ";
+				return locationString;
 		}
 		
 		public String toFormattedString() {

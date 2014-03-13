@@ -117,14 +117,15 @@ public class DataAnalyzer {
 		float quarterTurnCount = getConsecutiveTurns();
 		System.out.println("Raw right turns: " + quarterTurnCount);
 
-		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
-		quarterTurnCount += parkTurnCorrection();
+			//new turn counter removes the park turn end so no need for modification
+		//quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
+		//quarterTurnCount += parkTurnCorrection();
 		int roundedTurnCount = Math.round(quarterTurnCount);
 		System.out.println("Corrected Right Turns: " + roundedTurnCount);
 		
 		//iterate through the floor borders until we find our first, minimum floor hit.
 		for(Floor floor : floorBorders) {
-			if(roundedTurnCount < floor.maxTurns && parkedFloor == "") {
+			if(roundedTurnCount < floor.turns && parkedFloor == "") {
 				parkedFloor = floor.floorString;
 			}
 		}
@@ -144,8 +145,9 @@ public class DataAnalyzer {
 		
 		float quarterTurnCount = getConsecutiveTurns();
 
-		quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
-		quarterTurnCount += parkTurnCorrection();
+			//handled by new getConsecutiveTurns();
+		//quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
+		//quarterTurnCount += parkTurnCorrection();
 		
 		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
 		if(null != garageLocation && null != garageLocation.floors) {

@@ -54,14 +54,14 @@ public class UserSettings implements Serializable {
 		PhoneLocation phoneLocation = recentData.new PhoneLocation(location);
 		ArrayList<Floor> borders = new ArrayList<Floor>(
 				Arrays.asList(
-						new Floor(1, -1, "Low?"),
-						new Floor(-1, 1, "1 Def"),
-						new Floor(-3, 2, "2"),
-						new Floor(-5, 2.5f, "2B"),
-						new Floor(-7, 3, "3"),
-						new Floor(-9, 3.5f, "3B"),
-						new Floor(-11, 4, "4"),
-						new Floor(-13, 99, "High?")
+						new Floor(2, -1, "Low?"),
+						new Floor(0, 1, "1 Def"),
+						new Floor(-2, 2, "2"),
+						new Floor(-4, 2.5f, "2B"),
+						new Floor(-6, 3, "3"),
+						new Floor(-8, 3.5f, "3B"),
+						new Floor(-10, 4, "4"),
+						new Floor(-12, 99, "High?")
 						)); 
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);
@@ -211,12 +211,15 @@ public class UserSettings implements Serializable {
 			removeGarageLocation(this);
 		}
 		
-		public Floor getMatchingFloor(float finalTurnCount) {
+		public Floor getMatchingFloor(float correctedTurnCount) {
 			Floor parkedFloor = null;
 			
 			//iterate through the floor borders until we find our first, minimum floor hit.
+			//maybe we could do some cool hashmap thing here?
+			float difference = Math.abs(floors.get(0).turns - correctedTurnCount);
 			for(Floor floor : floors) {
-				if(finalTurnCount < floor.maxTurns && parkedFloor == null) {
+				if(Math.abs(floor.turns - correctedTurnCount) < difference) {
+					difference = Math.abs(floor.turns - correctedTurnCount);
 					parkedFloor = floor;
 				}
 			}
@@ -234,18 +237,18 @@ public class UserSettings implements Serializable {
 		 */
 		private static final long serialVersionUID = -8248771055332604053L;
 
-		public float maxTurns; //max number of quarter turns before crossing to the next floor positive is right, negative is left
+		public float turns; //max number of quarter turns before crossing to the next floor positive is right, negative is left
 		public float floorNum; //numerical representation of a floor
 		public String floorString; //text representation of a floor
 		
 		Floor(float turnCount, float floorNum, String floorString) {
-			this.maxTurns = turnCount;
+			this.turns = turnCount;
 			this.floorNum = floorNum;
 			this.floorString = floorString;
 		}
 		
 		public String toString() {
-			return maxTurns + ", " + floorNum + ", " + floorString;
+			return turns + ", " + floorNum + ", " + floorString;
 		}
 		
 	}

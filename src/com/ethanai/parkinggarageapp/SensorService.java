@@ -85,19 +85,18 @@ public class SensorService extends Service implements SensorEventListener {
 	public long locationUpdateMinTime = 10000; 
 	//private boolean isSensorsRuning
 	
+	private boolean debugState = false;
+	
 	public int onStartCommand(Intent intent, int flags, int startID) {
 		Toast.makeText(this, "Sensors Started", Toast.LENGTH_SHORT).show();
 
         //get info from the calling Activity
-        /*
 		Bundle extras = intent.getExtras();
         if(extras != null){
-        	int newMax = extras.getInt("maxReadingHistoryCount");
-        	if(newMax > 0) {
-        		maxReadingHistoryCount = newMax;
-        	}
+        	String debugStateString = (String)extras.get("debugState");
+        	if(debugStateString.equalsIgnoreCase("true"))
+        		debugState = true;
         }
-        */
 	        
         //location listeners
 		//locationUpdateMinTime = 0; //temporary hard coding
@@ -107,17 +106,20 @@ public class SensorService extends Service implements SensorEventListener {
 	    
 	    //set up structure to hold recent data (not all data so we can run for unlimited time)
         recentData =  new RecentSensorData(getBaseContext());
-	    
-		//set up sensor manager (sensor listeners only activate if we're close to a garage)
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        // disabled to see if the GPS signal will trigger the sensors
-        //reviseUpdateFrequency(); //decide if we should start the sensors or not
-        //registerSensors(); //temporary hard coded
 		
 		//create notifier 
 		myNotifier = new ParkingNotificationManager(this, recentData);
 		myNotifier.cancelFloorNotification();
 		myNotifier.gpsRunningNotification();
+		
+		//set up sensor manager (sensor listeners only activate if we're close to a garage)
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if(debugState) { //for the forcestart command
+        	registerSensors();
+        }
+        // disabled to see if the GPS signal will trigger the sensors
+        //reviseUpdateFrequency(); //decide if we should start the sensors or not
+        //registerSensors(); //temporary hard coded
                         				
 		return START_STICKY; //keep running until specifically stopped
 	}

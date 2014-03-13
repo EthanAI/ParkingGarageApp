@@ -9,14 +9,14 @@ import android.widget.Toast;
 
 public class DaemonReceiver extends BroadcastReceiver {	
 	//Temp hardcoding of my car's BT description to test with. Will need to be settable/changable in the future
-	String carBTName = "XPLOD";
-	String carBTMac = "54:42:49:B0:7A:C6";
+	
 	
 	ParkingNotificationManager myNotifier;
 
 	@Override
 	public void onReceive(Context context, Intent intent) { //maybe not final. create new context Context getBaseContext() and pass it
 		Log.i("BootReceiver", "Recieved something. " + intent.getAction());
+				
 		myNotifier = new ParkingNotificationManager(context, null);
 		
 		if(intent.getAction() == Intent.ACTION_POWER_CONNECTED) {
@@ -59,7 +59,7 @@ public class DaemonReceiver extends BroadcastReceiver {
 		BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 		String deviceName = device.getName(); 
 		String macAddress = device.getAddress();
-		return (deviceName.equalsIgnoreCase(carBTName) && macAddress.equalsIgnoreCase(carBTMac));
+		return (deviceName.equalsIgnoreCase(UserSettings.carBTName) && macAddress.equalsIgnoreCase(UserSettings.carBTMac));
 	}
 
 	public void startSensors(Context context) {

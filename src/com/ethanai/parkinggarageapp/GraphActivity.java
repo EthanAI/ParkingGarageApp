@@ -132,16 +132,17 @@ public class GraphActivity extends Activity {
 	
 	public void updateTextViews()	{
 		TextView tvTurn = (TextView) findViewById(R.id.turnField);
-    	tvTurn.setText("Raw Turns: " + recentData.turnConsecutiveCount);
+		DataAnalyzer dataAnalyzer = new DataAnalyzer(recentData);
+    	tvTurn.setText("Raw Turns: " + dataAnalyzer.getRawConsecutiveTurns());
     	
     	TextView tvFloor = (TextView) findViewById(R.id.floorField);
-    	tvFloor.setText("Floor: " + recentData.parkedFloor);
+    	tvFloor.setText("Floor: " + dataAnalyzer.getCurrentFloorEstimate());
     	
     	TextView tvNextFloor = (TextView) findViewById(R.id.nextFloorField);
     	tvNextFloor.setText(Integer.toString(floorNumber));
 
     	int newLocationUpdateMinTime = 0;
-    	if(recentData.distanceNearestGarage < 2000) {
+    	if(recentData.distanceNearestGarage < 1000) {
     		newLocationUpdateMinTime = 0;
     	} else if(recentData.distanceNearestGarage < 5000) {
     		newLocationUpdateMinTime = 30 * 1000;
@@ -152,13 +153,8 @@ public class GraphActivity extends Activity {
     	}
     	
     	TextView tvGarage = (TextView) findViewById(R.id.garageField);
-    	String nearestGarageName = "";
-    	if(null != recentData.newestPhoneLocation.getNearestGarage()) 
-    		nearestGarageName = recentData.newestPhoneLocation.getNearestGarage().name;
-    	else
-    		nearestGarageName = "none";
     	tvGarage.setText("D: " + Float.toString(recentData.distanceNearestGarage) + "\n" 
-    			+ recentData.newestPhoneLocation.getProvider() + " " + nearestGarageName
+    			+ recentData.newestPhoneLocation.getProvider() + " " + recentData.newestPhoneLocation.getNearestGarageName()
     			+ "\n" + "updates: " + newLocationUpdateMinTime);
 	}
 	
@@ -261,37 +257,19 @@ public class GraphActivity extends Activity {
     	Toast.makeText(getBaseContext(), "CSVs deleted.", Toast.LENGTH_SHORT).show();
     }
     
-    public void storeFloorData(View view) {
-    	EditText floorTextField = (EditText) findViewById(R.id.floorEntryField);
-    	String floorText = floorTextField.getText().toString();
-    	
-    	DataAnalyzer dataAnalyzer = new DataAnalyzer(recentData);
-    	float turnCount = dataAnalyzer.getConsecutiveTurns();
-    	Log.i("GraphActivity", "Got Floor: " + floorText);
-    	floorTextField.setText("");
-    	
-    	//get current garage location
-    	//get current entry location
-    	//get current borderfile
-    	
-    	//get current turn history since ... garage entrance? (Just do consecutive turns for now)
-    	//find middle between this border and previous/most similar floor
-    	//insert a border with averaged value OR refactor code to take floor data and find nearest match
-    	mySettings.addFloorRecord("TestGarage", floorText, turnCount);
-    	
-    	Toast.makeText(getBaseContext(), "Stored Floor: " + floorText + "\n" + "TurnCount: " + turnCount, Toast.LENGTH_SHORT).show();
-    }
-    
+ 
     public void clearFloor(View view) {
     	EditText floorTextField = (EditText) findViewById(R.id.floorEntryField);
     	floorTextField.setText("");
     }
     
-   // public void forceStartSensors(View view) {
-   // 	Toast.makeText(getBaseContext(), "Not Impelemented Yet", Toast.LENGTH_SHORT).show();
-    //}
+    public void resetSettings(View view) {
+    	mySettings.resetSettings();
+    	mySettings.saveSettings();
+    	Toast.makeText(getBaseContext(), "Settings Reset", Toast.LENGTH_SHORT).show();
+    }
     
-    public void createNewGarageLocation(View view) {
+    public void addNewGarageLocation(View view) {
     	LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		Location location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
 		
@@ -308,11 +286,6 @@ public class GraphActivity extends Activity {
     	}
     }
     
-    public void resetGarageLocations(View view) {
-    	mySettings.resetGarageLocations();
-    	Toast.makeText(getBaseContext(), "GarageLocations Reset", Toast.LENGTH_SHORT).show();
-    }
-    
     public void addFloor(View view) {
 		DataAnalyzer dataAnalyzer = new DataAnalyzer(recentData);
 		
@@ -325,14 +298,45 @@ public class GraphActivity extends Activity {
 	    	String locationName = recentData.newestPhoneLocation.getLocationName();
 	    	
 	    	float turnCount = dataAnalyzer.getConsecutiveTurns();
-	    	mySettings.addFloorRecord(locationName, Integer.toString(floorNumber), turnCount);
-	    	floorNumber++;
-	    	Toast.makeText(getBaseContext(), "addfloor Located:" + locationName + "\n" + turnCount, Toast.LENGTH_SHORT).show();
+	    	if(mySettings.addFloorRecord(locationName, Integer.toString(floorNumber), turnCount)) {
+	    		Toast.makeText(getBaseContext(), "addfloor Located:" + locationName + "\n" 
+	    				+ floorNumber + " " + turnCount, Toast.LENGTH_SHORT).show();
+	    		floorNumber++;
+	    		updateTextViews();
+			} else {	    	
+				Toast.makeText(getBaseContext(), "Enter a number and set up garage first", Toast.LENGTH_SHORT).show();
+			}
+
     	} 
     	//mySettings.addFloorRecord("TestGarage", floorText, turnCount);
     	
     	//Toast.makeText(getBaseContext(), "Stored Floor: " + floorText + "\n" + "TurnCount: " + turnCount, Toast.LENGTH_SHORT).show();
     }
+    
+    public void addCustomFloor(View view) {
+    	EditText floorTextField = (EditText) findViewById(R.id.floorEntryField);
+    	String floorText = floorTextField.getText().toString();
+    	
+    	DataAnalyzer dataAnalyzer = new DataAnalyzer(recentData);
+    	float turnCount = dataAnalyzer.getConsecutiveTurns();
+    	Log.i("GraphActivity", "Got Floor: " + floorText);
+    	floorTextField.setText("");
+    	
+    	//get current garage location
+    	//get current entry location
+    	//get current borderfile
+    	
+    	//get current turn history since ... garage entrance? (Just do consecutive turns for now)
+    	//find middle between this border and previous/most similar floor
+    	//insert a border with averaged value OR refactor code to take floor data and find nearest match    	
+    	if(mySettings.addFloorRecord("TestGarage", floorText, turnCount)) {
+    		Toast.makeText(getBaseContext(), "addfloor Located:" + "TestGarage" + "\n" 
+    				+ floorText + " " + turnCount, Toast.LENGTH_SHORT).show();
+		} else {	    	
+			Toast.makeText(getBaseContext(), "Enter a number and set up garage first", Toast.LENGTH_SHORT).show();
+		} 
+	}
+   
     
 	public void changeToTextActivity(View view) {
 	    Intent intent = new Intent(GraphActivity.this, TextActivity.class);
@@ -354,9 +358,16 @@ public class GraphActivity extends Activity {
 	
 	public void startSensorService(View view) { 
 		Intent intent = new Intent(getBaseContext(), SensorService.class);
-		startService(intent); //start Accelerometer Service. 
+		startService(intent);  
 	}
 	
+    public void forceStartSensors(View view) {
+    	Toast.makeText(getBaseContext(), "ForceStart", Toast.LENGTH_SHORT).show();
+    	Intent intent = new Intent(getBaseContext(), SensorService.class);
+    	intent.putExtra("debugState", "true");
+		startService(intent);  
+    }
+    
 	public void stopSensorService(View view) {
 		//Context context = getBaseContext();
 		Intent intent = new Intent(getApplicationContext(), SensorService.class);

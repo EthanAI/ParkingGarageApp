@@ -24,27 +24,59 @@ public class UserSettings implements Serializable {
 	 */
 	private static final long serialVersionUID = -1790572649218348232L;
 	public static ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
-	public static int recentDataHistoryCount = 2000;
-	public static int graphHistoryCount = 2000;
-	public static final int FLOOR_COLUMN_INDEX = 3;
+	public static int recentDataHistoryCount;
+	public static int graphHistoryCount;
+	public static int FLOOR_COLUMN_INDEX;
 	
-	public final static String STORAGE_DIRECTORY_NAME = "Documents";
-	public static final String GARAGE_LOG_NAME = "garageRecords.ser";
-	public static File garageLocationFile = new File(Environment.getExternalStorageDirectory().toString() 
-			+ "/" + STORAGE_DIRECTORY_NAME + "/" + GARAGE_LOG_NAME);
+	public static String STORAGE_DIRECTORY_NAME;
+	public static String SETTINGS_FILE_NAME;
+	public static File settingsFile;
+	//public static final String GARAGE_LOG_NAME = "garageRecords.ser";
+	//public static File garageLocationFile = new File(Environment.getExternalStorageDirectory().toString() 
+	//		+ "/" + STORAGE_DIRECTORY_NAME + "/" + GARAGE_LOG_NAME);
+	
+	public static String carBTName;
+	public static String carBTMac;
+	
+	public static boolean isFirstRun;
+	public static boolean isBluetoothUser;
+	public static boolean isGarageSelectionComplete;
 
 	
 	UserSettings() {	
-		//load garage settings from storage
-		allGarageLocations = loadGarageLocations();
+		//load settings from storage
+		//loadSettings();
 		
-		//debugMakeLocations();
+		//for testing
+		resetSettings();
+	}
+	
+	//temporary hard code, need to be able to add
+	public void setBluetoothRecord() {
+		carBTName = "XPLOD";
+		carBTMac = "54:42:49:B0:7A:C6";
 	}
 	
 	//for testing
-	public void resetGarageLocations() {
+	public void resetSettings() {
 		RecentSensorData recentData = new RecentSensorData();
 		allGarageLocations = new ArrayList<GarageLocation>();
+		
+		recentDataHistoryCount = 2000;
+		graphHistoryCount = 2000;
+		FLOOR_COLUMN_INDEX = 3;
+		
+		STORAGE_DIRECTORY_NAME = "Documents";
+		SETTINGS_FILE_NAME = "_parkingGarageSettings.ser";
+		settingsFile = new File(Environment.getExternalStorageDirectory().toString() 
+						+ "/" + STORAGE_DIRECTORY_NAME + "/" + SETTINGS_FILE_NAME);
+		
+		carBTName = "";
+		carBTMac = "";
+		
+	    isFirstRun = true;
+		isBluetoothUser = false;
+		isGarageSelectionComplete = false;
 		
 		//temp hardcode to add extra data
 		String name = "Home";
@@ -55,7 +87,7 @@ public class UserSettings implements Serializable {
 		ArrayList<Floor> borders = new ArrayList<Floor>(
 				Arrays.asList(
 						new Floor(2, -1, "Low?"),
-						new Floor(0, 1, "1 Def"),
+						new Floor(0, 1, "1"),
 						new Floor(-2, 2, "2"),
 						new Floor(-4, 2.5f, "2B"),
 						new Floor(-6, 3, "3"),
@@ -93,7 +125,8 @@ public class UserSettings implements Serializable {
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);
 	}
-	
+
+	/*
 	@SuppressWarnings("unchecked")
 	private ArrayList<GarageLocation> loadGarageLocations() {
 		ArrayList<GarageLocation> garageLocations = new ArrayList<GarageLocation>();
@@ -118,16 +151,49 @@ public class UserSettings implements Serializable {
 
 		return garageLocations;
 	}
+	*/
 	
 	public void saveSettings() {
 		try {
-			ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(garageLocationFile)); //overwrite old file
-			os.writeObject(allGarageLocations);
+			ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(settingsFile)); //overwrite old file
+			os.writeObject(this);
 			os.close();
 		} catch (Exception e) {
 			Log.e("UserSettings", e.toString());
 		}
 	}
+	
+	/*
+	public void loadSettings() {
+		UserSettings loadedSettings = null;
+		if(settingsFile != null && settingsFile.exists())
+		try {
+			ObjectInputStream is = new ObjectInputStream(new FileInputStream(settingsFile));
+			loadedSettings = (UserSettings) is.readObject();
+			is.close();
+		} catch (Exception e) {
+			Log.e("UserSettings", e.getMessage());
+		}
+		
+		//copy values into this()
+		//TODO look up best way to restore this from file once we land
+		allGarageLocations = loadedSettings.allGarageLocations;
+		recentDataHistoryCount = loadedSettings.recentDataHistoryCount;
+		graphHistoryCount = loadedSettings.graphHistoryCount;
+		FLOOR_COLUMN_INDEX = loadedSettings.FLOOR_COLUMN_INDEX;
+		
+		STORAGE_DIRECTORY_NAME = loadedSettings.STORAGE_DIRECTORY_NAME;
+		SETTINGS_FILE_NAME = loadedSettings.SETTINGS_FILE_NAME;
+		settingsFile = loadedSettings.settingsFile;
+		
+		carBTName = loadedSettings.carBTName;
+		carBTMac = loadedSettings.carBTMac;
+		
+		isFirstRun = loadedSettings.isFirstRun;
+		isBluetoothUser = loadedSettings.isBluetoothUser;
+		isGarageSelectionComplete = loadedSettings.isGarageSelectionComplete;
+	}
+	*/
 	
 	/*
 	 * Assert: all garage locations are stored to disk and loaded to allGarageLocations identically
@@ -144,14 +210,23 @@ public class UserSettings implements Serializable {
 		saveSettings();
 	}
 
-	
-	public void addFloorRecord(String garageName, String floorName, float turnCount) {
+	//return sucess or fail
+	public boolean addFloorRecord(String garageName, String floorName, float turnCount) {
 		GarageLocation editingGarage = getGarageLocation(garageName);
-		int floorNumber = Integer.parseInt(floorName.split("[a-zA-Z]")[0]);
-		Floor newBorder = new Floor(turnCount, floorNumber, floorName);
-		editingGarage.floors.add(newBorder); //might not be in order, we should do better deryption method
-		
-		saveSettings();
+		String tokens[] = floorName.split("[a-zA-Z]"); 
+		if(null != editingGarage && floorName.matches("[0-9][a-zA-Z]*")) {
+			float floorNumber = Integer.parseInt(tokens[0]);
+			if(floorName.matches("[0-9][a-zA-Z]+")) { //if anything entered other than numbers, assume partial floor change
+				floorNumber += 0.5;
+			}
+			Floor newBorder = new Floor(turnCount, floorNumber, floorName);
+			editingGarage.floors.add(newBorder); //might not be in order, we should do better deryption method
+			
+			saveSettings();
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	public static GarageLocation getGarageLocation(String searchName) {
@@ -216,14 +291,18 @@ public class UserSettings implements Serializable {
 			
 			//iterate through the floor borders until we find our first, minimum floor hit.
 			//maybe we could do some cool hashmap thing here?
-			float difference = Math.abs(floors.get(0).turns - correctedTurnCount);
-			for(Floor floor : floors) {
-				if(Math.abs(floor.turns - correctedTurnCount) < difference) {
-					difference = Math.abs(floor.turns - correctedTurnCount);
-					parkedFloor = floor;
+			if(null != floors && floors.size() > 0) {
+				float difference = Math.abs(floors.get(0).turns - correctedTurnCount);
+				for(Floor floor : floors) {
+					if(Math.abs(floor.turns - correctedTurnCount) < difference) {
+						difference = Math.abs(floor.turns - correctedTurnCount);
+						parkedFloor = floor;
+					}
 				}
+				return parkedFloor;
+			} else {
+				return null;
 			}
-			return parkedFloor;
 		}
 		
 		public String toString() {

@@ -314,7 +314,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			//for the recentData structure
 			distanceNearestGarage = phoneLocation.getDistanceNearestGarage();
 			if(initialLocationName == null)
-				initialLocationName = newestPhoneLocation.getNearestGarage().name;
+				initialLocationName = newestPhoneLocation.getNearestGarageName();
 			
 			this.locationString =  recentLocationString; //new PhoneLocation(location).locationString; // location.getLatitude() + " " + location.getLongitude();
 	    	
@@ -611,14 +611,27 @@ public class RecentSensorData implements Serializable { //must specify serializa
 			if(orientRecent != null && orientRecent.size() > 0) {
 				//recent phone location of this time = orientRecent.get(orientRecent.size()-1).location
 				PhoneLocation lastLocationSameProvider  = getLastLocationSameProvider();
-				this.age = (location.getElapsedRealtimeNanos() - lastLocationSameProvider.getElapsedRealtimeNanos());
-				this.age /= 1000000000f;
+				if(null != lastLocationSameProvider) {
+					this.age = (location.getElapsedRealtimeNanos() - lastLocationSameProvider.getElapsedRealtimeNanos());
+					this.age /= 1000000000f;
+				} else { //maybe only 2 entries, one from network and one from GPS. 
+					this.age = -1;
+				}
 			}
 			
 			//Log.i("RecentData", "Age: " + age + " " + location.getProvider());
 								
 		}	
 		
+		public String getNearestGarageName() {
+			String nearestGarageName = "";
+	    	if(null != getNearestGarage()) 
+	    		nearestGarageName = getNearestGarage().name;
+	    	else
+	    		nearestGarageName = "none";
+	    	return nearestGarageName;
+		}
+
 		public PhoneLocation getLastLocationSameProvider() {
 			PhoneLocation lastLocation = null;
 			for(int i = orientRecent.size()-1; orientRecent != null && lastLocation == null && i >= 0; i--) {
@@ -648,7 +661,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		
 		public float getDistanceNearestGarage() {
 			if(null == getNearestGarage())
-				return 999999999;
+				return 999999999; //really this should never happen...
 			else
 				return this.distanceTo(getNearestGarage().phoneLocation);
 		}

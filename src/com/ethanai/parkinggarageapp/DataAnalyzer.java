@@ -68,6 +68,7 @@ public class DataAnalyzer {
 	/*
 	 * Doesn't hold the full dataset in memory so just an estimate
 	 */
+	/*
 	public String getCurrentFloorEstimate(RecentSensorData recentData) {
 		ArrayList<Float> arrayList = new ArrayList<Float>();
 		for(int i = 0; i < recentData.orientRecent.size()-1; i++) {
@@ -75,9 +76,28 @@ public class DataAnalyzer {
 		}
 		return getCurrentFloor(arrayList, recentData.newestPhoneLocation);
 	}
+	*/
 	
 	public String getCurrentFloorEstimate() {
-		return getCurrentFloor();
+		Floor parkedFloor = null;
+		String currentLocationName;
+		if(null != currentPhoneLocation) {
+			PhoneLocation currentLocation = currentPhoneLocation;
+			currentLocationName = currentLocation.getLocationName();
+		} else {
+			currentLocationName = "Home"; //default 
+		}
+		
+		float quarterTurnCount = getRawConsecutiveTurns();
+		
+		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
+		if(null != garageLocation && null != garageLocation.floors) {
+			parkedFloor = garageLocation.getMatchingFloor(quarterTurnCount);
+		}
+		if(null != parkedFloor)
+			return parkedFloor.floorString;
+		else
+			return "None. getCurrentFloorEstimate()";
 	}
 	
 	/*
@@ -101,7 +121,7 @@ public class DataAnalyzer {
 	}
 	*/
 	
-	
+	/*
 	public String getCurrentFloor(ArrayList<Float> turnDegreesArray, PhoneLocation... phoneLocation) {
 		String currentLocationName;
 		if(null != phoneLocation[0]) {
@@ -132,6 +152,7 @@ public class DataAnalyzer {
 		
 		return parkedFloor;
 	}
+*/
 	
 	public String getCurrentFloor() {
 		Floor parkedFloor = null;
@@ -251,6 +272,56 @@ public class DataAnalyzer {
 		}
 		return consecutiveTurns;
 	}
+	
+	//positive for left negative right
+	public float getRawConsecutiveTurns() {
+		//TODO make sure not double dipping on the the parking correction
+		//Find the starting point after the parking (could be left or right) movement
+		int finalDriveIndex = turnDegreesArray.size() - 1; //just estimate from the end
+		
+		//Intensity threshold - work back from end, until we find a left turn
+			//try with floating average
+		int meanOffset = 10; //how far left and right to include in the smoothing averaging process
+		float turnThreshold = 0.75f; //max left turn before we stop the count
+		float consecutiveTurns = 0; //total amount turned left without changing directions
+		//right is high. As we work back in time to 'unwind' we should be decreasing. This tracks how far the lowest point is so far before we find an inflection point
+		//adding more lefts
+		float runningHighCount = getFloatingAverage(turnDegreesArray, meanOffset, finalDriveIndex) / 90;
+		float runningLowCount = getFloatingAverage(turnDegreesArray, meanOffset, finalDriveIndex) / 90;
+		float parkingEndCount = runningHighCount; //will need modified by the removeFidgit() method in future
+		boolean isTurningLeft = true;
+		boolean isTurningRight = true;
+		for(int i = finalDriveIndex; i > 0 && (isTurningLeft || isTurningRight); i--) {
+			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i);
+			float quarterTurnCount = floatingMeanDegrees / 90; //net quarter turns according to sensors
+			if(quarterTurnCount > runningHighCount) { //keep consistent with current sign convention
+				runningHighCount = quarterTurnCount;
+			} else if(quarterTurnCount < runningLowCount) {
+				runningLowCount = quarterTurnCount;
+			}
+			
+			//if current turn drops too far below the highest seen value, we've gone into a left turn
+			if(runningHighCount - quarterTurnCount > turnThreshold) {
+				isTurningRight = false;
+				consecutiveTurns = parkingEndCount - runningLowCount; //left turns = positive value 
+			}
+			
+			//if current turn goes too far above the minimum turn seen, we've gone into a right turn
+			if(quarterTurnCount - runningLowCount > turnThreshold) {
+				isTurningLeft = false;
+				consecutiveTurns = (runningHighCount - parkingEndCount) * -1; //right turns - negative value
+			}
+			
+			
+			//rightConsecutiveCount = runningHighCount - parkingEndCount;
+			//leftConsecutiveCount =  runningHighCount - quarterTurnCount;
+			
+			//System.out.println(i+3 + "\tleftCount "+ leftConsecutiveCount + "\trightCount " + rightConsecutiveCount + "\tparkingEndCount " + parkingEndCount + "\trunningLowCount " + runningLowCount);
+			
+		}
+		return consecutiveTurns;
+	}
+
 	
 	public ArrayList<TurnCount> getAllTurns() {
 		int meanOffset = 10; //how far left and right to include in the smoothing averaging process

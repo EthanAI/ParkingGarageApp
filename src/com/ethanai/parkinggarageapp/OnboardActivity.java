@@ -76,8 +76,10 @@ public class OnboardActivity extends Activity {
 	public void onOK(View view) {
 		if(textIterator.hasNext())
 			tv.setText(textIterator.next());
-		else
+		else {
+			UserSettings.isFirstRun = false;
 			toGraphActivity();
+		}
 		
 	}
 	

@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.TextView;
 
 import com.ethanai.parkinggarageapp.R;
 import com.ethanai.parkinggarageapp.UserSettings;
@@ -25,6 +26,17 @@ public class SettingsActivity extends Activity implements OnItemClickListener, O
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);   //get the overall layout
+        
+        TextView tvBTName = (TextView) findViewById(R.id.carbtname);
+        TextView tvBTMac = (TextView) findViewById(R.id.carbtmac);
+        
+        if(null != UserSettings.carBTName) {
+        	tvBTName.setText(UserSettings.carBTName);
+        }
+        if(null != UserSettings.carBTMac) {
+        	tvBTMac.setText(UserSettings.carBTMac);
+        }
+
         
         ArrayList<GarageLocation> listGarages = UserSettings.allGarageLocations;        
         ArrayAdapter<GarageLocation> adapter 

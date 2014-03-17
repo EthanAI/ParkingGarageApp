@@ -25,24 +25,17 @@ public class DaemonReceiver extends BroadcastReceiver {
 			Toast.makeText(context, "Power Off!", Toast.LENGTH_SHORT).show();
 		} else if(intent.getAction() == BluetoothDevice.ACTION_ACL_CONNECTED) {
 			//http://stackoverflow.com/questions/9459680/how-identify-which-bluetooth-device-causes-an-action-acl-connected-broadcast
-			//TODO 
-				//Make 2nd deamon? Activate sensors when near home
-				//check GPS is not home
-			if(isCarDevice(intent)) {
-				Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
+			if(UserSettings.isBluetoothUser) {
+				//if(UserSettings.carBTMac == null) {
+				//	checkCarBT(context, intent);
+				//}
 				
-				startSensors(context); //possibly this getting triggered multiple times by multiple bluetooth devices (if rebooted in the car?)
-				//need detailed GPS work complete with an array of geofences based on user settings
-				//How to get access to all that from boot? Most code in the SensorService service and that doesn't run at boot.
-				/*
-				if(UserLocationManager.isAtHome()) {
-					Toast.makeText(context, "At home, no need", Toast.LENGTH_LONG).show();
+				if(null != UserSettings.carBTMac && isCarDevice(intent)) {
+					Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
+					startSensors(context); 
 				} else {
-					Toast.makeText(context, "Outside, Start Sensors", Toast.LENGTH_LONG).show();
+					Toast.makeText(context, "Other BT Connection", Toast.LENGTH_SHORT).show();
 				}
-				*/
-			} else {
-				Toast.makeText(context, "Other BT Connection", Toast.LENGTH_SHORT).show();
 			}
 		} else if(intent.getAction() == BluetoothDevice.ACTION_ACL_DISCONNECTED) {
 			Toast.makeText(context, "BT Disconnect!", Toast.LENGTH_SHORT).show();
@@ -61,6 +54,7 @@ public class DaemonReceiver extends BroadcastReceiver {
 		String macAddress = device.getAddress();
 		return (deviceName.equalsIgnoreCase(UserSettings.carBTName) && macAddress.equalsIgnoreCase(UserSettings.carBTMac));
 	}
+
 
 	public void startSensors(Context context) {
 		//Toast.makeText(context, "bCast in", Toast.LENGTH_SHORT).show();

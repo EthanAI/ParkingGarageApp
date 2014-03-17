@@ -1,6 +1,8 @@
 package com.ethanai.parkinggarageapp;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Set;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
@@ -14,8 +16,12 @@ import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
@@ -336,6 +342,35 @@ public class GraphActivity extends Activity {
 			Toast.makeText(getBaseContext(), "Enter a number and set up garage first", Toast.LENGTH_SHORT).show();
 		} 
 	}
+    
+	public void pickCarBT(View view) { //maybe choose from paired list of devices
+		BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+		Set<BluetoothDevice> btList = btAdapter.getBondedDevices();
+		final ArrayList<String> btNames = new ArrayList<String>();
+		final ArrayList<String> btMACs = new ArrayList<String>();
+		
+		for(BluetoothDevice device : btList) {
+			btNames.add(device.getName());
+			btMACs.add(device.getAddress());
+		}
+		
+		String btNamesArray[] = {""};
+		btNamesArray = btNames.toArray(btNamesArray);
+		
+		AlertDialog ad = 
+				new AlertDialog.Builder(GraphActivity.this)
+				.setTitle("Select Car Bluetooth Device")
+				.setItems(btNamesArray, new DialogInterface.OnClickListener() {
+		               public void onClick(DialogInterface dialog, int which) {   
+			               UserSettings.carBTName = btNames.get(which);
+			               UserSettings.carBTMac = btMACs.get(which);
+			               Toast.makeText(getApplicationContext(), "Added: " + UserSettings.carBTName
+			            		   + "\n" + UserSettings.carBTMac, Toast.LENGTH_SHORT).show();
+
+		           }
+		       }).create();
+		ad.show();		
+	}
    
     
 	public void changeToTextActivity(View view) {
@@ -352,6 +387,12 @@ public class GraphActivity extends Activity {
 	
 	public void changeToSettingsActivity(View view) {
 	    Intent intent = new Intent(GraphActivity.this, SettingsActivity.class);
+	    startActivity(intent);
+		//this.finish();
+	}
+	
+	public void startOnboardActivity(View view) {
+	    Intent intent = new Intent(GraphActivity.this, OnboardActivity.class);
 	    startActivity(intent);
 		//this.finish();
 	}

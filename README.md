@@ -158,6 +158,32 @@ Primary mechanics:
 		+make left turn count
 		+switch from raw count to turn history from entry point (need id entry point time)
 		
+Steps to Beta release: 
+	-First run set up
+		-Convert to dialogs instead of activity
+		+complete the meat behind it to save user settings
+		-ask questions to set up for auto/manual operation
+			-auto fork:
+				-Set bluetooth name to empty
+				-Everytime bluetooth connects, ask 'is this your car stereo?' if bluetoothName still empty
+		-ask questions to set up for preset garages
+			-choose from list of preset garages (include database later)
+	-Design UI for post-setup app
+		-Buttons
+			-[Where's My Car?] see where parked
+			-[Parking Garages] see/change which garages active
+				-create new profile from here
+			-[Send Report] - Get user explanation of what went wrong
+				-include recent sensor data
+				-include recent app log
+				-create email
+	-Add Adsense
+	-Test left and right turns at home
+	-Test manual on and off
+	-test automatic on and off
+	-test new garage mapping
+	-add logging/bug reporting system (copy to email, complete control over transmitting data)
+		
 		
 add location if exit car without sensors activated?
 Share parking locations?
@@ -167,11 +193,12 @@ Master the most crowded garage
 			
   
 	Bugs:
-		GraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
+		xGraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
 			XWas a problem to appending final info to the front of the file
-			Bug returned 2/28. Long time analyzing the completed csv? Threading should be applied
+			xBug returned 2/28. Long time analyzing the completed csv? Threading should be applied
 				Down to 12 minutes to lag out
 				Not much of a problem now that we record less data. Fix for future stability
+			xadded multithreading for the final analysis, should permenantly fix the bug. 
 			
 		XGPS info not updating on the output. Pretty sure we're listening, not getting saved?
 			XWe're just feeding itself its own value -_-. 
@@ -193,6 +220,8 @@ Master the most crowded garage
 			Depreciated. Does not seem to occur near any of my garages
 		Fix startup bug
 			First connect of the day from home crashes
+		Not saving settings to file
+			UserSettings class has no fields when debugged. So odd.
 			
 			
         

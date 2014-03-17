@@ -37,6 +37,7 @@ public class UserSettings implements Serializable {
 	
 	public static String carBTName;
 	public static String carBTMac;
+	public static ArrayList<String> nonCarBTMacArray = new ArrayList<String>();
 	
 	public static boolean isFirstRun;
 	public static boolean isBluetoothUser;

@@ -27,8 +27,8 @@
 			<Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="Start"
-				android:onClick="startSensorService" />
+				android:text="OnBrd"
+				android:onClick="startOnboardActivity" />
 
 		</TableRow>    
 		<TableRow>
@@ -52,19 +52,19 @@
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
 				android:text="Record Fl."
-				android:onClick="storeFloorData" />
+				android:onClick="addCustomFloor" />
 		</TableRow>    
 		<TableRow>
 		    <Button
 		    	android:layout_height="wrap_content"
 		    	android:layout_width="wrap_content"
 				android:text="Reset G"
-				android:onClick="resetGarageLocations" />
+				android:onClick="resetSettings" />
 		    <Button
 		    	android:layout_height="wrap_content"
 		    	android:layout_width="wrap_content"
 				android:text="Save Loc."
-				android:onClick="createNewGarageLocation" />
+				android:onClick="addNewGarageLocation" />
 		    <TextView
 			    android:id="@+id/nextFloorField" 
 			    android:text="NxtFl"
@@ -75,6 +75,13 @@
 		    	android:layout_width="wrap_content"
 				android:text="Add Fl"
 				android:onClick="addFloor" />
+		</TableRow>
+		<TableRow>
+		    <Button
+		        android:layout_height="wrap_content"
+		    	android:layout_width="wrap_content"
+		        android:text="Choose BT"
+		        android:onClick="pickCarBT" />
 		</TableRow>
 		
 	</TableLayout>

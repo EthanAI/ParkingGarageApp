@@ -1,14 +1,9 @@
 package com.ethanai.parkinggarageapp;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -24,6 +19,8 @@ public class UserSettings implements Serializable {
 	 */
 	private static final long serialVersionUID = -1790572649218348232L;
 	public static ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
+	public static ArrayList<GarageLocation> enabledGarageLocations = new ArrayList<GarageLocation>();
+
 	public static int recentDataHistoryCount;
 	public static int graphHistoryCount;
 	public static int FLOOR_COLUMN_INDEX;

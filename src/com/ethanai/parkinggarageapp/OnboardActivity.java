@@ -3,7 +3,11 @@ package com.ethanai.parkinggarageapp;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
+
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -51,12 +55,10 @@ public class OnboardActivity extends Activity {
 	    		+ "\tDatabase of pre-mapped garages\n"
 	    		+ "\tImproved battery usage\n"
 	    		);
+	    /*
 	    textArray.add(
 	    		"Initial setup:\nDo you have a bluetooth device in your car?"
 	    		); //TODO set yes or no. Add options to select bluetooth name if user says yes.
-	    textArray.add(
-	    		"Are you connected now?"
-	    		); //TODO
 	    textArray.add(
 	    		"Select any of the following preset garage profiles:"
 	    		); //TODO also have a none of the above option
@@ -66,6 +68,7 @@ public class OnboardActivity extends Activity {
 	    textArray.add(
 	    		"All done! We'll take it from here."
 	    		);
+	    		*/
 	    textIterator = textArray.iterator();
 
 	    tv = (TextView) findViewById(R.id.onboardText);
@@ -78,10 +81,73 @@ public class OnboardActivity extends Activity {
 			tv.setText(textIterator.next());
 		else {
 			UserSettings.isFirstRun = false;
-			toGraphActivity();
+			btUserQuery();
 		}
 		
 	}
+	
+	public void btUserQuery() { 		
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Does your car have a Bluetooth Stereo?")
+               .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                       UserSettings.isBluetoothUser = true;
+                       presetGaragePicker();
+                   }
+               })
+               .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                	   UserSettings.isBluetoothUser = false;
+                       presetGaragePicker();
+                   }
+               });
+        builder.create();
+        builder.show();
+	}
+	
+    public void presetGaragePicker() {
+    	final ArrayList<Integer> checkedNames = new ArrayList<Integer>();
+    	
+    	ArrayList<String> garageNames = new ArrayList<String>();
+    	for(GarageLocation gl : UserSettings.allGarageLocations) {
+    		garageNames.add(gl.name);
+    	}
+    	
+    	CharSequence[] namesArray = garageNames.toArray(new CharSequence[garageNames.size()]);
+    	//String namesArray[] = {""};
+		//namesArray = garageNames.toArray(namesArray);
+    	
+		AlertDialog.Builder builder = 
+				new AlertDialog.Builder(this)
+				.setTitle("Select any preset garages to enable")
+				.setMultiChoiceItems(namesArray, null, new DialogInterface.OnMultiChoiceClickListener() {
+		               @Override
+		               public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+		                   if (isChecked) {
+		                       // If the user checked the item, add it to the selected items
+		                	   checkedNames.add(which);
+		                   } else if (checkedNames.contains(which)) {
+		                       // Else, if the item is already in the array, remove it 
+		                	   checkedNames.remove(Integer.valueOf(which));
+		                   }
+		               }
+		           })
+		           // Set the action buttons
+		           .setPositiveButton("Add These", new DialogInterface.OnClickListener() {
+		               @Override
+		               public void onClick(DialogInterface dialog, int id) {
+		                   for(int i : checkedNames) {
+		                	   UserSettings.enabledGarageLocations.add(UserSettings.allGarageLocations.get(i));
+		                   }
+		                   finish();
+		               }
+		           });
+		       
+		       
+		builder.create();
+		builder.show();	
+    }
+
 	
 	public void toGraphActivity() {
 		this.finish();

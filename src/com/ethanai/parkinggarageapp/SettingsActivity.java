@@ -38,7 +38,7 @@ public class SettingsActivity extends Activity implements OnItemClickListener, O
         }
 
         
-        ArrayList<GarageLocation> listGarages = UserSettings.allGarageLocations;        
+        ArrayList<GarageLocation> listGarages = UserSettings.enabledGarageLocations;        
         ArrayAdapter<GarageLocation> adapter 
         	= new ArrayAdapter<GarageLocation>(this, R.layout.settings_list_item, listGarages);
 

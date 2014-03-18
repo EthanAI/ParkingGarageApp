@@ -43,6 +43,9 @@
             android:name="com.ethanai.parkinggarageapp.SettingsActivity" >
         </activity>
         <activity
+            android:name="com.ethanai.parkinggarageapp.BluetoothSettingsActivity" >
+        </activity>
+        <activity
             android:name=".FloorBorderActivity" >
         </activity>
         <service 

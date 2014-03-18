@@ -42,27 +42,7 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
         ListView listView = (ListView) findViewById(R.id.listview); // get the field for the listview within the overall layout
         listView.setAdapter(adapter);
         
-        listView.setOnItemClickListener(this);
-        
-        /*
-        //for debugging
-        PackageManager packageManager = getPackageManager();
-        
-        List<String> startupApps = new ArrayList<String>();
-        List<ResolveInfo> detail = new ArrayList<ResolveInfo>();
-        Intent intent = new Intent("android.intent.action.BOOT_COMPLETED");
-        List<ResolveInfo> activities = packageManager.queryBroadcastReceivers(intent, 0);
-        for (ResolveInfo resolveInfo : activities) {
-            ActivityInfo activityInfo = resolveInfo.activityInfo;
-            if (activityInfo != null) {
-                startupApps.add(activityInfo.name);
-                detail.add(resolveInfo);
-            }
-        }
-        System.out.println();
-        */
-        
-        
+        listView.setOnItemClickListener(this);        
     }
 	
 	public ArrayList<String> getSortedRecent(ArrayList<String> rawList, int maxItems) {
@@ -107,12 +87,14 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
     /*
      * Function for the button
      */
+	/*
     public void changeToGraphActivity(View view) {
     	Intent intent = new Intent(HistoryActivity.this, GraphActivity.class);
     	intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); //Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         this.finish();
     }
+    */
 
 
 	@Override
@@ -135,6 +117,9 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 		
 	}
 
-	
+	public void finish(View view) {
+		finish();
+	}
+
 	
 }

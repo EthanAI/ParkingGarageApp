@@ -25,19 +25,8 @@ public class SettingsActivity extends Activity implements OnItemClickListener, O
 	
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);   //get the overall layout
-        
-        TextView tvBTName = (TextView) findViewById(R.id.carbtname);
-        TextView tvBTMac = (TextView) findViewById(R.id.carbtmac);
-        
-        if(null != UserSettings.carBTName) {
-        	tvBTName.setText(UserSettings.carBTName);
-        }
-        if(null != UserSettings.carBTMac) {
-        	tvBTMac.setText(UserSettings.carBTMac);
-        }
-
-        
+        setContentView(R.layout.activity_settings);   
+             
         ArrayList<GarageLocation> listGarages = UserSettings.enabledGarageLocations;        
         ArrayAdapter<GarageLocation> adapter 
         	= new ArrayAdapter<GarageLocation>(this, R.layout.settings_list_item, listGarages);
@@ -89,6 +78,30 @@ public class SettingsActivity extends Activity implements OnItemClickListener, O
 		return true; //consume the click
 	}
 	
+	public void addGarageFromPresets(View view) {
+		//make checkbox dialog (can I handle a lot? Scroll?)
+		//update view
+	}
+	
+	public void removeGarageFromPresets(View view) {
+		//make checkbox dialog
+		//update view
+		
+	}
+	
+	public void createNewGarage(View view) {
+		//dialog to get text
+		//buildGarageProfile (or similar)
+		//update view
+		
+	}
+	
+	public void buildGarageProfile(View view) {
+		//dialog to select text //currently allow redoing any of them
+		//driveawaystart dialog
+		//recursive 'floor record' dialog
+		//update view
+	}
 	
 
 }

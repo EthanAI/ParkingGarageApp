@@ -47,6 +47,13 @@ public class MainActivity extends Activity {
 		//this.finish();
 	}
 	
+	public void toBluetoothSettingsActivity(View view) {
+		Intent intent = new Intent(MainActivity.this, BluetoothSettingsActivity.class);
+	    startActivity(intent);
+		//this.finish();
+	}
+	
+	
 	public void sendDebugLog(View view) {
 		Toast.makeText(getApplicationContext(), "Not Implemented Yet", Toast.LENGTH_SHORT).show();
 	}

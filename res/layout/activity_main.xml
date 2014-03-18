@@ -3,41 +3,8 @@
               android:orientation="vertical" 
               android:layout_width="fill_parent"
               android:layout_height="fill_parent">
-     
-    <TableLayout
-        android:paddingTop="10dip"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:stretchColumns="*">
-        <TableRow>
-            <Button 
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="DeveloperView"
-                android:onClick="toGraphActivity" />
-		</TableRow>    
-		<TableRow>
-   			<Button 
-				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
-				android:text="Where's My Car"
-				android:onClick="toHistoryActivity" />
-			<Button 
-				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
-				android:text="Parking Garages"
-				android:onClick="toSettingsActivity" />
-			<Button 
-				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
-				android:text="Debug Log"
-				android:onClick="sendDebugLog" />
-		</TableRow>    
-	
-		
-	</TableLayout>
-	
-    <LinearLayout
+              
+   <LinearLayout
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
 	    android:orientation="horizontal" >
@@ -48,6 +15,7 @@
 	        android:layout_weight="1"
 	        android:layout_height="wrap_content"
 	        android:layout_gravity="left"
+	        android:textSize="20sp"
 	        android:background="#88FF0000"/>
 
 	    <TextView
@@ -60,6 +28,46 @@
 	        android:background="#8800FF00"/>
 	
 	</LinearLayout>
+     
+    <TableLayout
+        android:paddingTop="10dip"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:stretchColumns="*">
+        <TableRow>
+            <Button 
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="DeveloperView"
+                android:onClick="toGraphActivity" />
+            <Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Debug Log"
+				android:onClick="sendDebugLog" />
+		</TableRow>    
+		<TableRow>
+			<Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Garage Settings"
+				android:onClick="toSettingsActivity" />
+			<Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="BT Settings"
+				android:onClick="toBluetoothSettingsActivity" />
+			<Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Parking Hist."
+				android:onClick="toHistoryActivity" />
+		</TableRow>    
+	
+		
+	</TableLayout>
+	
+
     
 
 </LinearLayout>

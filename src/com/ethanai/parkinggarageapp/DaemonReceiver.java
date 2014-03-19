@@ -11,12 +11,16 @@ public class DaemonReceiver extends BroadcastReceiver {
 	//Temp hardcoding of my car's BT description to test with. Will need to be settable/changable in the future
 	
 	
-	ParkingNotificationManager myNotifier;
+	private ParkingNotificationManager myNotifier;
+	
+	public UserSettings mySettings;
+
 
 	@Override
 	public void onReceive(Context context, Intent intent) { //maybe not final. create new context Context getBaseContext() and pass it
 		Log.i("BootReceiver", "Recieved something. " + intent.getAction());
-				
+		
+        mySettings = MainActivity.mySettings;				
 		myNotifier = new ParkingNotificationManager(context, null);
 				
 		if(intent.getAction() == Intent.ACTION_POWER_CONNECTED) {
@@ -25,12 +29,12 @@ public class DaemonReceiver extends BroadcastReceiver {
 			Toast.makeText(context, "Power Off!", Toast.LENGTH_SHORT).show();
 		} else if(intent.getAction() == BluetoothDevice.ACTION_ACL_CONNECTED) {
 			//http://stackoverflow.com/questions/9459680/how-identify-which-bluetooth-device-causes-an-action-acl-connected-broadcast
-			if(UserSettings.isBluetoothUser) {
+			if(mySettings.isBluetoothUser) {
 				//if(UserSettings.carBTMac == null) {
 				//	checkCarBT(context, intent);
 				//}
 				
-				if(null != UserSettings.carBTMac && isCarDevice(intent)) {
+				if(null != mySettings.carBTMac && isCarDevice(intent)) {
 					Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
 					startSensors(context); 
 				} else {
@@ -52,7 +56,7 @@ public class DaemonReceiver extends BroadcastReceiver {
 		BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 		String deviceName = device.getName(); 
 		String macAddress = device.getAddress();
-		return (deviceName.equalsIgnoreCase(UserSettings.carBTName) && macAddress.equalsIgnoreCase(UserSettings.carBTMac));
+		return (deviceName.equalsIgnoreCase(mySettings.carBTName) && macAddress.equalsIgnoreCase(mySettings.carBTMac));
 	}
 
 

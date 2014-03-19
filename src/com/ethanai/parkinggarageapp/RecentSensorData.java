@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.TimeZone;
 
+import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 @SuppressLint("SimpleDateFormat")
@@ -35,7 +36,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	 * 
 	 */
 	private static final long serialVersionUID = 5721779411217090251L;
-	public int historyLength = UserSettings.recentDataHistoryCount;
+	public UserSettings mySettings = MainActivity.mySettings;
+	public int historyLength = mySettings.recentDataHistoryCount;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
 	public DateFormat format = new SimpleDateFormat("'Date 'yyyy-MM-dd HH:mm:ss.SSS");
     
@@ -97,7 +99,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 		Location location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
 		
-		newestPhoneLocation = new PhoneLocation(location);
+		newestPhoneLocation = new PhoneLocation(location, orientRecent);
 		distanceNearestGarage = newestPhoneLocation.getDistanceNearestGarage();
 	}
 	
@@ -168,10 +170,10 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	//version for non-sensor data (gps records)
 	public void addUpToLimit(Location newLocation) {
 		if(newLocation.getProvider().equalsIgnoreCase(LocationManager.GPS_PROVIDER)) {
-			addUpToLimit(gpsRecent, new PhoneLocation(newLocation));
+			addUpToLimit(gpsRecent, new PhoneLocation(newLocation, orientRecent));
 			setGPSLocation(newLocation);
 		} else {
-			addUpToLimit(networkRecent, new PhoneLocation(newLocation));
+			addUpToLimit(networkRecent, new PhoneLocation(newLocation, orientRecent));
 			setNetworkLocation(newLocation);
 		}
 	}
@@ -208,7 +210,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	}
 	
 	public void setGPSLocation(Location location) {
-		currentGPSLocation = new PhoneLocation(location);
+		currentGPSLocation = new PhoneLocation(location, orientRecent);
 		newestPhoneLocation = getBestLocation();
 		distanceNearestGarage = newestPhoneLocation.getDistanceNearestGarage();
 		
@@ -225,7 +227,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	}
 	
 	public void setNetworkLocation(Location location) {
-		currentNetworkLocation = new PhoneLocation(location);
+		currentNetworkLocation = new PhoneLocation(location, orientRecent);
 		newestPhoneLocation = getBestLocation();
 		distanceNearestGarage = newestPhoneLocation.getDistanceNearestGarage();
 		
@@ -567,183 +569,193 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	                "\n";
 		}		
 	}
+}
 	
-	/*
-	 * Cant save any location fields/constructor anything or else cannot serialize. This is so awkward
+/*
+ * Cant save any location fields/constructor anything or else cannot serialize. This is so awkward
+ */
+class PhoneLocation implements Serializable {
+	/**
+	 * 
 	 */
-	class PhoneLocation implements Serializable {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 4019620007238814716L;
-		public String provider;
-		//public Location location; //cant have
-		public double latitude;
-		public double longitude;
-		public double altitude;
-		public float bearing;
-		public float speed;
-		public float accuracy;
-		public long elapsedRealtimeNanos;
-		
-		public final int MATCH_DISTANCE = 150;
-		
-		public Date date;
+	private static final long serialVersionUID = 4019620007238814716L;
+	public String provider;
+	//public Location location; //cant have
+	public double latitude;
+	public double longitude;
+	public double altitude;
+	public float bearing;
+	public float speed;
+	public float accuracy;
+	public long elapsedRealtimeNanos;
+	
+	public final int MATCH_DISTANCE = 150;
+	
+	public Date date;
 
-		public String dateString;
-		//public String locationString;
-		public float age = 0;
+	public String dateString;
+	//public String locationString;
+	public float age = 0;
+	
+	public ArrayList<DerivedOrientation> orientRecent;
+	public UserSettings mySettings = MainActivity.mySettings;
+	public DateFormat format = new SimpleDateFormat("'Date 'yyyy-MM-dd HH:mm:ss.SSS");
+	
+	PhoneLocation (Location location, ArrayList<DerivedOrientation> orientRecent) {
+		//super(location);
+		format.setTimeZone(TimeZone.getTimeZone("HST"));
 		
-		PhoneLocation (Location location) {
-			//super(location);
-			this.provider = location.getProvider();
-			this.latitude = location.getLatitude();
-			this.longitude = location.getLongitude();
-			this.altitude = location.getAltitude();
-			this.bearing = location.getBearing();
-			this.speed = location.getSpeed();
-			this.accuracy = location.getAccuracy();
-			this.elapsedRealtimeNanos = location.getElapsedRealtimeNanos();
-			
-			this.date = new Date(location.getTime());			
-			this.dateString = format.format(date);
+		this.provider = location.getProvider();
+		this.latitude = location.getLatitude();
+		this.longitude = location.getLongitude();
+		this.altitude = location.getAltitude();
+		this.bearing = location.getBearing();
+		this.speed = location.getSpeed();
+		this.accuracy = location.getAccuracy();
+		this.elapsedRealtimeNanos = location.getElapsedRealtimeNanos();
+		
+		this.date = new Date(location.getTime());			
+		this.dateString = format.format(date);
+		
+		this.orientRecent = orientRecent;
 
-			if(orientRecent != null && orientRecent.size() > 0) {
-				//recent phone location of this time = orientRecent.get(orientRecent.size()-1).location
-				PhoneLocation lastLocationSameProvider  = getLastLocationSameProvider();
-				if(null != lastLocationSameProvider) {
-					this.age = (location.getElapsedRealtimeNanos() - lastLocationSameProvider.getElapsedRealtimeNanos());
-					this.age /= 1000000000f;
-				} else { //maybe only 2 entries, one from network and one from GPS. 
-					this.age = -1;
-				}
-			}
-			
-			//Log.i("RecentData", "Age: " + age + " " + location.getProvider());
-								
-		}	
-		
-		public String getNearestGarageName() {
-			String nearestGarageName = "";
-	    	if(null != getNearestGarage()) 
-	    		nearestGarageName = getNearestGarage().name;
-	    	else
-	    		nearestGarageName = "none";
-	    	return nearestGarageName;
-		}
 
-		public PhoneLocation getLastLocationSameProvider() {
-			PhoneLocation lastLocation = null;
-			for(int i = orientRecent.size()-1; orientRecent != null && lastLocation == null && i >= 0; i--) {
-				if(provider.equalsIgnoreCase(orientRecent.get(i).phoneLocation.getProvider())) {
-					lastLocation = orientRecent.get(i).phoneLocation;
-				}
-			}
-			return lastLocation;
-		}
-
-		public String getLocationCoordinates() {
-			String locationString = getLatitude() + " " + getLongitude();
-			//Log.i("GarageAppGPS", locationString);
-			return locationString;
-		}
-		
-		public String getLocationName() {
-			if(isAtGarage()) 
-				return getNearestGarage().name;
-			else
-				return "Other"; //getLocationCoordinates();
-		}
-		
-		public boolean isAtGarage() {
-			return (getDistanceNearestGarage() < MATCH_DISTANCE);
-		}
-		
-		public float getDistanceNearestGarage() {
-			if(null == getNearestGarage())
-				return 999999999; //really this should never happen...
-			else
-				return this.distanceTo(getNearestGarage().phoneLocation);
-		}
-		
-		public GarageLocation getNearestGarage() {
-			if(null != UserSettings.allGarageLocations && UserSettings.allGarageLocations.size() > 0) {
-				GarageLocation closestGarage = UserSettings.allGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
-				float closestDistance = distanceTo(closestGarage.phoneLocation); //closestLocation.location.distanceTo(location);
-				for(GarageLocation garageLocation : UserSettings.allGarageLocations) {
-					float checkDistance = distanceTo(garageLocation.phoneLocation);
-					if(checkDistance < closestDistance) {
-						closestDistance = checkDistance;
-						closestGarage = garageLocation;
-					}
-				}
-				return closestGarage;
-			} else {
-				return null;
+		if(orientRecent != null && orientRecent.size() > 0) {
+			//recent phone location of this time = orientRecent.get(orientRecent.size()-1).location
+			PhoneLocation lastLocationSameProvider  = getLastLocationSameProvider();
+			if(null != lastLocationSameProvider) {
+				this.age = (location.getElapsedRealtimeNanos() - lastLocationSameProvider.getElapsedRealtimeNanos());
+				this.age /= 1000000000f;
+			} else { //maybe only 2 entries, one from network and one from GPS. 
+				this.age = -1;
 			}
 		}
 		
-		//implement replacements for Location class methods .. -_-
-		public String getProvider() {
-			return provider;
+		//Log.i("RecentData", "Age: " + age + " " + location.getProvider());
+							
+	}	
+	
+	public String getNearestGarageName() {
+		String nearestGarageName = "";
+    	if(null != getNearestGarage()) 
+    		nearestGarageName = getNearestGarage().name;
+    	else
+    		nearestGarageName = "none";
+    	return nearestGarageName;
+	}
+
+	public PhoneLocation getLastLocationSameProvider() {
+		PhoneLocation lastLocation = null;
+		for(int i = orientRecent.size()-1; orientRecent != null && lastLocation == null && i >= 0; i--) {
+			if(provider.equalsIgnoreCase(orientRecent.get(i).phoneLocation.getProvider())) {
+				lastLocation = orientRecent.get(i).phoneLocation;
+			}
 		}
-		public double getLatitude() {
-			return latitude;
-		}
-		public double getLongitude() {
-			return longitude;
-		}
-		public float distanceTo(PhoneLocation phoneLocation) {
-			Location here = new Location("here"); //temp for math
-			Location there = new Location("there"); //also needed
-			here.setLatitude(latitude);
-			here.setLongitude(longitude);
-			there.setLatitude(phoneLocation.latitude);
-			there.setLongitude(phoneLocation.longitude);
-			return here.distanceTo(there);
-		}
-		public double getAltitude() {
-			return altitude;
-		}
-		public float getBearing() {
-			return bearing;
-		}
-		public float getSpeed() {
-			return speed;
-		}
-		public float getAccuracy() {
-			return accuracy;
-		}
-		public long getElapsedRealtimeNanos() {
-			return elapsedRealtimeNanos;
-		}
-		
-		public String getLocationString() {
-			String nearestGarageName = "";
-			if(null == getNearestGarage())
-				nearestGarageName = "None";
-			else
-				nearestGarageName = getNearestGarage().name;
-			String locationString 
-					= getLatitude() + ", " 
-					+ getLongitude() + ", " 
-					+ getAccuracy() + ", " 
-					+ getDistanceNearestGarage() + ", " 
-					+ nearestGarageName + ", "
-					+ getBearing() + ", " 
-					+ age + ", " //location.getAltitude() + ", " 
-					+ getSpeed() + ", ";
-			
-			Log.i("RecentData", "Age: " + age + " " + getProvider());
-			Log.i("RecentData", locationString);
-			//if(null == )
-			//	return BLANK_GPS_RESULT;
-			//else
-				return locationString;
-		}
-		
-		public String toFormattedString() {
-			return getLocationString() + "\n";
+		return lastLocation;
+	}
+
+	public String getLocationCoordinates() {
+		String locationString = getLatitude() + " " + getLongitude();
+		//Log.i("GarageAppGPS", locationString);
+		return locationString;
+	}
+	
+	public String getLocationName() {
+		if(isAtGarage()) 
+			return getNearestGarage().name;
+		else
+			return "Other"; //getLocationCoordinates();
+	}
+	
+	public boolean isAtGarage() {
+		return (getDistanceNearestGarage() < MATCH_DISTANCE);
+	}
+	
+	public float getDistanceNearestGarage() {
+		if(null == getNearestGarage())
+			return 999999999; //really this should never happen...
+		else
+			return this.distanceTo(getNearestGarage().phoneLocation);
+	}
+	
+	public GarageLocation getNearestGarage() {
+		if(null != mySettings.enabledGarageLocations && mySettings.enabledGarageLocations.size() > 0) {
+			GarageLocation closestGarage = mySettings.enabledGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
+			float closestDistance = distanceTo(closestGarage.phoneLocation); //closestLocation.location.distanceTo(location);
+			for(GarageLocation garageLocation : mySettings.enabledGarageLocations) {
+				float checkDistance = distanceTo(garageLocation.phoneLocation);
+				if(checkDistance < closestDistance) {
+					closestDistance = checkDistance;
+					closestGarage = garageLocation;
+				}
+			}
+			return closestGarage;
+		} else {
+			return null;
 		}
 	}
+	
+	//implement replacements for Location class methods .. -_-
+	public String getProvider() {
+		return provider;
+	}
+	public double getLatitude() {
+		return latitude;
+	}
+	public double getLongitude() {
+		return longitude;
+	}
+	public float distanceTo(PhoneLocation phoneLocation) {
+		Location here = new Location("here"); //temp for math
+		Location there = new Location("there"); //also needed
+		here.setLatitude(latitude);
+		here.setLongitude(longitude);
+		there.setLatitude(phoneLocation.latitude);
+		there.setLongitude(phoneLocation.longitude);
+		return here.distanceTo(there);
+	}
+	public double getAltitude() {
+		return altitude;
+	}
+	public float getBearing() {
+		return bearing;
+	}
+	public float getSpeed() {
+		return speed;
+	}
+	public float getAccuracy() {
+		return accuracy;
+	}
+	public long getElapsedRealtimeNanos() {
+		return elapsedRealtimeNanos;
+	}
+	
+	public String getLocationString() {
+		String nearestGarageName = "";
+		if(null == getNearestGarage())
+			nearestGarageName = "None";
+		else
+			nearestGarageName = getNearestGarage().name;
+		String locationString 
+				= getLatitude() + ", " 
+				+ getLongitude() + ", " 
+				+ getAccuracy() + ", " 
+				+ getDistanceNearestGarage() + ", " 
+				+ nearestGarageName + ", "
+				+ getBearing() + ", " 
+				+ age + ", " //location.getAltitude() + ", " 
+				+ getSpeed() + ", ";
+		
+		Log.i("RecentData", "Age: " + age + " " + getProvider());
+		Log.i("RecentData", locationString);
+		//if(null == )
+		//	return BLANK_GPS_RESULT;
+		//else
+			return locationString;
+	}
+	
+	public String toFormattedString() {
+		return getLocationString() + "\n";
+	}
 }
+

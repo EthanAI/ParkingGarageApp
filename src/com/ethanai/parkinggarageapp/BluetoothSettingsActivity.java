@@ -22,9 +22,13 @@ public class BluetoothSettingsActivity extends Activity {
 	public TextView tvBTName;
 	public TextView tvBTMac;
 	
+	public UserSettings mySettings;
+	
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bluetoothsettings);   //get the overall layout
+        
+        mySettings = MainActivity.mySettings;
         
         tvEnabledStatus = (TextView) findViewById(R.id.btenabledstatus);
         tvBTName = (TextView) findViewById(R.id.btname);
@@ -34,18 +38,18 @@ public class BluetoothSettingsActivity extends Activity {
     }
     
     public void updateTextViews() {
-    	if(UserSettings.isBluetoothUser)
+    	if(mySettings.isBluetoothUser)
         	tvEnabledStatus.setText("Enabled");
         else
         	tvEnabledStatus.setText("Disabled");
         
-        if(null != UserSettings.carBTName)
-        	tvBTName.setText(UserSettings.carBTName);
+        if(null != mySettings.carBTName)
+        	tvBTName.setText(mySettings.carBTName);
         else
         	tvBTName.setText("None");
         
-        if(null != UserSettings.carBTMac)
-        	tvBTMac.setText(UserSettings.carBTMac);
+        if(null != mySettings.carBTMac)
+        	tvBTMac.setText(mySettings.carBTMac);
         else
         	tvBTMac.setText("None");
         
@@ -63,16 +67,16 @@ public class BluetoothSettingsActivity extends Activity {
         builder.setMessage("Does your car have a Bluetooth Stereo?")
                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
-                       UserSettings.isBluetoothUser = true;
+                	   mySettings.isBluetoothUser = true;
                        pickCarBT();
                		   updateTextViews();
                    }
                })
                .setNegativeButton("No", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
-                	   UserSettings.isBluetoothUser = false;
-                	   UserSettings.carBTName = null;
-                	   UserSettings.carBTName = null;
+                	   mySettings.isBluetoothUser = false;
+                	   mySettings.carBTName = null;
+                	   mySettings.carBTMac = null;
                 	   updateTextViews();
                    }
                });
@@ -99,10 +103,11 @@ public class BluetoothSettingsActivity extends Activity {
 				.setTitle("Select Car Bluetooth Device")
 				.setItems(btNamesArray, new DialogInterface.OnClickListener() {
 		               public void onClick(DialogInterface dialog, int which) {   
-			               UserSettings.carBTName = btNames.get(which);
-			               UserSettings.carBTMac = btMACs.get(which);
-			               Toast.makeText(getApplicationContext(), "Registered: " + UserSettings.carBTName
-			            		   + "\n" + UserSettings.carBTMac, Toast.LENGTH_SHORT).show();
+		            	   mySettings.carBTName = btNames.get(which);
+		            	   mySettings.carBTMac = btMACs.get(which);
+			               updateTextViews();
+			               Toast.makeText(getApplicationContext(), "Registered: " + mySettings.carBTName
+			            		   + "\n" + mySettings.carBTMac, Toast.LENGTH_SHORT).show();
 
 		           }
 		       }).create();

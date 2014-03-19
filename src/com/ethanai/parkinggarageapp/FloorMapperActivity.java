@@ -2,7 +2,6 @@ package com.ethanai.parkinggarageapp;
 
 import java.util.ArrayList;
 
-import com.ethanai.parkinggarageapp.RecentSensorData.PhoneLocation;
 import com.ethanai.parkinggarageapp.UserSettings.Floor;
 
 import android.app.Activity;

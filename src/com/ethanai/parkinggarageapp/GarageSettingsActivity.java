@@ -34,7 +34,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_garagesettings);   
                      
-        adapter = new ArrayAdapter<GarageLocation>(this, R.layout.settings_list_item, UserSettings.enabledGarageLocations);
+        adapter = new ArrayAdapter<GarageLocation>(this, R.layout.settings_list_item, mySettings.enabledGarageLocations);
 
         listView = (ListView) findViewById(R.id.listview); // get the field for the listview within the overall layout
         listView.setAdapter(adapter);
@@ -97,8 +97,8 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 		final ArrayList<GarageLocation> unusedGarages = new ArrayList<GarageLocation>();
     	
     	ArrayList<String> garageNames = new ArrayList<String>(); //make list of all unused garages
-    	for(GarageLocation garageLocation : UserSettings.allGarageLocations) {
-    		if(!UserSettings.enabledGarageLocations.contains(garageLocation)) {
+    	for(GarageLocation garageLocation : mySettings.allGarageLocations) {
+    		if(!mySettings.enabledGarageLocations.contains(garageLocation)) {
     			garageNames.add(garageLocation.name);
     			unusedGarages.add(garageLocation);
     		}
@@ -127,7 +127,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 			        	@Override
 			            public void onClick(DialogInterface dialog, int id) {
 			        		for(int i : checkedNames) {
-			             	   UserSettings.enabledGarageLocations.add(unusedGarages.get(i));
+			        			mySettings.enabledGarageLocations.add(unusedGarages.get(i));
 			                }
 			        		updateListView();
 			            }
@@ -152,7 +152,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 		final ArrayList<Integer> checkedNames = new ArrayList<Integer>();
     	
     	ArrayList<String> garageNames = new ArrayList<String>(); //make list of all unused garages
-    	for(GarageLocation garageLocation : UserSettings.enabledGarageLocations) {
+    	for(GarageLocation garageLocation : mySettings.enabledGarageLocations) {
 			garageNames.add(garageLocation.name);
     	}
     	
@@ -180,11 +180,11 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 			               public void onClick(DialogInterface dialog, int id) {
 			            	   ArrayList<GarageLocation> toRemoveGarages = new ArrayList<GarageLocation>();
 			                   for(int i : checkedNames) {
-			                	   toRemoveGarages.add(UserSettings.enabledGarageLocations.get(i));
+			                	   toRemoveGarages.add(mySettings.enabledGarageLocations.get(i));
 			                   }
 			                   
 			                   for(GarageLocation garageLocation : toRemoveGarages) {
-			                	   UserSettings.enabledGarageLocations.remove(garageLocation);
+			                	   mySettings.enabledGarageLocations.remove(garageLocation);
 			                   }
 			                   updateListView();
 			               }
@@ -211,7 +211,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 		dialogInstructUser();
 		//dialog to select garage name
 		ArrayList<String> garageNames = new ArrayList<String>();
-		for(GarageLocation garageLocation : UserSettings.enabledGarageLocations) {
+		for(GarageLocation garageLocation : mySettings.enabledGarageLocations) {
 			garageNames.add(garageLocation.name);
 		}
 		
@@ -222,7 +222,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 				.setTitle("Profile to Remake")
 				.setItems(namesArray, new DialogInterface.OnClickListener() {
 		               public void onClick(DialogInterface dialog, int which) {   
-			               makeNewGarageLocation(UserSettings.enabledGarageLocations.get(which).name);
+			               makeNewGarageLocation(mySettings.enabledGarageLocations.get(which).name);
 		           }
 		       }).create();
 		ad.show();	

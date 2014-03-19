@@ -27,11 +27,15 @@ import android.widget.ListView;
 public class HistoryActivity extends Activity implements OnItemClickListener {
 
 	ArrayList<String> adapterStrings;
+	public UserSettings mySettings;
+
 	/** Called when the activity is first created. */
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);   //get the overall layout
+        
+        mySettings = MainActivity.mySettings;
 
         ArrayList<String> listStrings = readLog(1);
         adapterStrings = getSortedRecent(listStrings, 10);
@@ -56,7 +60,7 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 	
 	public ArrayList<String> readLog(int headerRowCount) {
 		ArrayList<String> arrayList = new ArrayList<String>();
-		File file = new File(Environment.getExternalStorageDirectory().toString() + "/" + UserSettings.STORAGE_DIRECTORY_NAME 
+		File file = new File(Environment.getExternalStorageDirectory().toString() + "/" + mySettings.STORAGE_DIRECTORY_NAME 
 				+ "/parkingLog.csv");
 		if(null != file && file.exists()) {
 			try {
@@ -68,7 +72,7 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 				String line = "";
 				while((line = br.readLine()) != null) {
 					String entries[] = line.split(",");
-					arrayList.add(entries[UserSettings.FLOOR_COLUMN_INDEX] + "\n" + entries[0] + "\n" + entries[1]
+					arrayList.add(entries[mySettings.FLOOR_COLUMN_INDEX] + "\n" + entries[0] + "\n" + entries[1]
 							+ "\n" + entries[2]);
 				}
 				br.close();			

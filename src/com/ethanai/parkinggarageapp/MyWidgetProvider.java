@@ -16,6 +16,8 @@ import android.widget.RemoteViews;
 
 public class MyWidgetProvider extends AppWidgetProvider {
 	public static final String MY_WIDGET_FILTER_ACTION_ID = "mywidget";
+	
+	public UserSettings mySettings = MainActivity.mySettings;
 
 	@Override
 	  public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -77,7 +79,7 @@ public class MyWidgetProvider extends AppWidgetProvider {
 		super.onReceive(context, intent);
 
 		//update the text
-		ArrayList<String> floorHistory = getSortedRecent(readColumns(UserSettings.FLOOR_COLUMN_INDEX, 1), 5);
+		ArrayList<String> floorHistory = getSortedRecent(readColumns(mySettings.FLOOR_COLUMN_INDEX, 1), 5);
 		// Get all ids
 		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 	    ComponentName thisWidget = new ComponentName(context, MyWidgetProvider.class);
@@ -112,7 +114,7 @@ public class MyWidgetProvider extends AppWidgetProvider {
 	
 	public ArrayList<String> readColumns(int targetColumnIndex, int headerRowCount) {
 		ArrayList<String> arrayList = new ArrayList<String>();
-		File file = new File(Environment.getExternalStorageDirectory().toString() + "/" + UserSettings.STORAGE_DIRECTORY_NAME 
+		File file = new File(Environment.getExternalStorageDirectory().toString() + "/" + mySettings.STORAGE_DIRECTORY_NAME 
 				+ "/parkingLog.csv");
 		if(null != file && file.exists()) {
 			try {
@@ -124,7 +126,7 @@ public class MyWidgetProvider extends AppWidgetProvider {
 				String line = "";
 				while((line = br.readLine()) != null) {
 					String entries[] = line.split(",");
-					arrayList.add(entries[UserSettings.FLOOR_COLUMN_INDEX]);
+					arrayList.add(entries[mySettings.FLOOR_COLUMN_INDEX]);
 				}
 				br.close();			
 			}

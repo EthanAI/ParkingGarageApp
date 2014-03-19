@@ -44,10 +44,9 @@ public class GraphActivity extends Activity {
 	
 	//initialize the settings. Should only be one of this object ever. This is only for the testing Graph Activity
 	//Will be instantiated by the real running class elsewhere
-	public static UserSettings mySettings = MainActivity.mySettings; 
-    public static RecentSensorData recentData = MainActivity.recentData;
+    public RecentSensorData recentData = MainActivity.recentData;
+	public UserSettings mySettings = MainActivity.mySettings; 
 
-	
     private GraphicalView mChart;
     private TimeSeries rotationCountSeries;
     private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
@@ -77,7 +76,8 @@ public class GraphActivity extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			// Get extra data included in the Intent
 		    String updateType = intent.getStringExtra("updateType");
-		    Log.i("GraphActivityReceiver", "Got message: " + updateType);
+		    recentData = MainActivity.recentData; //broadcast reciever not getting the data from the class initializer some reason
+		    Log.i("GraphActivityReceiver", "Got message: " + updateType + " " + recentData.orientRecent.size() + " " + MainActivity.recentData.orientRecent.size());
 		    
 		    if(updateType.equals(ACCELEROMETER_TAG)) {
  
@@ -158,7 +158,7 @@ public class GraphActivity extends Activity {
     	}
     	
     	TextView tvGarage = (TextView) findViewById(R.id.garageField);
-    	tvGarage.setText("D: " + Float.toString(recentData.distanceNearestGarage) + "\n" 
+    	tvGarage.setText("Dist: " + Float.toString(recentData.distanceNearestGarage) + "\n" 
     			+ recentData.newestPhoneLocation.getProvider() + " " + recentData.newestPhoneLocation.getNearestGarageName()
     			+ "\n" + "updates: " + newLocationUpdateMinTime);
 	}
@@ -199,8 +199,8 @@ public class GraphActivity extends Activity {
     	//	mCurrentSeries.add(i, recentData.accRecent.get(i).x);
     	//}
     	int i = 0;
-    	if(recentData.orientRecent.size() > UserSettings.graphHistoryCount)
-    		i = recentData.orientRecent.size() - UserSettings.graphHistoryCount;
+    	if(recentData.orientRecent.size() > mySettings.graphHistoryCount)
+    		i = recentData.orientRecent.size() - mySettings.graphHistoryCount;
     	for(; i < recentData.orientRecent.size(); i++) {
     		//if(rotationCountSeries.getItemCount() > plotDataCount) { //limit size of what we want to plot
     		//	rotationCountSeries.remove(0); //remove oldest item
@@ -282,7 +282,7 @@ public class GraphActivity extends Activity {
 	    	String name = "Temp";
 	    	//PhoneLocation phoneLocation = recentData.newestPhoneLocation;
 	    	GarageLocation garageLocation = mySettings.new GarageLocation(name, location, null);
-	    	UserSettings.allGarageLocations.add(garageLocation);
+	    	mySettings.allGarageLocations.add(garageLocation);
 	    	mySettings.saveSettings();
 	    	
 	    	Toast.makeText(getBaseContext(), "Created Garage: " + name, Toast.LENGTH_SHORT).show();
@@ -341,36 +341,6 @@ public class GraphActivity extends Activity {
 			Toast.makeText(getBaseContext(), "Enter a number and set up garage first", Toast.LENGTH_SHORT).show();
 		} 
 	}
-    
-	public void pickCarBT(View view) { //maybe choose from paired list of devices
-		BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
-		Set<BluetoothDevice> btList = btAdapter.getBondedDevices();
-		final ArrayList<String> btNames = new ArrayList<String>();
-		final ArrayList<String> btMACs = new ArrayList<String>();
-		
-		for(BluetoothDevice device : btList) {
-			btNames.add(device.getName());
-			btMACs.add(device.getAddress());
-		}
-		
-		String btNamesArray[] = {""};
-		btNamesArray = btNames.toArray(btNamesArray);
-		
-		AlertDialog ad = 
-				new AlertDialog.Builder(GraphActivity.this)
-				.setTitle("Select Car Bluetooth Device")
-				.setItems(btNamesArray, new DialogInterface.OnClickListener() {
-		               public void onClick(DialogInterface dialog, int which) {   
-			               UserSettings.carBTName = btNames.get(which);
-			               UserSettings.carBTMac = btMACs.get(which);
-			               Toast.makeText(getApplicationContext(), "Added: " + UserSettings.carBTName
-			            		   + "\n" + UserSettings.carBTMac, Toast.LENGTH_SHORT).show();
-
-		           }
-		       }).create();
-		ad.show();		
-	}
-   
     
 	public void changeToTextActivity(View view) {
 	    Intent intent = new Intent(GraphActivity.this, TextActivity.class);

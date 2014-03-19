@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 //naive implementation to show a few pages of info and get user input
 public class OnboardActivity extends Activity {
+	public UserSettings mySettings;
 	
 	public ArrayList<String> textArray = new ArrayList<String>();
 	public Iterator<String> textIterator;
@@ -25,7 +26,10 @@ public class OnboardActivity extends Activity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
-	    setContentView(R.layout.activity_onboard);	    	    
+	    setContentView(R.layout.activity_onboard);	    
+	    
+        mySettings = MainActivity.mySettings;
+
 	    
 	    textArray.add(
 	    		"Welcome to Parking Garage App. This app will help you find your car inside parking garages, where "
@@ -80,7 +84,7 @@ public class OnboardActivity extends Activity {
 		if(textIterator.hasNext())
 			tv.setText(textIterator.next());
 		else {
-			UserSettings.isFirstRun = false;
+			mySettings.isFirstRun = false;
 			btUserQuery();
 		}
 		
@@ -91,13 +95,13 @@ public class OnboardActivity extends Activity {
         builder.setMessage("Does your car have a Bluetooth Stereo?")
                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
-                       UserSettings.isBluetoothUser = true;
+                	   mySettings.isBluetoothUser = true;
                        presetGaragePicker();
                    }
                })
                .setNegativeButton("No", new DialogInterface.OnClickListener() {
                    public void onClick(DialogInterface dialog, int id) {
-                	   UserSettings.isBluetoothUser = false;
+                	   mySettings.isBluetoothUser = false;
                        presetGaragePicker();
                    }
                });
@@ -109,7 +113,7 @@ public class OnboardActivity extends Activity {
     	final ArrayList<Integer> checkedNames = new ArrayList<Integer>();
     	
     	ArrayList<String> garageNames = new ArrayList<String>();
-    	for(GarageLocation gl : UserSettings.allGarageLocations) {
+    	for(GarageLocation gl : mySettings.allGarageLocations) {
     		garageNames.add(gl.name);
     	}
     	
@@ -137,7 +141,7 @@ public class OnboardActivity extends Activity {
 		               @Override
 		               public void onClick(DialogInterface dialog, int id) {
 		                   for(int i : checkedNames) {
-		                	   UserSettings.enabledGarageLocations.add(UserSettings.allGarageLocations.get(i));
+		                	   mySettings.enabledGarageLocations.add(mySettings.allGarageLocations.get(i));
 		                   }
 		                   finish();
 		               }

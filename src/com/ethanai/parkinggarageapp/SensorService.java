@@ -46,6 +46,7 @@ import android.widget.Toast;
 public class SensorService extends Service implements SensorEventListener {
 	
 	private RecentSensorData recentData =  MainActivity.recentData; 
+	private UserSettings mySettings = MainActivity.mySettings;
 	
 	//for debugging
 	public boolean forceSensorStart = true;
@@ -349,13 +350,13 @@ public class SensorService extends Service implements SensorEventListener {
 	    //Float distanceFromNearestGarage = recentData.newestPhoneLocation.getDistanceNearestGarage();
 		
 	    //set up files to hold the data
-	    accelerometerFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " accelReadings.csv");
-	    magnFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " magReadings.csv"); 
-	    compassFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " compassReadings.csv"); 
+	    accelerometerFile = createExternalFile(mySettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " accelReadings.csv");
+	    magnFile = createExternalFile(mySettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " magReadings.csv"); 
+	    compassFile = createExternalFile(mySettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " compassReadings.csv"); 
 	    //pressureFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationString + " pressureReadings.csv"); 	
-	    orientFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " orientationReadings.csv"); 
+	    orientFile = createExternalFile(mySettings.STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " orientationReadings.csv"); 
 	    //signalFile = createExternalFile(STORAGE_DIRECTORY_NAME, dateString + " " + locationName + " signalStrength.csv");
-	    parkingLogFile = createExternalFile(UserSettings.STORAGE_DIRECTORY_NAME, "parkingLog.csv");
+	    parkingLogFile = createExternalFile(mySettings.STORAGE_DIRECTORY_NAME, "parkingLog.csv");
 	    
 		//appendToFile(orientFile, "Departed from: " + locationName + ", " + locationCoords + ", Distance: " + distanceFromNearestGarage + "\n");
 		appendToFile(orientFile, recentData.orientHeader);
@@ -371,7 +372,7 @@ public class SensorService extends Service implements SensorEventListener {
 	public void renameFiles() {
 	    String dateString = new SimpleDateFormat(FILE_DATE_FORMAT_STRING).format(recentData.initialDate);
 
-		String name = UserSettings.STORAGE_DIRECTORY_NAME + "/" 
+		String name = mySettings.STORAGE_DIRECTORY_NAME + "/" 
 				+ dateString 
 				+ " End " + recentData.newestPhoneLocation.getLocationName() 
 				+ " Fl " + recentData.parkedFloor
@@ -444,7 +445,7 @@ public class SensorService extends Service implements SensorEventListener {
     
 	 // broadcast notice that this sensor has updated. Also give the updated recent data 
 	 private void notifyUpdate(String updateTag) {
-		 Log.i("sender", "Broadcasting message " + updateTag);
+		 Log.i("sender", "Broadcasting message " + updateTag + " " + recentData.orientRecent.size() + " " + MainActivity.recentData.orientRecent.size());
 		 Intent brIntent = new Intent(updateTag);
 		 // Include data & label with the intent we send
 		 brIntent.putExtra("updateType", updateTag);

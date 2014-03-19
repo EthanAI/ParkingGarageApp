@@ -7,8 +7,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import com.ethanai.parkinggarageapp.RecentSensorData.PhoneLocation;
-
 import android.location.Location;
 import android.os.Environment;
 import android.util.Log;
@@ -17,27 +15,27 @@ public class UserSettings implements Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -1790572649218348232L;
-	public static ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
-	public static ArrayList<GarageLocation> enabledGarageLocations = new ArrayList<GarageLocation>();
+	private  final long serialVersionUID = -1790572649218348232L;
+	public ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
+	public ArrayList<GarageLocation> enabledGarageLocations = new ArrayList<GarageLocation>();
 
-	public static int recentDataHistoryCount;
-	public static int graphHistoryCount;
-	public static int FLOOR_COLUMN_INDEX;
+	public int recentDataHistoryCount;
+	public int graphHistoryCount;
+	public int FLOOR_COLUMN_INDEX;
 	
-	public static String STORAGE_DIRECTORY_NAME;
-	public static String SETTINGS_FILE_NAME;
-	public static File settingsFile;
+	public String STORAGE_DIRECTORY_NAME;
+	public String SETTINGS_FILE_NAME;
+	public File settingsFile;
 	//public static final String GARAGE_LOG_NAME = "garageRecords.ser";
 	//public static File garageLocationFile = new File(Environment.getExternalStorageDirectory().toString() 
 	//		+ "/" + STORAGE_DIRECTORY_NAME + "/" + GARAGE_LOG_NAME);
 	
-	public static String carBTName;
-	public static String carBTMac;
+	public String carBTName;
+	public String carBTMac;
 	
-	public static boolean isFirstRun;
-	public static boolean isBluetoothUser;
-	public static boolean isGarageSelectionComplete;
+	public boolean isFirstRun;
+	public boolean isBluetoothUser;
+	public boolean isGarageSelectionComplete;
 
 	
 	UserSettings() {	
@@ -56,7 +54,7 @@ public class UserSettings implements Serializable {
 	
 	//for testing
 	public void resetSettings() {
-		RecentSensorData recentData = new RecentSensorData();
+		//RecentSensorData recentData = MainActivity.recentData;
 		allGarageLocations = new ArrayList<GarageLocation>();
 		
 		recentDataHistoryCount = 2000;
@@ -68,8 +66,8 @@ public class UserSettings implements Serializable {
 		settingsFile = new File(Environment.getExternalStorageDirectory().toString() 
 						+ "/" + STORAGE_DIRECTORY_NAME + "/" + SETTINGS_FILE_NAME);
 		
-		carBTName = "";
-		carBTMac = "";
+		carBTName = null;
+		carBTMac = null;
 		
 	    isFirstRun = true;
 		isBluetoothUser = false;
@@ -80,7 +78,7 @@ public class UserSettings implements Serializable {
 		Location location = new Location(name);
 		location.setLatitude(21.3474357); 
 		location.setLongitude(-157.9035183); 
-		PhoneLocation phoneLocation = recentData.new PhoneLocation(location);
+		PhoneLocation phoneLocation = new PhoneLocation(location, null);
 		ArrayList<Floor> borders = new ArrayList<Floor>(
 				Arrays.asList(
 						new Floor(2, -1, "Low?"),
@@ -100,7 +98,7 @@ public class UserSettings implements Serializable {
 		location.setLatitude(21.295819); 
 		location.setLongitude(-157.818232); 
 		//21.2930909	-157.8171503
-		phoneLocation = recentData.new PhoneLocation(location);
+		phoneLocation = new PhoneLocation(location, null);
 		borders = new ArrayList<Floor>(
 				Arrays.asList(
 						new Floor(5, 3, "3L"),
@@ -116,39 +114,12 @@ public class UserSettings implements Serializable {
 		location = new Location(name);
 		location.setLatitude(21.29871750); 
 		location.setLongitude(-157.82012939); 
-		phoneLocation = recentData.new PhoneLocation(location);
+		phoneLocation = new PhoneLocation(location, null);
 		
 		borders = new ArrayList<Floor>(); 
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);
 	}
-
-	/*
-	@SuppressWarnings("unchecked")
-	private ArrayList<GarageLocation> loadGarageLocations() {
-		ArrayList<GarageLocation> garageLocations = new ArrayList<GarageLocation>();
-		if(garageLocationFile != null && garageLocationFile.exists())
-		try {
-			ObjectInputStream is = new ObjectInputStream(new FileInputStream(garageLocationFile));
-			garageLocations = (ArrayList<GarageLocation>) is.readObject();
-			is.close();
-		} catch (StreamCorruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return garageLocations;
-	}
-	*/
 	
 	public void saveSettings() {
 		try {
@@ -226,7 +197,7 @@ public class UserSettings implements Serializable {
 		}
 	}
 	
-	public static GarageLocation getGarageLocation(String searchName) {
+	public GarageLocation getGarageLocation(String searchName) {
 		GarageLocation returnValue = null;
 		for(GarageLocation garageLocation : allGarageLocations) {
 			if(garageLocation.name.equalsIgnoreCase(searchName)) {
@@ -245,7 +216,7 @@ public class UserSettings implements Serializable {
 	}
 	
 	
-	public static ArrayList<String> toArrayList() {
+	public ArrayList<String> toArrayList() {
 		ArrayList<String> settingData = new ArrayList<String>();
 		for(GarageLocation garageLocation : allGarageLocations) {
 			String text = "";
@@ -276,7 +247,7 @@ public class UserSettings implements Serializable {
 		}	
 		
 		GarageLocation(String newName, Location location, ArrayList<Floor> newBorders) {
-			this(newName, new RecentSensorData().new PhoneLocation(location), newBorders);
+			this(newName, new PhoneLocation(location, null), newBorders);
 		}
 		
 		public void delete() {

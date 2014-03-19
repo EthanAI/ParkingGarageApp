@@ -8,10 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 
-
-
 //import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
-import com.ethanai.parkinggarageapp.RecentSensorData.PhoneLocation;
 import com.ethanai.parkinggarageapp.UserSettings.Floor;
 import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
@@ -24,6 +21,9 @@ public class DataAnalyzer {
 	ArrayList<Double> latArray = new ArrayList<Double>();
 	ArrayList<Double> longArray = new ArrayList<Double>();
 	PhoneLocation currentPhoneLocation;
+	
+	public UserSettings mySettings = MainActivity.mySettings;
+
 	
 	DataAnalyzer(RecentSensorData recentData, PhoneLocation newCurrentPhoneLocation) { 
 		for(int i = 0; i < recentData.orientRecent.size()-1; i++) {
@@ -90,7 +90,7 @@ public class DataAnalyzer {
 		
 		float quarterTurnCount = getRawConsecutiveTurns();
 		
-		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
+		GarageLocation garageLocation = mySettings.getGarageLocation(currentLocationName);
 		if(null != garageLocation && null != garageLocation.floors) {
 			parkedFloor = garageLocation.getMatchingFloor(quarterTurnCount);
 		}
@@ -170,7 +170,7 @@ public class DataAnalyzer {
 		//quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)
 		//quarterTurnCount += parkTurnCorrection();
 		
-		GarageLocation garageLocation = UserSettings.getGarageLocation(currentLocationName);
+		GarageLocation garageLocation = mySettings.getGarageLocation(currentLocationName);
 		if(null != garageLocation && null != garageLocation.floors) {
 			parkedFloor = garageLocation.getMatchingFloor(quarterTurnCount);
 

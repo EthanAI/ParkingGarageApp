@@ -10,12 +10,17 @@ import android.widget.Toast;
 //Activity dashboard for the user. Replaces the developer's GraphActivity in final product
 public class MainActivity extends Activity {
 	
+	public static UserSettings mySettings = new UserSettings(); 
+    public static RecentSensorData recentData = new RecentSensorData();
 	
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        //set up structure to hold recent data (not all data so we can run for unlimited time)
+        recentData =  new RecentSensorData(getBaseContext());
         
         TextView tvGarage = (TextView) findViewById(R.id.garageField);
         tvGarage.setText("Garage: TODO");
@@ -42,7 +47,7 @@ public class MainActivity extends Activity {
 	}
 	
 	public void toSettingsActivity(View view) {
-		Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+		Intent intent = new Intent(MainActivity.this, GarageSettingsActivity.class);
 	    startActivity(intent);
 		//this.finish();
 	}

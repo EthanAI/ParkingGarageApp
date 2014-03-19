@@ -18,7 +18,7 @@ public class DaemonReceiver extends BroadcastReceiver {
 		Log.i("BootReceiver", "Recieved something. " + intent.getAction());
 				
 		myNotifier = new ParkingNotificationManager(context, null);
-		
+				
 		if(intent.getAction() == Intent.ACTION_POWER_CONNECTED) {
 			Toast.makeText(context, "Power On!", Toast.LENGTH_SHORT).show();
 		} else if(intent.getAction() == Intent.ACTION_POWER_DISCONNECTED) {

@@ -40,10 +40,13 @@
             android:name="com.ethanai.parkinggarageapp.HistoryActivity" >
         </activity>
         <activity
-            android:name="com.ethanai.parkinggarageapp.SettingsActivity" >
+            android:name="com.ethanai.parkinggarageapp.GarageSettingsActivity" >
         </activity>
         <activity
             android:name="com.ethanai.parkinggarageapp.BluetoothSettingsActivity" >
+        </activity>
+        <activity
+            android:name="FloorMapperActivity" >
         </activity>
         <activity
             android:name=".FloorBorderActivity" >

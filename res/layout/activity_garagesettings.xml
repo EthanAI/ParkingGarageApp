@@ -21,17 +21,27 @@
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
-		android:text="Deacvtivate Garage"
+		android:text="Deactivate Garage"
 		android:onClick="removeGarageFromPresets" />
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
 		android:text="Create Custom Garage Profile"
-		android:onClick="createNewGarage" />
+		android:onClick="buildGarageProfile" />
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
 		android:text="Rebuild Custom Profile"
-		android:onClick="buildGarageProfile" />
+		android:onClick="editGarageProfile" />
+	<Button 
+		android:layout_height="wrap_content"
+		android:layout_width="wrap_content"
+		android:text="Refresh"
+		android:onClick="updateListView" />
+	<Button 
+		android:layout_height="wrap_content"
+		android:layout_width="wrap_content"
+		android:text="Return"
+		android:onClick="finish" />
 	    
 </LinearLayout>

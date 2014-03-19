@@ -1,0 +1,32 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" 
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    
+    <TextView
+        android:text="Building Garage Profile"
+		android:layout_height="wrap_content"
+		android:layout_width="wrap_content" />
+    
+	<TextView 
+	    android:id="@+id/garage_name"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" /> 
+    <TextView 
+	    android:id="@+id/next_floor_number"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content" /> 
+	    
+	<Button 
+		android:layout_height="wrap_content"
+		android:layout_width="wrap_content"
+		android:text="Save"
+		android:onClick="addFloor" />
+	<Button 
+		android:layout_height="wrap_content"
+		android:layout_width="wrap_content"
+		android:text="Finish"
+		android:onClick="finish" />
+
+	    
+</LinearLayout>

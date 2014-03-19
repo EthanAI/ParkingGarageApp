@@ -45,6 +45,8 @@ import android.widget.Toast;
 @SuppressLint("SimpleDateFormat")
 public class SensorService extends Service implements SensorEventListener {
 	
+	private RecentSensorData recentData =  MainActivity.recentData; 
+	
 	//for debugging
 	public boolean forceSensorStart = true;
 	
@@ -66,7 +68,6 @@ public class SensorService extends Service implements SensorEventListener {
 	private String FILE_DATE_FORMAT_STRING = "yyyy-MM-dd HH.mm";
 
 	//private int maxReadingHistoryCount = 100;
-	private RecentSensorData recentData; 
 
 	//private final String ACCELEROMETER_TAG 	= "accelerometer";
 	//private final String MAGNETIC_TAG 		= "magnetic";
@@ -103,9 +104,6 @@ public class SensorService extends Service implements SensorEventListener {
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, gpsListener);
 		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0f, networkListener);  
-	    
-	    //set up structure to hold recent data (not all data so we can run for unlimited time)
-        recentData =  new RecentSensorData(getBaseContext());
 		
 		//create notifier 
 		myNotifier = new ParkingNotificationManager(this, recentData);

@@ -42,20 +42,18 @@ import android.widget.Toast;
 @SuppressLint("SimpleDateFormat")
 public class GraphActivity extends Activity {
 	
-	public static UserSettings mySettings = new UserSettings(); //initialize the settings. Should only be one of this object ever. 
+	//initialize the settings. Should only be one of this object ever. This is only for the testing Graph Activity
+	//Will be instantiated by the real running class elsewhere
+	public static UserSettings mySettings = MainActivity.mySettings; 
+    public static RecentSensorData recentData = MainActivity.recentData;
+
 	
     private GraphicalView mChart;
-    
     private TimeSeries rotationCountSeries;
-
     private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
-    
     private XYSeriesRenderer rotationCountRenderer;
-
     private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
-    
-    RecentSensorData recentData = new RecentSensorData();
-        
+            
 	private final String ACCELEROMETER_TAG 	= "accelerometer";
 	private final String MAGNETIC_TAG 		= "magnetic";
 	private final String ORIENTATION_TAG 	= "orientation";
@@ -80,7 +78,6 @@ public class GraphActivity extends Activity {
 			// Get extra data included in the Intent
 		    String updateType = intent.getStringExtra("updateType");
 		    Log.i("GraphActivityReceiver", "Got message: " + updateType);
-		    recentData = (RecentSensorData) intent.getSerializableExtra("recentData");
 		    
 		    if(updateType.equals(ACCELEROMETER_TAG)) {
  
@@ -106,6 +103,8 @@ public class GraphActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
+        
+        recentData =  new RecentSensorData(getBaseContext());
         
         TextView tvNextFloor = (TextView) findViewById(R.id.nextFloorField);
     	tvNextFloor.setText(Integer.toString(floorNumber));
@@ -386,7 +385,7 @@ public class GraphActivity extends Activity {
 	}
 	
 	public void changeToSettingsActivity(View view) {
-	    Intent intent = new Intent(GraphActivity.this, SettingsActivity.class);
+	    Intent intent = new Intent(GraphActivity.this, GarageSettingsActivity.class);
 	    startActivity(intent);
 		//this.finish();
 	}

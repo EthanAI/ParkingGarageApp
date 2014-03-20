@@ -232,12 +232,16 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 	}
 	
 	public void buildGarageProfile(View view) {	
+		Toast.makeText(getApplicationContext(), "Not Implemented in Alpha", Toast.LENGTH_SHORT).show();
+		/*
 		dialogInstructUser();
 		//get new name
 		//dialog to select text //currently allow redoing any of them
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 	    // Get the layout inflater
 	    LayoutInflater inflater = this.getLayoutInflater();
+	    
+	    final View layout = inflater.inflate(R.layout.dialog_get_garage_name, null);
 
 	    // Inflate and set the layout for the dialog
 	    // Pass null as the parent view because its going in the dialog layout
@@ -246,9 +250,9 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 	    		// Add action buttons
 	           .setPositiveButton("OK", new DialogInterface.OnClickListener() {
 	               @Override
-	               public void onClick(DialogInterface dialog, int id) {
-	                   EditText garageNameField = (EditText) findViewById(R.id.input_garage_name);
-	                   GarageSettingsActivity.this.makeNewGarageLocation(garageNameField.toString());
+	               public void onClick(DialogInterface dialog, int id) { 
+	                   EditText garageNameField = (EditText) layout.findViewById(R.id.new_garage_name);
+	                   GarageSettingsActivity.this.makeNewGarageLocation(garageNameField.getText().toString());
 	               }
 	           })
 	           .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -258,15 +262,21 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 	           });      
 	    builder.create();
 	    builder.show();
+	    */
 	}
 	
 	public void makeNewGarageLocation(String garageName) {
+		Toast.makeText(getApplicationContext(), "Not Implemented in Alpha", Toast.LENGTH_SHORT).show();
+
+		/*
 		//start new activity. Pass garageName
 		//let it build new garageLocation and add it
 		Intent intent = new Intent(GarageSettingsActivity.this, FloorMapperActivity.class);
 		intent.putExtra("garageName", garageName);
 		startActivity(intent);
 		//update view
+		
+		 */
 	}
 	
 	public void dialogInstructUser() {

@@ -19,8 +19,8 @@ public class FloorMapperActivity extends Activity {
     public String garageName;
     public ArrayList<Floor> floors = new ArrayList<Floor>();
     
-    TextView tvGarageName = (TextView) findViewById(R.id.garage_name);
-    TextView tvFloor = (TextView) findViewById(R.id.next_floor_number);
+    TextView tvGarageName;
+    TextView tvFloor;
     
 	
     @Override
@@ -30,6 +30,9 @@ public class FloorMapperActivity extends Activity {
         
         garageName = getIntent().getStringExtra("garageName");
         
+        tvGarageName = (TextView) findViewById(R.id.garage_name);
+        tvFloor = (TextView) findViewById(R.id.next_floor_number);
+
         tvGarageName.setText("Garage: " + garageName);
         tvFloor.setText("Preparing Floor: " + Integer.toString(nextFloor));
         

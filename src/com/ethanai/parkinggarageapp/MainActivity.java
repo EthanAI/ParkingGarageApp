@@ -1,6 +1,8 @@
 package com.ethanai.parkinggarageapp;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -15,6 +17,8 @@ public class MainActivity extends Activity {
     
     public TextView tvGarage;
     public TextView tvFloor;
+    public TextView tvGarageStatus;
+    public TextView tvBTStatus;
     
     public String garageName;
     public String garageFloor;    
@@ -26,10 +30,15 @@ public class MainActivity extends Activity {
         
         tvGarage = (TextView) findViewById(R.id.garageField);
         tvFloor = (TextView) findViewById(R.id.floorField);
+        tvGarageStatus = (TextView) findViewById(R.id.garage_setup_status);
+        tvBTStatus = (TextView) findViewById(R.id.bt_setup_status);
         
         //set up structure to hold recent data (not all data so we can run for unlimited time)
         mySettings = new UserSettings(); 
         recentData =  new RecentSensorData(getBaseContext());
+        
+        if(mySettings.isFirstRun)
+        	onboarding();
         
         updateTextViews();
 	}
@@ -54,9 +63,68 @@ public class MainActivity extends Activity {
         	garageName = "No Record";
         	garageFloor = "No Record";
         }
+        if(null == mySettings.enabledGarageLocations || mySettings.enabledGarageLocations.size() == 0) {
+        	tvGarageStatus.setText("No garages selected");
+        } else {
+        	tvGarageStatus.setText("");
+        }
+        if(null == mySettings.carBTName || mySettings.carBTName.length() == 0) {
+        	tvBTStatus.setText("Bluetooth disabled");
+        } else {
+        	tvBTStatus.setText("");
+        }
         
         tvGarage.setText("    " + garageName);
         tvFloor.setText("    Floor: " + garageFloor);
+	}
+	
+	public void onboarding() {
+		String text1 = "Welcome to Parking Garage App. This app will help you find your car inside parking garages, where "
+	    		+ "GPS cannot reach. The app runs automatically when you drive, and uses the sensors do detect "
+	    		+ "what floor you parked your car on. After the initial set up, the app will do everything automatically."
+	    		+ "\n\nThis app in in beta. Currently it works successfuly on garages with one "
+	    		+ "entrance, and no loops within the garage. This version can run automatically if "
+	    		+ "you have a bluetooth stereo in your car. "
+	    		+ "If you do not have a bluetooth stereo, you give it a try by running it manually. Tell us what "
+	    		+ "you think of our app, and look forward to future improvments!";
+		final String text2 = "Instructions:\n"
+				+ "1. Use 'BT Settings' to register your Bluetooth device (if applicable).\n\n"
+				+ "2. Use 'Garage Settings' to select one of the preset garages (Currently only CCV6) "
+				+ "or build a custom profile for any garage. \n\n"
+				+ "That's it, we'll handle the rest. \n\nAnytime your car approaches one of the garages on your list, "
+				+ "the sensors will automatically turn on and calculate which floor you stop on. "
+				+ "More presets garages, support for more garage types and automatic running without Bluetooth is comming "
+				+ "soon. "
+				+ "\n\n"
+				+ "Thank you for participating in the alpha and beta.";
+		final String text3 = "Coming Improvements:\n"
+	    		+ "\tAuto start/stop without bluetooth stereo\n"
+	    		+ "\tSupport for multi-entrance garages\n"
+	    		+ "\tSupport for garages with internal intersections\n"
+	    		+ "\tDatabase of pre-mapped garages\n"
+	    		+ "\tImproved battery usage\n";
+		AlertDialog.Builder startBuilder = new AlertDialog.Builder(this);
+		startBuilder.setMessage(text1)
+               .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                	   messageDialog2(text2);
+                   }
+               });
+		startBuilder.create();
+		startBuilder.show();
+	}
+	
+	public void messageDialog2(final String textMessage) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(textMessage)
+               .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                   public void onClick(DialogInterface dialog, int id) {
+                	  mySettings.isFirstRun = false;
+                	  mySettings.saveSettings();
+                   }
+               });
+        builder.create();
+        builder.show();
 	}
 	
 	/*

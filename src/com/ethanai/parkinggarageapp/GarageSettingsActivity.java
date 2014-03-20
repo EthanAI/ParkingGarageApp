@@ -8,11 +8,9 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
@@ -210,6 +208,9 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 	
 	
 	public void editGarageProfile(View view) {
+		Toast.makeText(getApplicationContext(), "Not Implemented in Alpha", Toast.LENGTH_SHORT).show();
+
+		/*
 		dialogInstructUser();
 		//dialog to select garage name
 		ArrayList<String> garageNames = new ArrayList<String>();
@@ -228,7 +229,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 		           }
 		       }).create();
 		ad.show();	
-		
+		*/
 	}
 	
 	public void buildGarageProfile(View view) {	
@@ -266,17 +267,12 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 	}
 	
 	public void makeNewGarageLocation(String garageName) {
-		Toast.makeText(getApplicationContext(), "Not Implemented in Alpha", Toast.LENGTH_SHORT).show();
-
-		/*
 		//start new activity. Pass garageName
 		//let it build new garageLocation and add it
 		Intent intent = new Intent(GarageSettingsActivity.this, FloorMapperActivity.class);
 		intent.putExtra("garageName", garageName);
 		startActivity(intent);
 		//update view
-		
-		 */
 	}
 	
 	public void dialogInstructUser() {

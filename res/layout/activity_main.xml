@@ -42,6 +42,22 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:stretchColumns="*">
+	    <TableRow>
+	        <TextView
+		        android:id="@+id/garage_setup_status"
+		        android:layout_width="fill_parent"
+		        android:layout_weight="1"
+		        android:layout_height="wrap_content"
+		        android:layout_gravity="left" 
+		        android:textSize="15sp" />
+	        <TextView
+		        android:id="@+id/bt_setup_status"
+		        android:layout_width="fill_parent"
+		        android:layout_weight="1"
+		        android:layout_height="wrap_content"
+		        android:layout_gravity="right" 
+		        android:textSize="15sp" />
+	    </TableRow>
 		<TableRow>
 			<Button 
 				android:layout_height="wrap_content"
@@ -62,7 +78,7 @@
 		    <Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
-				android:text="Parking Hist."
+				android:text="Parking History"
 				android:onClick="toHistoryActivity" />
 		</TableRow>
 		<TableRow>

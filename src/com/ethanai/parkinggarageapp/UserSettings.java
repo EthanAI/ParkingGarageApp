@@ -87,7 +87,7 @@ public class UserSettings implements Serializable {
 		isGarageSelectionComplete = false;
 		
 		//temp hardcode to add extra data
-		String name = "Home";
+		String name = "CCV6";
 		Location location = new Location(name);
 		location.setLatitude(21.3474357); 
 		location.setLongitude(-157.9035183); 

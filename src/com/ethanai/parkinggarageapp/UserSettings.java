@@ -1,7 +1,9 @@
 package com.ethanai.parkinggarageapp;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -19,6 +21,8 @@ public class UserSettings implements Serializable {
 	
 	public ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
 	public ArrayList<GarageLocation> enabledGarageLocations = new ArrayList<GarageLocation>();
+	public ArrayList<GarageLocation> userAddedGarageLocations = new ArrayList<GarageLocation>();
+
 	
 	public String carBTName;
 	public String carBTMac;
@@ -36,17 +40,28 @@ public class UserSettings implements Serializable {
 	
 	public String STORAGE_DIRECTORY_NAME;
 	public String SETTINGS_FILE_NAME;
-	public File settingsFile;
+	public String PRESETS_FILE_NAME;
+	public File userSettingsFile;
+	public File presetGaragesFile;
 	//public static final String GARAGE_LOG_NAME = "garageRecords.ser";
 	//public static File garageLocationFile = new File(Environment.getExternalStorageDirectory().toString() 
 	//		+ "/" + STORAGE_DIRECTORY_NAME + "/" + GARAGE_LOG_NAME);
 	
 	UserSettings() {	
+		STORAGE_DIRECTORY_NAME = "Documents";
+		SETTINGS_FILE_NAME = "_parkingGarageSettings.ser";
+		PRESETS_FILE_NAME = "_presetGarages.ser";
+		userSettingsFile = new File(Environment.getExternalStorageDirectory().toString() 
+						+ "/" + STORAGE_DIRECTORY_NAME + "/" + SETTINGS_FILE_NAME);
+		presetGaragesFile = new File(Environment.getExternalStorageDirectory().toString() 
+				+ "/" + STORAGE_DIRECTORY_NAME + "/" + PRESETS_FILE_NAME);
+		
+		
 		//load settings from storage
-		//loadSettings();
+		loadSettings();
 		
 		//for testing
-		resetSettings();
+		//resetSettings();
 	}
 	
 	//temporary hard code, need to be able to add
@@ -63,11 +78,6 @@ public class UserSettings implements Serializable {
 		recentDataHistoryCount = 2000;
 		graphHistoryCount = 2000;
 		FLOOR_COLUMN_INDEX = 3;
-		
-		STORAGE_DIRECTORY_NAME = "Documents";
-		SETTINGS_FILE_NAME = "_parkingGarageSettings.ser";
-		settingsFile = new File(Environment.getExternalStorageDirectory().toString() 
-						+ "/" + STORAGE_DIRECTORY_NAME + "/" + SETTINGS_FILE_NAME);
 		
 		carBTName = null;
 		carBTMac = null;
@@ -123,13 +133,29 @@ public class UserSettings implements Serializable {
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);
 		
+		if(presetGaragesFile != null && presetGaragesFile.exists()) {
+			ArrayList<GarageLocation> presetGarages;
+			try {
+				ObjectInputStream is = new ObjectInputStream(new FileInputStream(presetGaragesFile));
+				presetGarages = (ArrayList<GarageLocation>) is.readObject();
+				is.close();
+				for(GarageLocation garageLocation : presetGarages) {
+					if(!allGarageLocations.contains(garageLocation)) {
+						allGarageLocations.add(garageLocation);
+					}
+				}
+			} catch (Exception e) {
+				Log.e("UserSettings", e.getMessage());
+			}
+		}
+		
 		//TODO add recent parking location
 	}
 	
 	//TODO Save all other data (parking location, etc)
 	public void saveSettings() {
 		try {
-			ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(settingsFile)); //overwrite old file
+			ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(userSettingsFile)); //overwrite old file
 			os.writeObject(this);
 			os.close();
 		} catch (Exception e) {
@@ -137,37 +163,44 @@ public class UserSettings implements Serializable {
 		}
 	}
 	
-	/*
 	public void loadSettings() {
 		UserSettings loadedSettings = null;
-		if(settingsFile != null && settingsFile.exists())
-		try {
-			ObjectInputStream is = new ObjectInputStream(new FileInputStream(settingsFile));
-			loadedSettings = (UserSettings) is.readObject();
-			is.close();
-		} catch (Exception e) {
-			Log.e("UserSettings", e.getMessage());
+		if(userSettingsFile != null && userSettingsFile.exists()) {
+			try {
+				ObjectInputStream is = new ObjectInputStream(new FileInputStream(userSettingsFile));
+				loadedSettings = (UserSettings) is.readObject();
+				is.close();
+			} catch (Exception e) {
+				Log.e("UserSettings", e.getMessage());
+			}
+						
+			//copy values into this()
+			allGarageLocations 		= loadedSettings.allGarageLocations;
+			enabledGarageLocations 	= loadedSettings.enabledGarageLocations;
+			parkingRecordRecent 	= loadedSettings.parkingRecordRecent;
+			
+			carBTName = loadedSettings.carBTName;
+			carBTMac = loadedSettings.carBTMac;
+			
+			isFirstRun = loadedSettings.isFirstRun;
+			isBluetoothUser = loadedSettings.isBluetoothUser;
+			isGarageSelectionComplete = loadedSettings.isGarageSelectionComplete;
+			
+			
+			recentDataHistoryCount 	= loadedSettings.recentDataHistoryCount;
+			graphHistoryCount 		= loadedSettings.graphHistoryCount;
+			FLOOR_COLUMN_INDEX 		= loadedSettings.FLOOR_COLUMN_INDEX;
+			
+			//STORAGE_DIRECTORY_NAME = loadedSettings.STORAGE_DIRECTORY_NAME;
+			//SETTINGS_FILE_NAME = loadedSettings.SETTINGS_FILE_NAME;
+			//userSettingsFile = loadedSettings.userSettingsFile;
+			
+			
+		} else {
+			resetSettings();
 		}
 		
-		//copy values into this()
-		//TODO look up best way to restore this from file once we land
-		allGarageLocations = loadedSettings.allGarageLocations;
-		recentDataHistoryCount = loadedSettings.recentDataHistoryCount;
-		graphHistoryCount = loadedSettings.graphHistoryCount;
-		FLOOR_COLUMN_INDEX = loadedSettings.FLOOR_COLUMN_INDEX;
-		
-		STORAGE_DIRECTORY_NAME = loadedSettings.STORAGE_DIRECTORY_NAME;
-		SETTINGS_FILE_NAME = loadedSettings.SETTINGS_FILE_NAME;
-		settingsFile = loadedSettings.settingsFile;
-		
-		carBTName = loadedSettings.carBTName;
-		carBTMac = loadedSettings.carBTMac;
-		
-		isFirstRun = loadedSettings.isFirstRun;
-		isBluetoothUser = loadedSettings.isBluetoothUser;
-		isGarageSelectionComplete = loadedSettings.isGarageSelectionComplete;
 	}
-	*/
 	
 	/*
 	 * Assert: all garage locations are stored to disk and loaded to allGarageLocations identically

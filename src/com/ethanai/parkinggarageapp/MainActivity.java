@@ -55,8 +55,8 @@ public class MainActivity extends Activity {
         	garageFloor = "No Record";
         }
         
-        tvGarage.setText("Garage: " + garageName);
-        tvFloor.setText("Floor: " + garageFloor);
+        tvGarage.setText("    " + garageName);
+        tvFloor.setText("    Floor: " + garageFloor);
 	}
 	
 	/*

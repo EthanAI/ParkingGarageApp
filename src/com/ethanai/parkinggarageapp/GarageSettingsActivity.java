@@ -129,6 +129,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 			        		for(int i : checkedNames) {
 			        			mySettings.enabledGarageLocations.add(unusedGarages.get(i));
 			                }
+		        			mySettings.saveSettings();
 			        		updateListView();
 			            }
 			        });
@@ -186,6 +187,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 			                   for(GarageLocation garageLocation : toRemoveGarages) {
 			                	   mySettings.enabledGarageLocations.remove(garageLocation);
 			                   }
+			                   mySettings.saveSettings();
 			                   updateListView();
 			               }
 			           });

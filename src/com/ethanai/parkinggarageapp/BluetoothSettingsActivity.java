@@ -70,6 +70,7 @@ public class BluetoothSettingsActivity extends Activity {
                 	   mySettings.isBluetoothUser = true;
                        pickCarBT();
                		   updateTextViews();
+	        		   mySettings.saveSettings();
                    }
                })
                .setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -78,6 +79,7 @@ public class BluetoothSettingsActivity extends Activity {
                 	   mySettings.carBTName = null;
                 	   mySettings.carBTMac = null;
                 	   updateTextViews();
+                	   mySettings.saveSettings();
                    }
                });
         builder.create();
@@ -106,6 +108,7 @@ public class BluetoothSettingsActivity extends Activity {
 		            	   mySettings.carBTName = btNames.get(which);
 		            	   mySettings.carBTMac = btMACs.get(which);
 			               updateTextViews();
+			               mySettings.saveSettings();
 			               Toast.makeText(getApplicationContext(), "Registered: " + mySettings.carBTName
 			            		   + "\n" + mySettings.carBTMac, Toast.LENGTH_SHORT).show();
 

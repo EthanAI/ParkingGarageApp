@@ -53,12 +53,18 @@
 				android:layout_width="wrap_content"
 				android:text="BT Settings"
 				android:onClick="toBluetoothSettingsActivity" />
-			<Button 
+			
+		</TableRow>    
+		<TableRow
+		    android:layout_height="wrap_content"
+            android:layout_width="fill_parent"
+            android:gravity="center_horizontal">
+		    <Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
 				android:text="Parking Hist."
 				android:onClick="toHistoryActivity" />
-		</TableRow>    
+		</TableRow>
 		<TableRow>
             <Button 
                 android:layout_height="wrap_content"

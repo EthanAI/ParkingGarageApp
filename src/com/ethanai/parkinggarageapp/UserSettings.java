@@ -2,7 +2,9 @@ package com.ethanai.parkinggarageapp;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -19,9 +21,11 @@ public class UserSettings implements Serializable {
 	 */
 	private static final long serialVersionUID = -8023067763707780880L;
 	
-	public ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
 	public ArrayList<GarageLocation> enabledGarageLocations = new ArrayList<GarageLocation>();
+	public ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
 	public ArrayList<GarageLocation> userAddedGarageLocations = new ArrayList<GarageLocation>();
+	public ArrayList<GarageLocation> presetGarageLocations = new ArrayList<GarageLocation>();
+
 
 	
 	public String carBTName;
@@ -38,24 +42,35 @@ public class UserSettings implements Serializable {
 	public int graphHistoryCount;
 	public int FLOOR_COLUMN_INDEX;
 	
-	public String STORAGE_DIRECTORY_NAME;
+	public String STORAGE_DIRECTORY_NAME = "AppGarageParking";
+	public String DATABASE_DIRECTORY_NAME = "AppGarageParking/ResourceData";
+	
 	public String SETTINGS_FILE_NAME;
 	public String PRESETS_FILE_NAME;
+	public String CUSTOM_GARAGE_FILE_NAME;
 	public File userSettingsFile;
+	public File userCustomGaragesFile;
 	public File presetGaragesFile;
 	//public static final String GARAGE_LOG_NAME = "garageRecords.ser";
 	//public static File garageLocationFile = new File(Environment.getExternalStorageDirectory().toString() 
 	//		+ "/" + STORAGE_DIRECTORY_NAME + "/" + GARAGE_LOG_NAME);
 	
 	UserSettings() {	
-		STORAGE_DIRECTORY_NAME = "Documents";
-		SETTINGS_FILE_NAME = "_parkingGarageSettings.ser";
-		PRESETS_FILE_NAME = "_presetGarages.ser";
+		SETTINGS_FILE_NAME 		= "_parkingAppSettings.ser";
+		PRESETS_FILE_NAME 		= "_presetGarages.ser";
+		CUSTOM_GARAGE_FILE_NAME = "_customGarages.ser";
+		
 		userSettingsFile = new File(Environment.getExternalStorageDirectory().toString() 
 						+ "/" + STORAGE_DIRECTORY_NAME + "/" + SETTINGS_FILE_NAME);
-		presetGaragesFile = new File(Environment.getExternalStorageDirectory().toString() 
-				+ "/" + STORAGE_DIRECTORY_NAME + "/" + PRESETS_FILE_NAME);
+		userCustomGaragesFile = new File(Environment.getExternalStorageDirectory().toString() 
+				+ "/" + STORAGE_DIRECTORY_NAME + "/" + CUSTOM_GARAGE_FILE_NAME);
 		
+		presetGaragesFile = new File(Environment.getExternalStorageDirectory().toString() 
+				+ "/" + DATABASE_DIRECTORY_NAME + "/" + PRESETS_FILE_NAME);
+		
+		//create Directory
+		createDirectory(STORAGE_DIRECTORY_NAME);
+		createDirectory(DATABASE_DIRECTORY_NAME);
 		
 		//load settings from storage
 		loadSettings();
@@ -65,13 +80,36 @@ public class UserSettings implements Serializable {
 	}
 	
 	//temporary hard code, need to be able to add
+	/*
 	public void setBluetoothRecord() {
 		carBTName = "XPLOD";
 		carBTMac = "54:42:49:B0:7A:C6";
 	}
+	*/
 	
 	//for testing
 	public void resetSettings() {
+		//copy values into this()
+		allGarageLocations	 	= new ArrayList<GarageLocation>();
+		presetGarageLocations 	= new ArrayList<GarageLocation>();
+		enabledGarageLocations 	= new ArrayList<GarageLocation>();
+		parkingRecordRecent 	= null;
+		
+		carBTName = null;
+		carBTMac = null;
+		
+		isFirstRun = true;
+		isBluetoothUser = false;
+		isGarageSelectionComplete = false;
+		
+		recentDataHistoryCount = 2000;
+		graphHistoryCount = 2000;
+		FLOOR_COLUMN_INDEX = 3;
+		
+		Log.i("UserSettings", "Non-garage settings reset to install defaults");
+	}
+	
+	public void restoreDebugSettings() {
 		//RecentSensorData recentData = MainActivity.recentData;
 		allGarageLocations = new ArrayList<GarageLocation>();
 		
@@ -104,8 +142,10 @@ public class UserSettings implements Serializable {
 						new Floor(-12, 99, "High?")
 						)); 
 		//form new Location and add it
-		addGarageLocation(name, phoneLocation, borders);
+		presetGarageLocations.add(new GarageLocation(name, phoneLocation, borders));
+		allGarageLocations.add(new GarageLocation(name, phoneLocation, borders));
 		
+		/*
 		name = "UH Lot 20";
 		location = new Location(name);
 		location.setLatitude(21.295819); 
@@ -148,15 +188,32 @@ public class UserSettings implements Serializable {
 				Log.e("UserSettings", e.getMessage());
 			}
 		}
+		*/
 		
-		//TODO add recent parking location
+		saveSettings();
+		savePresetGarages();
 	}
 	
-	//TODO Save all other data (parking location, etc)
+	//saves everything except presets. That should never be altered at runtime
 	public void saveSettings() {
 		try {
 			ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(userSettingsFile)); //overwrite old file
 			os.writeObject(this);
+			os.close();
+			
+			os = new ObjectOutputStream(new FileOutputStream(userCustomGaragesFile)); //overwrite old file
+			os.writeObject(userAddedGarageLocations);
+			os.close();
+			
+		} catch (Exception e) {
+			Log.e("UserSettings", e.toString());
+		}
+	}
+	
+	public void savePresetGarages() {
+		try {
+			ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(presetGaragesFile)); //overwrite old file
+			os.writeObject(enabledGarageLocations);
 			os.close();
 		} catch (Exception e) {
 			Log.e("UserSettings", e.toString());
@@ -165,6 +222,8 @@ public class UserSettings implements Serializable {
 	
 	public void loadSettings() {
 		UserSettings loadedSettings = null;
+
+		//Load the rest of the user settings
 		if(userSettingsFile != null && userSettingsFile.exists()) {
 			try {
 				ObjectInputStream is = new ObjectInputStream(new FileInputStream(userSettingsFile));
@@ -175,7 +234,6 @@ public class UserSettings implements Serializable {
 			}
 						
 			//copy values into this()
-			allGarageLocations 		= loadedSettings.allGarageLocations;
 			enabledGarageLocations 	= loadedSettings.enabledGarageLocations;
 			parkingRecordRecent 	= loadedSettings.parkingRecordRecent;
 			
@@ -195,9 +253,41 @@ public class UserSettings implements Serializable {
 			//SETTINGS_FILE_NAME = loadedSettings.SETTINGS_FILE_NAME;
 			//userSettingsFile = loadedSettings.userSettingsFile;
 			
-			
+			Log.i("UserSettings", "remaining settings loaded");
 		} else {
-			resetSettings();
+			resetSettings(); //deletes EVERYTHING be sure to do this before trying to load custom garages or database garages
+		}
+		
+		//load user's custom garages, add to the array of all garages
+		if(userCustomGaragesFile != null && userCustomGaragesFile.exists()) {
+			try {
+				ObjectInputStream is = new ObjectInputStream(new FileInputStream(userCustomGaragesFile));
+				userAddedGarageLocations = (ArrayList<GarageLocation>) is.readObject();
+				is.close();
+				
+				for(GarageLocation garageLocation : userAddedGarageLocations)
+					allGarageLocations.add(garageLocation);
+				
+				Log.i("UserSettings", "custom garages loaded " + userAddedGarageLocations.size() + " " + allGarageLocations.size());
+			} catch (Exception e) {
+				Log.e("UserSettings", e.getMessage());
+			}
+		}
+		
+		//load official database of garages, add to the array of all garages
+		if(presetGaragesFile != null && presetGaragesFile.exists()) {
+			try {
+				ObjectInputStream is = new ObjectInputStream(new FileInputStream(presetGaragesFile));
+				presetGarageLocations = (ArrayList<GarageLocation>) is.readObject();
+				is.close();
+				
+				for(GarageLocation garageLocation : presetGarageLocations)
+					allGarageLocations.add(garageLocation);
+				
+				Log.i("UserSettings", "preset garages loaded " + presetGarageLocations.size() + " " + allGarageLocations.size());
+			} catch (Exception e) {
+				Log.e("UserSettings", e.getMessage());
+			}
 		}
 		
 	}
@@ -207,6 +297,8 @@ public class UserSettings implements Serializable {
 	 * We just add the new one to our array and overwrite the local file
 	 */
 	// good info on serilizable limitations http://www.javacodegeeks.com/2013/03/serialization-in-java.html
+	/*//garage locations more complicated now (preset and user defined separated) use individual methods for adding
+	  //to the proper one(s).
 	public void addGarageLocation(String name, PhoneLocation phoneLocation, ArrayList<Floor> borders) {
 		allGarageLocations.add(new GarageLocation(name, phoneLocation, borders));
 		saveSettings();
@@ -216,6 +308,7 @@ public class UserSettings implements Serializable {
 		allGarageLocations.remove(garageLocation);
 		saveSettings();
 	}
+	*/
 
 	//return sucess or fail
 	public boolean addFloorRecord(String garageName, String floorName, float turnCount) {
@@ -266,6 +359,39 @@ public class UserSettings implements Serializable {
 		return settingData;
 	}
 	
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read
+    * http://developer.android.com/guide/topics/data/data-storage.html#filesExternal
+    * */
+    public boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+    
+    public void createDirectory(String directoryName) {
+        String sdCard = Environment.getExternalStorageDirectory().toString(); //get root of external storage
+        File dir = new File(sdCard, directoryName);
+        if (!dir.exists()) { //make directory if it doesnt exist
+            dir.mkdirs();  //make all parent directories even.
+        }
+    }
+    
+	
+	
+	
+	
 	class GarageLocation implements Serializable {
 		/**
 		 * 
@@ -289,9 +415,11 @@ public class UserSettings implements Serializable {
 			this(newName, new PhoneLocation(location, null), newBorders);
 		}
 		
+		/*
 		public void delete() {
 			removeGarageLocation(this);
 		}
+		*/
 		
 		public Floor getMatchingFloor(float correctedTurnCount) {
 			Floor parkedFloor = null;

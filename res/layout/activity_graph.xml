@@ -14,7 +14,7 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:text="Delete"
-                android:onClick="deleteCSVFiles" />
+                android:onClick="deleteAllFiles" />
             <Button 
 				android:layout_height="wrap_content"
 				android:layout_width="wrap_content"
@@ -43,39 +43,21 @@
 				android:layout_width="wrap_content"
 				android:text="Stop"
 				android:onClick="stopSensorService" />
-			<EditText
-			    android:id="@+id/floorEntryField" 
-			    android:text="F#"
-			    android:onClick="clearFloor"  
-				android:layout_height="wrap_content"
-				android:layout_width="wrap_content" />
-			<Button 
-				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
-				android:text="Add"
-				android:onClick="addCustomFloor" />
+
+			
 		</TableRow>    
 		<TableRow>
 		    <Button
 		    	android:layout_height="wrap_content"
 		    	android:layout_width="wrap_content"
 				android:text="Reset"
-				android:onClick="resetSettings" />
-		    <Button
-		    	android:layout_height="wrap_content"
-		    	android:layout_width="wrap_content"
-				android:text="NewG"
-				android:onClick="addNewGarageLocation" />
-		    <TextView
-			    android:id="@+id/nextFloorField" 
-			    android:text="NxtFl"
+				android:onClick="restoreDebugSettings" />
+		    <Button 
 				android:layout_height="wrap_content"
-				android:layout_width="wrap_content" />
-		    <Button
-		    	android:layout_height="wrap_content"
-		    	android:layout_width="wrap_content"
-				android:text="Add Fl"
-				android:onClick="addFloor" />
+				android:layout_width="wrap_content"
+				android:text="Save G.DB"
+				android:onClick="writePresetGarageFile" />
+
 		</TableRow>
 
 		

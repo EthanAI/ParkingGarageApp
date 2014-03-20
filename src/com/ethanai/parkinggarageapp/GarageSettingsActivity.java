@@ -64,7 +64,8 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 	        	   GarageLocation garageLocation = (GarageLocation) adapterView.getItemAtPosition(position);
 	        	   ArrayAdapter <GarageLocation> adapter = (ArrayAdapter<GarageLocation>) adapterView.getAdapter();
 
-	        	   garageLocation.delete();
+	        	   mySettings.enabledGarageLocations.remove(garageLocation); //remove from enabled list only
+	        	   mySettings.saveSettings();
 	        	   adapter.notifyDataSetChanged();
 	        	   
 	           }

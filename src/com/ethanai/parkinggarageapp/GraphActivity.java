@@ -59,7 +59,7 @@ public class GraphActivity extends Activity {
 	
 	private LocalBroadcastManager lbManager; //only handles messages sent from this app
 	
-	private int floorNumber = 1; //for counting which floor we are recording next
+	//private int floorNumber = 1; //for counting which floor we are recording next
     
        	
 	//http://stackoverflow.com/questions/8802157/how-to-use-localbroadcastmanager
@@ -100,8 +100,8 @@ public class GraphActivity extends Activity {
         
         recentData =  new RecentSensorData(getBaseContext());
         
-        TextView tvNextFloor = (TextView) findViewById(R.id.nextFloorField);
-    	tvNextFloor.setText(Integer.toString(floorNumber));
+        //TextView tvNextFloor = (TextView) findViewById(R.id.nextFloorField);
+    	//tvNextFloor.setText(Integer.toString(floorNumber));
         
 		
 		//make this poll sensor service status and verify if it is running. May need some kind of trigger to repaint
@@ -137,8 +137,8 @@ public class GraphActivity extends Activity {
     	TextView tvFloor = (TextView) findViewById(R.id.floorField);
     	tvFloor.setText("Floor: " + dataAnalyzer.getCurrentFloorEstimate());
     	
-    	TextView tvNextFloor = (TextView) findViewById(R.id.nextFloorField);
-    	tvNextFloor.setText(Integer.toString(floorNumber));
+    	//TextView tvNextFloor = (TextView) findViewById(R.id.nextFloorField);
+    	//tvNextFloor.setText(Integer.toString(floorNumber));
 
     	int newLocationUpdateMinTime = 0;
     	if(recentData.distanceNearestGarage < 1000) {
@@ -178,6 +178,9 @@ public class GraphActivity extends Activity {
 		mRenderer.setXLabelsColor(Color.BLACK);
 		mRenderer.setApplyBackgroundColor(true);
 		mRenderer.setBackgroundColor(Color.WHITE);
+		
+		mRenderer.setXLabelsColor(Color.RED);
+		mRenderer.setYLabelsColor(0, Color.RED);
     }
 
     private void loadData() {
@@ -244,26 +247,29 @@ public class GraphActivity extends Activity {
   /*
    * Function for the buttons
    */
-    public void deleteCSVFiles(View view) {
-    	//TODO make this softcoded once user settings is in a final implementation
-    	String folderName = "Documents";
+    // delete all but the preset garage file. This should be immutable resource we install with app and use
+    public void deleteAllFiles(View view) {
+    	String folderName = mySettings.STORAGE_DIRECTORY_NAME;
     	String sdCard = Environment.getExternalStorageDirectory().toString(); //get root of external storage
         File dir = new File(sdCard, folderName);
     	for(File file: dir.listFiles()) {
-    		if(file.getName().endsWith(".csv"))
+    		//if(file.getName().endsWith(".csv"))
+    		if(!file.getName().equals(mySettings.PRESETS_FILE_NAME))
     			file.delete();
     	}
     	Toast.makeText(getBaseContext(), "CSVs deleted.", Toast.LENGTH_SHORT).show();
     }
     
  
+    /*
     public void clearFloor(View view) {
     	EditText floorTextField = (EditText) findViewById(R.id.floorEntryField);
     	floorTextField.setText("");
     }
+    */
     
-    public void resetSettings(View view) {
-    	mySettings.resetSettings();
+    public void restoreDebugSettings(View view) {
+    	mySettings.restoreDebugSettings();
     	mySettings.saveSettings();
     	Toast.makeText(getBaseContext(), "Settings Reset", Toast.LENGTH_SHORT).show();
     }
@@ -285,6 +291,7 @@ public class GraphActivity extends Activity {
     	}
     }
     
+    /*
     public void addFloor(View view) {
 		DataAnalyzer dataAnalyzer = new DataAnalyzer(recentData);
 		
@@ -311,7 +318,9 @@ public class GraphActivity extends Activity {
     	
     	//Toast.makeText(getBaseContext(), "Stored Floor: " + floorText + "\n" + "TurnCount: " + turnCount, Toast.LENGTH_SHORT).show();
     }
+    */
     
+    /*
     public void addCustomFloor(View view) {
     	EditText floorTextField = (EditText) findViewById(R.id.floorEntryField);
     	String floorText = floorTextField.getText().toString();
@@ -335,6 +344,11 @@ public class GraphActivity extends Activity {
 			Toast.makeText(getBaseContext(), "Enter a number and set up garage first", Toast.LENGTH_SHORT).show();
 		} 
 	}
+	*/
+    
+    public void writePresetGarageFile(View view) {
+    	mySettings.savePresetGarages();
+    }
     
 	public void changeToTextActivity(View view) {
 	    Intent intent = new Intent(GraphActivity.this, TextActivity.class);

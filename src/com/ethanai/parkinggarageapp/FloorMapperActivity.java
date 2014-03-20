@@ -3,6 +3,7 @@ package com.ethanai.parkinggarageapp;
 import java.util.ArrayList;
 
 import com.ethanai.parkinggarageapp.UserSettings.Floor;
+import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -62,7 +63,11 @@ public class FloorMapperActivity extends Activity {
     	addFloor(view);
     	//build garage location and add it
     	PhoneLocation phoneLocation = recentData.newestPhoneLocation;	
-    	mySettings.addGarageLocation(garageName, phoneLocation, floors);
+    	GarageLocation newCustomGarage = mySettings.new GarageLocation(garageName, phoneLocation, floors);
+    	mySettings.userAddedGarageLocations.add(newCustomGarage);
+    	mySettings.allGarageLocations.add(newCustomGarage);
+    	mySettings.enabledGarageLocations.add(newCustomGarage);
+    	mySettings.saveSettings();
     	//toast
     	Toast.makeText(getApplicationContext(), "New Garage Profile Complete", Toast.LENGTH_SHORT).show();
     	finish();

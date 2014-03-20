@@ -34,18 +34,6 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:stretchColumns="*">
-        <TableRow>
-            <Button 
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="DeveloperView"
-                android:onClick="toGraphActivity" />
-            <Button 
-				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
-				android:text="Debug Log"
-				android:onClick="sendDebugLog" />
-		</TableRow>    
 		<TableRow>
 			<Button 
 				android:layout_height="wrap_content"
@@ -62,6 +50,18 @@
 				android:layout_width="wrap_content"
 				android:text="Parking Hist."
 				android:onClick="toHistoryActivity" />
+		</TableRow>    
+		<TableRow>
+            <Button 
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="DeveloperView"
+                android:onClick="toGraphActivity" />
+            <Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Debug Log"
+				android:onClick="sendDebugLog" />
 		</TableRow>    
 	
 		

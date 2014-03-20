@@ -28,6 +28,7 @@ import java.util.TimeZone;
 
 import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
+import com.ethanai.parkinggarageapp.UserSettings.ParkingRecord;
 
 @SuppressLint("SimpleDateFormat")
 public class RecentSensorData implements Serializable { //must specify serializable so it can be passed by our intents neatly
@@ -570,7 +571,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}		
 	}
 }
-	
+
 /*
  * Cant save any location fields/constructor anything or else cannot serialize. This is so awkward
  */

@@ -123,7 +123,5 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 
 	public void finish(View view) {
 		finish();
-	}
-
-	
+	}	
 }

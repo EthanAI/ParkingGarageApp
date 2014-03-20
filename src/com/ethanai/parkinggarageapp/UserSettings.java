@@ -15,9 +15,20 @@ public class UserSettings implements Serializable {
 	/**
 	 * 
 	 */
-	private  final long serialVersionUID = -1790572649218348232L;
+	private final long serialVersionUID = -1790572649218348232L;
+	
 	public ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
 	public ArrayList<GarageLocation> enabledGarageLocations = new ArrayList<GarageLocation>();
+	
+	public String carBTName;
+	public String carBTMac;
+	
+	public boolean isFirstRun;
+	public boolean isBluetoothUser;
+	public boolean isGarageSelectionComplete;
+	
+	public ParkingRecord parkingRecordRecent;
+	
 
 	public int recentDataHistoryCount;
 	public int graphHistoryCount;
@@ -29,14 +40,6 @@ public class UserSettings implements Serializable {
 	//public static final String GARAGE_LOG_NAME = "garageRecords.ser";
 	//public static File garageLocationFile = new File(Environment.getExternalStorageDirectory().toString() 
 	//		+ "/" + STORAGE_DIRECTORY_NAME + "/" + GARAGE_LOG_NAME);
-	
-	public String carBTName;
-	public String carBTMac;
-	
-	public boolean isFirstRun;
-	public boolean isBluetoothUser;
-	public boolean isGarageSelectionComplete;
-
 	
 	UserSettings() {	
 		//load settings from storage
@@ -119,8 +122,11 @@ public class UserSettings implements Serializable {
 		borders = new ArrayList<Floor>(); 
 		//form new Location and add it
 		addGarageLocation(name, phoneLocation, borders);
+		
+		//TODO add recent parking location
 	}
 	
+	//TODO Save all other data (parking location, etc)
 	public void saveSettings() {
 		try {
 			ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(settingsFile)); //overwrite old file
@@ -299,5 +305,35 @@ public class UserSettings implements Serializable {
 		}
 		
 	}
+	
+	class ParkingRecord implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -780668416286718326L;
+		public String dateString;
+		public double latitude;
+		public double longitude;
+		public String locationName;
+		public String floorName;
+		public String sourceFileName;
+		
+		ParkingRecord(String newDateString, PhoneLocation newestPhoneLocation, String parkedFloor, File sourceFile) {
+			dateString 		= newDateString;
+			longitude 		= newestPhoneLocation.getLongitude();
+			latitude 		= newestPhoneLocation.getLatitude();
+			locationName 	= newestPhoneLocation.getLocationName();
+			floorName 		= parkedFloor;
+			sourceFileName 	= sourceFile.toString();
+		}
+		
+		public String toString() {
+			return dateString + ", " 
+					+ latitude + " " + longitude + ", "
+					+ locationName + ", "
+					+ floorName + "," 
+					+ sourceFileName + "\n";
+		}
+	}	
 	
 }

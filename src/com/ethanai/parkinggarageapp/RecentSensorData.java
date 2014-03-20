@@ -11,10 +11,6 @@ import android.location.Location;
 import android.location.LocationManager;
 //import android.util.Log;
 
-
-
-
-
 import android.util.Log;
 
 import java.io.Serializable;
@@ -28,7 +24,6 @@ import java.util.TimeZone;
 
 import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
-import com.ethanai.parkinggarageapp.UserSettings.ParkingRecord;
 
 @SuppressLint("SimpleDateFormat")
 public class RecentSensorData implements Serializable { //must specify serializable so it can be passed by our intents neatly
@@ -680,8 +675,9 @@ class PhoneLocation implements Serializable {
 	}
 	
 	public GarageLocation getNearestGarage() {
+		GarageLocation closestGarage = null;
 		if(null != mySettings.enabledGarageLocations && mySettings.enabledGarageLocations.size() > 0) {
-			GarageLocation closestGarage = mySettings.enabledGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
+			closestGarage = mySettings.enabledGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
 			float closestDistance = distanceTo(closestGarage.phoneLocation); //closestLocation.location.distanceTo(location);
 			for(GarageLocation garageLocation : mySettings.enabledGarageLocations) {
 				float checkDistance = distanceTo(garageLocation.phoneLocation);
@@ -690,10 +686,8 @@ class PhoneLocation implements Serializable {
 					closestGarage = garageLocation;
 				}
 			}
-			return closestGarage;
-		} else {
-			return null;
 		}
+		return closestGarage;
 	}
 	
 	//implement replacements for Location class methods .. -_-

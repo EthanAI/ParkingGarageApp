@@ -1,8 +1,6 @@
 package com.ethanai.parkinggarageapp;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Set;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
@@ -16,12 +14,8 @@ import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;

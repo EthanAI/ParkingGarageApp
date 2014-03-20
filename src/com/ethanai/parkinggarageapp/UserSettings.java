@@ -15,7 +15,7 @@ public class UserSettings implements Serializable {
 	/**
 	 * 
 	 */
-	private final long serialVersionUID = -1790572649218348232L;
+	private static final long serialVersionUID = -8023067763707780880L;
 	
 	public ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
 	public ArrayList<GarageLocation> enabledGarageLocations = new ArrayList<GarageLocation>();

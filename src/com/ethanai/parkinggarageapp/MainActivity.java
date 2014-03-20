@@ -1,11 +1,18 @@
 package com.ethanai.parkinggarageapp;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdRequest.Builder;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +34,9 @@ public class MainActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        // Look up the AdView as a resource and load a request.
+        addAds();
         
         tvGarage = (TextView) findViewById(R.id.garageField);
         tvFloor = (TextView) findViewById(R.id.floorField);
@@ -53,6 +63,15 @@ public class MainActivity extends Activity {
 		super.onResume();
 		updateTextViews();
 	}
+
+	public void addAds() {
+		AdView adView = (AdView)this.findViewById(R.id.adView);
+        Builder adBuilder = new AdRequest.Builder();
+        adBuilder.addTestDevice("2EF171E12F703640E851B84E5314ED51");
+        AdRequest adRequest = adBuilder.build();
+        adView.loadAd(adRequest);
+	}
+	
 	
 	public void updateTextViews() {
         //ArrayList<String> listStrings = readLog(1);        

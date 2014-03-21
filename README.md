@@ -193,6 +193,7 @@ Master the most crowded garage
 			
   
 	Bugs:
+		TurnCounter math needs some improving. Has trouble with back and forth
 		xGraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
 			XWas a problem to appending final info to the front of the file
 			xBug returned 2/28. Long time analyzing the completed csv? Threading should be applied
@@ -220,8 +221,8 @@ Master the most crowded garage
 			Depreciated. Does not seem to occur near any of my garages
 		Fix startup bug
 			First connect of the day from home crashes
-		Not saving settings to file
-			UserSettings class has no fields when debugged. So odd.
+		XNot saving settings to file
+			XUserSettings class has no fields when debugged. So odd. (was issues with statics not able to serialze ever)
 			
 			
         

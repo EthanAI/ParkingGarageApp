@@ -32,7 +32,9 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	 * 
 	 */
 	private static final long serialVersionUID = 5721779411217090251L;
+	
 	public UserSettings mySettings = MainActivity.mySettings;
+	
 	public int historyLength = mySettings.recentDataHistoryCount;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
 	public DateFormat format = new SimpleDateFormat("'Date 'yyyy-MM-dd HH:mm:ss.SSS");
@@ -191,7 +193,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	
 	public void updateParkingData() {
 		if(orientRecent.size() > 1) {
-			DataAnalyzer dataAnalyzer = new DataAnalyzer(this, newestPhoneLocation);
+			DataAnalyzer dataAnalyzer = new DataAnalyzer(this); //this, newestPhoneLocation);
 			parkedFloor = dataAnalyzer.getCurrentFloorEstimate();  
 			
 			//for viewing turncount during development.

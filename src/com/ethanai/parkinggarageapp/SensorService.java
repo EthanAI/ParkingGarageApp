@@ -108,7 +108,7 @@ public class SensorService extends Service implements SensorEventListener {
 		
 		//create notifier 
 		myNotifier = new ParkingNotificationManager(this, recentData);
-		myNotifier.cancelFloorNotification();
+		//myNotifier.cancelFloorNotification();
 		myNotifier.gpsRunningNotification();
 		
 		//set up sensor manager (sensor listeners only activate if we're close to a garage)
@@ -147,7 +147,7 @@ public class SensorService extends Service implements SensorEventListener {
 		myNotifier.cancelSensorNotification(); //turn off sensor notification
 		myNotifier.cancelGPSNotification();
 		//myNotifier.daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
-		myNotifier.floorNotification();
+		//myNotifier.floorNotification();
 		
 		// Tell widget to update 
 		 Intent brIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
@@ -174,7 +174,7 @@ public class SensorService extends Service implements SensorEventListener {
 	    protected String doInBackground(File... files) {
 	    	for (File file : files) {
 	    		DataAnalyzer dataAnalyzer = new DataAnalyzer(file);
-	    		recentData.parkedFloor = dataAnalyzer.getCurrentFloor();
+	    		recentData.parkedFloor = dataAnalyzer.getFloor();
 	    	}
 	    	return recentData.parkedFloor;
 	    }

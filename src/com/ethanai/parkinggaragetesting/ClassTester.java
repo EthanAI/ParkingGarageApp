@@ -50,7 +50,7 @@ public class ClassTester {
 				System.out.print("RawTurnCount: " + turnCount);
 				//turnCount += dataAnalyzer.fidgitingCorrection();
 				//turnCount += dataAnalyzer.parkTurnCorrection();
-				System.out.print(" Last Remover: " + dataAnalyzer.parkTurnCorrection());
+				//System.out.print(" Last Remover: " + dataAnalyzer.parkTurnCorrection());
 				System.out.print(" Modified TurnCount: " + turnCount);
 				System.out.print(" Dist From Center : " + getCertainty(turnCount));
 				System.out.print(" Floor: " + getFloorName2(turnCount));
@@ -71,7 +71,7 @@ public class ClassTester {
 			Float turnCount = dataAnalyzer.getConsecutiveTurns();
 			System.out.print("RawTurnCount: " + turnCount);
 			turnCount += dataAnalyzer.fidgitingCorrection();
-			turnCount += dataAnalyzer.parkTurnCorrection();
+			//turnCount += dataAnalyzer.parkTurnCorrection();
 			System.out.print(" Modified TurnCount: " + turnCount);
 			System.out.print(" Floor: " + getFloorName2(turnCount) + " ");
 			System.out.print(" Dist From Center : " + getCertainty(turnCount));

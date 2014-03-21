@@ -168,6 +168,7 @@ public class GraphActivity extends Activity {
     	mRenderer.addSeriesRenderer(rotationCountRenderer);
     	
 		mRenderer.setYTitle("Quarter Turns");
+		mRenderer.setLabelsColor(Color.RED);
 		mRenderer.setAxisTitleTextSize(MEDIUM_TEXT_SIZE);
 		mRenderer.setLegendTextSize(MEDIUM_TEXT_SIZE);
 		
@@ -179,7 +180,7 @@ public class GraphActivity extends Activity {
 		mRenderer.setApplyBackgroundColor(true);
 		mRenderer.setBackgroundColor(Color.WHITE);
 		
-		mRenderer.setXLabelsColor(Color.RED);
+		mRenderer.setXLabelsColor(Color.BLACK);
 		mRenderer.setYLabelsColor(0, Color.RED);
     }
 

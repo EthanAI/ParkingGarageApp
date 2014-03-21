@@ -426,6 +426,7 @@ public class UserSettings implements Serializable {
 			//maybe we could do some cool hashmap thing here?
 			if(null != floors && floors.size() > 0) {
 				float difference = Math.abs(floors.get(0).turns - correctedTurnCount);
+				parkedFloor = floors.get(0);
 				for(Floor floor : floors) {
 					if(Math.abs(floor.turns - correctedTurnCount) < difference) {
 						difference = Math.abs(floor.turns - correctedTurnCount);
@@ -485,6 +486,9 @@ public class UserSettings implements Serializable {
 			floorName 		= parkedFloor;
 			sourceFileName 	= sourceFile.toString();
 		}
+		
+		
+		
 		
 		public String toString() {
 			return dateString + ", " 

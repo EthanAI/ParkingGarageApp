@@ -72,8 +72,9 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 				String line = "";
 				while((line = br.readLine()) != null) {
 					String entries[] = line.split(",");
-					arrayList.add(entries[mySettings.FLOOR_COLUMN_INDEX] + "\n" + entries[0] + "\n" + entries[1]
-							+ "\n" + entries[2]);
+					arrayList.add("Floor:" + entries[mySettings.FLOOR_COLUMN_INDEX] + entries[2] + "\n" 
+					+ entries[0] + "\n" 
+					+ "GPS: " + entries[1]);
 				}
 				br.close();			
 			}
@@ -81,31 +82,17 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 				System.err.println(e.getMessage());
 			}
 		} else {
-			arrayList.add("None");
+			arrayList.add("No parking history records.");
 		}
 		return arrayList;
 	}
-	
-
-	
-    /*
-     * Function for the button
-     */
-	/*
-    public void changeToGraphActivity(View view) {
-    	Intent intent = new Intent(HistoryActivity.this, GraphActivity.class);
-    	intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); //Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-        this.finish();
-    }
-    */
-
 
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View view, int position, long id) {
 		//Object o = lv.getItemAtPosition(position);
 		String viewText = adapterStrings.get((int) id);
 		String coordinates = viewText.split("\n")[2];
+		coordinates = coordinates.replace("GPS: ", "");
 		Log.i("HistoryActivity", coordinates);
 		try {
 			//String address = addrText.getText().toString();
@@ -125,3 +112,15 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
 		finish();
 	}	
 }
+
+/*
+ * Function for the button
+ */
+/*
+public void changeToGraphActivity(View view) {
+	Intent intent = new Intent(HistoryActivity.this, GraphActivity.class);
+	intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); //Intent.FLAG_ACTIVITY_NEW_TASK);
+    startActivity(intent);
+    this.finish();
+}
+*/

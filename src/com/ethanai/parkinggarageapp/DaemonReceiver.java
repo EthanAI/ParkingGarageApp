@@ -11,7 +11,7 @@ public class DaemonReceiver extends BroadcastReceiver {
 	//Temp hardcoding of my car's BT description to test with. Will need to be settable/changable in the future
 	
 	
-	private ParkingNotificationManager myNotifier;
+	//private ParkingNotificationManager myNotifier;
 	
 	public UserSettings mySettings;
 
@@ -21,12 +21,13 @@ public class DaemonReceiver extends BroadcastReceiver {
 		Log.i("BootReceiver", "Recieved something. " + intent.getAction());
 		
         mySettings = MainActivity.mySettings;				
-		myNotifier = new ParkingNotificationManager(context, null);
+		
+        //myNotifier = new ParkingNotificationManager(context, null);
 				
 		if(intent.getAction() == Intent.ACTION_POWER_CONNECTED) {
-			Toast.makeText(context, "Power On!", Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, "Power On!", Toast.LENGTH_SHORT).show();
 		} else if(intent.getAction() == Intent.ACTION_POWER_DISCONNECTED) {
-			Toast.makeText(context, "Power Off!", Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, "Power Off!", Toast.LENGTH_SHORT).show();
 		} else if(intent.getAction() == BluetoothDevice.ACTION_ACL_CONNECTED) {
 			//http://stackoverflow.com/questions/9459680/how-identify-which-bluetooth-device-causes-an-action-acl-connected-broadcast
 			if(mySettings.isBluetoothUser) {
@@ -38,14 +39,14 @@ public class DaemonReceiver extends BroadcastReceiver {
 					Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
 					startSensors(context); 
 				} else {
-					Toast.makeText(context, "Other BT Connection", Toast.LENGTH_SHORT).show();
+					//Toast.makeText(context, "Other BT Connection", Toast.LENGTH_SHORT).show();
 				}
 			}
 		} else if(intent.getAction() == BluetoothDevice.ACTION_ACL_DISCONNECTED) {
 			Toast.makeText(context, "BT Disconnect!", Toast.LENGTH_SHORT).show();
 			stopSensors(context);
 		} else if (intent.getAction() == Intent.ACTION_BOOT_COMPLETED){
-			myNotifier.daemonNotification();
+			// myNotifier.daemonNotification();
 		} else {
 			//Toast.makeText(context, "Unused Broadcast: " + intent.getAction(), Toast.LENGTH_SHORT).show();
 		}

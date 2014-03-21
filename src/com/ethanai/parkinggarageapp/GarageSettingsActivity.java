@@ -41,14 +41,18 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
         listView.setOnItemLongClickListener(this);
     }
 
+    
 	@Override
 	public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+		/* we dont want to show this stuff to the user
 		GarageLocation garageLocation = (GarageLocation) adapterView.getItemAtPosition(position);
 		
 		Intent intent = new Intent(GarageSettingsActivity.this, FloorBorderActivity.class);
 		intent.putExtra("floorBorders", (Serializable) garageLocation.floors);
 		startActivity(intent);
+		*/
 	}
+	
 	
 	@Override
 	public boolean onItemLongClick(final AdapterView<?> adapterView, View view, final int position, long id) {

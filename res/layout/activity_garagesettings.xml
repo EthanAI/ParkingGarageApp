@@ -28,11 +28,14 @@
 		android:layout_width="wrap_content"
 		android:text="Create Custom Garage Profile"
 		android:onClick="buildGarageProfile" />
+	
+	<!--  
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
 		android:text="Rebuild Custom Profile"
 		android:onClick="editGarageProfile" />
+	-->
 
 	<Button 
 		android:layout_height="wrap_content"

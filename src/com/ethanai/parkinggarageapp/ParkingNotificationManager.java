@@ -30,9 +30,9 @@ public class ParkingNotificationManager {
 			    new NotificationCompat.Builder(context)
 				.setSmallIcon(R.drawable.icon_notification_sensors_on_hdpi)
 			    .setContentTitle("Sensors Running")
-			    .setContentText("Recording possible parking actions");
+			    .setContentText("Preparing for Parking");
 		
-		Intent resultIntent = new Intent(context, GraphActivity.class);
+		Intent resultIntent = new Intent(context, MainActivity.class);
 		// Because clicking the notification opens a new ("special") activity, there's
 		// no need to create an artificial back stack.
 		PendingIntent resultPendingIntent = PendingIntent.getActivity(context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -54,10 +54,10 @@ public class ParkingNotificationManager {
 		NotificationCompat.Builder mBuilder =
 			    new NotificationCompat.Builder(context)
 				.setSmallIcon(R.drawable.ic_launcher)
-			    .setContentTitle("GPS Running")
-			    .setContentText("GPS running at reduced frequency. Sensors off.");
+			    .setContentTitle("Parking Garage App Active")
+			    .setContentText("Monitoring for Proximity to Active Garages");
 		
-		Intent resultIntent = new Intent(context, GraphActivity.class);
+		Intent resultIntent = new Intent(context, MainActivity.class);
 		// Because clicking the notification opens a new ("special") activity, there's
 		// no need to create an artificial back stack.
 		PendingIntent resultPendingIntent = PendingIntent.getActivity(context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -72,7 +72,7 @@ public class ParkingNotificationManager {
 	}
 	
 	
-	
+	/*
 	public void floorNotification() {
 		//modify notification http://developer.android.com/training/notify-user/managing.html
 		NotificationManager mNotifyMgr = 
@@ -97,6 +97,7 @@ public class ParkingNotificationManager {
 				FLOOR_NOTIFICATION_ID,
 				mBuilder.build());
 	}
+	*/
 	
 	public void daemonNotification() {
 		//http://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#setContentText(java.lang.CharSequence)

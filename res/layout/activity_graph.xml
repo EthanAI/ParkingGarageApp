@@ -44,9 +44,6 @@
 				android:text="Stop"
 				android:onClick="stopSensorService" />
 
-			
-		</TableRow>    
-		<TableRow>
 		    <Button
 		    	android:layout_height="wrap_content"
 		    	android:layout_width="wrap_content"
@@ -57,6 +54,23 @@
 				android:layout_width="wrap_content"
 				android:text="Save G.DB"
 				android:onClick="writePresetGarageFile" />
+		</TableRow>    
+		<TableRow>
+		    <Button
+		    	android:layout_height="wrap_content"
+		    	android:layout_width="wrap_content"
+				android:text="Turns"
+				android:onClick="enableTurnGraph" />
+		    <Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Accel"
+				android:onClick="enableAccelGraph" />
+		    <Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Orient"
+				android:onClick="enableOrientGraph" />
 
 		</TableRow>
 

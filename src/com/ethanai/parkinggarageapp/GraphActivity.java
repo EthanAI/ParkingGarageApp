@@ -10,6 +10,7 @@ import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
+import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 import android.annotation.SuppressLint;
@@ -41,9 +42,14 @@ public class GraphActivity extends Activity {
 	public UserSettings mySettings = MainActivity.mySettings; 
 
     private GraphicalView mChart;
-    private TimeSeries rotationCountSeries;
+    private TimeSeries timeSeries1;
+    private TimeSeries timeSeries2;
+    private TimeSeries timeSeries3;
     private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
-    private XYSeriesRenderer rotationCountRenderer;
+    private XYSeriesRenderer seriesRenderer1;
+    private XYSeriesRenderer seriesRenderer2;
+    private XYSeriesRenderer seriesRenderer3;
+    
     private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
             
 	private final String ACCELEROMETER_TAG 	= "accelerometer";
@@ -54,6 +60,11 @@ public class GraphActivity extends Activity {
 	
 	private final String GPS_UPDATE_TAG		= "gpsUpdate";
 	private final String NETWORK_UPDATE_TAG	= "networkUpdate";
+	
+	private final int TURN_FLAG = 0;
+	private final int ACCEL_FLAG = 1;
+	private final int ORIENT_FLAG = 2;
+	private int graphType = TURN_FLAG;
 
 	
 	private LocalBroadcastManager lbManager; //only handles messages sent from this app
@@ -129,9 +140,25 @@ public class GraphActivity extends Activity {
 	}
 	
 	public void updateTextViews()	{
+		float rpMag = 0;
+		String rpMagDiscrete;
+		if(null != recentData && null != recentData.orientRecent && recentData.orientRecent.size() > 0) {
+			DerivedOrientation lastOrient = recentData.orientRecent.get(recentData.orientRecent.size() - 1);
+			double pitch = (double) lastOrient.pitchInDegrees;
+			double roll = (double) lastOrient.rollInDegrees;
+			rpMag = (float) Math.sqrt(pitch * pitch + roll * roll);
+		}
+		if(rpMag < 20) //TODO would need to be modified to be relative to historical position. Might be in a vertical dock. 
+			rpMagDiscrete = "flat";
+		else if (rpMag < 45)
+			rpMagDiscrete = "medium";
+		else
+			rpMagDiscrete = "high";
 		TextView tvTurn = (TextView) findViewById(R.id.turnField);
 		DataAnalyzer dataAnalyzer = new DataAnalyzer(recentData);
-    	tvTurn.setText("Raw Turns: " + dataAnalyzer.getRawConsecutiveTurns());
+    	tvTurn.setText("Raw Turns: " + dataAnalyzer.getRawConsecutiveTurns() + "\n" +
+    			"RPmag: " + rpMag + "\n" 
+    			+ rpMagDiscrete);
     	
     	TextView tvFloor = (TextView) findViewById(R.id.floorField);
     	tvFloor.setText("Floor: " + dataAnalyzer.getCurrentFloorEstimate());
@@ -159,14 +186,70 @@ public class GraphActivity extends Activity {
     private void initChart() {
     	DisplayMetrics metrics = this.getResources().getDisplayMetrics();
     	float MEDIUM_TEXT_SIZE = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 13, metrics);
-
-    	rotationCountSeries = new TimeSeries("Turns"); //add better time element?
-    	mDataset.addSeries(rotationCountSeries);
-    	rotationCountRenderer = new XYSeriesRenderer();
-    	rotationCountRenderer.setColor(Color.BLACK);
-    	mRenderer.addSeriesRenderer(rotationCountRenderer);
     	
-		mRenderer.setYTitle("Quarter Turns");
+    	mDataset.clear();
+    	switch(graphType) {
+    	case TURN_FLAG:    		
+    		timeSeries1 = new TimeSeries("Turns"); //add better time element?
+        	mDataset.addSeries(timeSeries1);
+        	seriesRenderer1 = new XYSeriesRenderer();
+        	seriesRenderer1.setColor(Color.BLACK);
+        	mRenderer.addSeriesRenderer(seriesRenderer1);
+        	
+    		mRenderer.setYTitle("Quarter Turns");
+        	break;
+    	case ACCEL_FLAG:
+    		timeSeries1 = new TimeSeries("X Accel"); 
+    		timeSeries2 = new TimeSeries("Y Accel"); 
+    		timeSeries3 = new TimeSeries("Z Accel"); 
+    		
+        	mDataset.addSeries(timeSeries1);
+        	mDataset.addSeries(timeSeries2);
+        	mDataset.addSeries(timeSeries3);
+        	
+        	seriesRenderer1 = new XYSeriesRenderer();
+        	seriesRenderer1.setColor(Color.BLACK);
+        	
+        	seriesRenderer2 = new XYSeriesRenderer();
+        	seriesRenderer2.setColor(Color.RED);
+        	
+        	seriesRenderer3 = new XYSeriesRenderer();
+        	seriesRenderer3.setColor(Color.GREEN);
+        	
+        	mRenderer.addSeriesRenderer(seriesRenderer1);
+        	mRenderer.addSeriesRenderer(seriesRenderer2);
+        	mRenderer.addSeriesRenderer(seriesRenderer3);
+        	
+    		mRenderer.setYTitle("m/s^2");
+    		
+    		break;
+    	case ORIENT_FLAG:
+    		timeSeries1 = new TimeSeries("azi"); 
+    		timeSeries2 = new TimeSeries("pitch"); 
+    		timeSeries3 = new TimeSeries("roll"); 
+    		
+        	mDataset.addSeries(timeSeries1);
+        	mDataset.addSeries(timeSeries2);
+        	mDataset.addSeries(timeSeries3);
+        	
+        	seriesRenderer1 = new XYSeriesRenderer();
+        	seriesRenderer1.setColor(Color.BLACK);
+        	
+        	seriesRenderer2 = new XYSeriesRenderer();
+        	seriesRenderer2.setColor(Color.RED);
+        	
+        	seriesRenderer3 = new XYSeriesRenderer();
+        	seriesRenderer3.setColor(Color.GREEN);
+        	
+        	mRenderer.addSeriesRenderer(seriesRenderer1);
+        	mRenderer.addSeriesRenderer(seriesRenderer2);
+        	mRenderer.addSeriesRenderer(seriesRenderer3);
+        	
+    		mRenderer.setYTitle("Degrees");
+    		
+    		break;
+		}
+		
 		mRenderer.setLabelsColor(Color.RED);
 		mRenderer.setAxisTitleTextSize(MEDIUM_TEXT_SIZE);
 		mRenderer.setLegendTextSize(MEDIUM_TEXT_SIZE);
@@ -175,23 +258,73 @@ public class GraphActivity extends Activity {
 		//TODO add button to restore view to following
 		
 		mRenderer.setLabelsTextSize(MEDIUM_TEXT_SIZE);
-		mRenderer.setXLabelsColor(Color.BLACK);
 		mRenderer.setApplyBackgroundColor(true);
 		mRenderer.setBackgroundColor(Color.WHITE);
 		
 		mRenderer.setXLabelsColor(Color.BLACK);
 		mRenderer.setYLabelsColor(0, Color.RED);
+		
+		
     }
 
     private void loadData() {
-    	rotationCountSeries.clear();
+
+    	//layout.removeAllViews();  //This remove previous graph
+    	//layout.addView(mChartView); //This loads the graph again
+    	
+    	int i = 0;
+    	switch(graphType) {
+    	case TURN_FLAG:
+    		Log.i("GraphingActivity", "Turn");
+    		
+    		timeSeries1.clear();
+    		
+        	if(recentData.orientRecent.size() > mySettings.graphHistoryCount)
+        		i = recentData.orientRecent.size() - mySettings.graphHistoryCount;
+        	for(; i < recentData.orientRecent.size(); i++) {
+        		timeSeries1.add(i, recentData.orientRecent.get(i).totalTurnDegrees / 90);
+        	}
+        	break;
+    	case ACCEL_FLAG:
+    		Log.i("GraphingActivity", "Accel");
+
+    		timeSeries1.clear();
+    		timeSeries2.clear();
+    		timeSeries3.clear();
+    		
+        	if(recentData.accRecent.size() > mySettings.graphHistoryCount)
+        		i = recentData.accRecent.size() - mySettings.graphHistoryCount;
+        	for(; i < recentData.accRecent.size(); i++) {
+        		timeSeries1.add(i, recentData.accRecent.get(i).x);  
+        		timeSeries2.add(i, recentData.accRecent.get(i).y);
+        		timeSeries3.add(i, recentData.accRecent.get(i).z);
+        	}
+    		break;
+    	case ORIENT_FLAG:
+    		Log.i("GraphingActivity", "Orient");
+
+    		timeSeries1.clear();
+    		timeSeries2.clear();
+    		timeSeries3.clear();
+    		
+        	if(recentData.orientRecent.size() > mySettings.graphHistoryCount)
+        		i = recentData.orientRecent.size() - mySettings.graphHistoryCount;
+        	for(; i < recentData.orientRecent.size(); i++) {
+        		timeSeries1.add(i, recentData.orientRecent.get(i).azimuthInDegrees); 
+        		timeSeries2.add(i, recentData.orientRecent.get(i).pitchInDegrees);
+        		timeSeries3.add(i, recentData.orientRecent.get(i).rollInDegrees);
+        	}
+    		break;
+    	}
+    	
+    		
 
     	/*
     	mXSeries.clear();
     	mYSeries.clear();
     	mZSeries.clear();
     	mAngleSeries.clear();
-    	*/
+    	
     	//for(int i = 0; i < plotDataCount && i < recentData.accRecent.size(); i++) {
     	//	mCurrentSeries.add(i, recentData.accRecent.get(i).x);
     	//}
@@ -203,14 +336,13 @@ public class GraphActivity extends Activity {
     		//	rotationCountSeries.remove(0); //remove oldest item
     		//}
     		rotationCountSeries.add(i, recentData.orientRecent.get(i).totalTurnDegrees / 90);
-    		/*
+    		
     		mXSeries.add(i, recentData.orientRecent.get(i).azimuthInDegrees);
     		mYSeries.add(i, recentData.orientRecent.get(i).pitchInDegrees);
     		mZSeries.add(i, recentData.orientRecent.get(i).rollInDegrees);
     		//mAngleSeries.add(i, recentData.orientRecent.get(i).inclinationInDegrees);
     		mAngleSeries.add(i, recentData.orientRecent.get(i).totalTurnDegrees);
     		*/
-    	}
     }
 
     protected void onResume() {
@@ -231,14 +363,12 @@ public class GraphActivity extends Activity {
         	loadData();
         	mChart = ChartFactory.getLineChartView(this, mDataset, mRenderer);
         	layout.addView(mChart);
-        
-        //} else if(recentData.accRecent != null && recentData.accRecent.size() > 0) {
-
         } else if(recentData.magnRecent != null && recentData.magnRecent.size() > 0) {
         	//initChart();
         	loadData();
         	//mChart = ChartFactory.getLineChartView(this, mDataset, mRenderer);
-        	//layout.addView(mChart);
+        	//layout.removeAllViews();  //This remove previous graph
+        	//layout.addView(mChart); //This loads the graph again
         	mChart.repaint();
         }
     }  
@@ -349,6 +479,21 @@ public class GraphActivity extends Activity {
     public void writePresetGarageFile(View view) {
     	mySettings.savePresetGarages();
     }
+    
+    public void enableTurnGraph(View view) {
+    	graphType = TURN_FLAG;
+    	initChart();
+    }
+    
+    public void enableAccelGraph(View view) {
+    	graphType = ACCEL_FLAG;
+    	initChart();
+    }
+
+	public void enableOrientGraph(View view) {
+		graphType = ORIENT_FLAG;
+    	initChart();
+	}
     
 	public void changeToTextActivity(View view) {
 	    Intent intent = new Intent(GraphActivity.this, TextActivity.class);

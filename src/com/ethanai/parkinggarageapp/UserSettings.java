@@ -218,6 +218,7 @@ public class UserSettings implements Serializable {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void loadSettings() {
 		UserSettings loadedSettings = null;
 

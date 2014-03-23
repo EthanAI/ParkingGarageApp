@@ -13,14 +13,20 @@ public class DaemonReceiver extends BroadcastReceiver {
 	
 	//private ParkingNotificationManager myNotifier;
 	
-	public UserSettings mySettings;
+	public static UserSettings mySettings;
 
 
 	@Override
 	public void onReceive(Context context, Intent intent) { //maybe not final. create new context Context getBaseContext() and pass it
 		Log.i("BootReceiver", "Recieved something. " + intent.getAction());
 		
-        mySettings = MainActivity.mySettings;				
+		//get settings
+		//sometimes (often) the deamon reciever will be called while the Mainactivity is destroyed. In that case,
+		//the receiver needs to be the one to build the settings
+		if(MainActivity.mySettings != null)
+			mySettings = MainActivity.mySettings;				
+		else
+			mySettings = new UserSettings(); 
 		
         //myNotifier = new ParkingNotificationManager(context, null);
 				

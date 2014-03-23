@@ -1,6 +1,5 @@
 package com.ethanai.parkinggarageapp;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 import android.app.Activity;

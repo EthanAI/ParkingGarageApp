@@ -2,9 +2,7 @@ package com.ethanai.parkinggarageapp;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdRequest.Builder;
-import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -12,7 +10,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,7 +41,10 @@ public class MainActivity extends Activity {
         tvBTStatus = (TextView) findViewById(R.id.bt_setup_status);
         
         //set up structure to hold recent data (not all data so we can run for unlimited time)
-        mySettings = new UserSettings(); 
+        if(null == DaemonReceiver.mySettings)
+        	mySettings = new UserSettings(); 
+        else
+        	mySettings = DaemonReceiver.mySettings;
         recentData =  new RecentSensorData(getBaseContext());
         
         if(mySettings.isFirstRun)
@@ -116,12 +116,14 @@ public class MainActivity extends Activity {
 				+ "soon. "
 				+ "\n\n"
 				+ "Thank you for participating in the alpha and beta.";
+		/*
 		final String text3 = "Coming Improvements:\n"
 	    		+ "\tAuto start/stop without bluetooth stereo\n"
 	    		+ "\tSupport for multi-entrance garages\n"
 	    		+ "\tSupport for garages with internal intersections\n"
 	    		+ "\tDatabase of pre-mapped garages\n"
 	    		+ "\tImproved battery usage\n";
+	    		*/
 		AlertDialog.Builder startBuilder = new AlertDialog.Builder(this);
 		startBuilder.setMessage(text1)
                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -146,35 +148,6 @@ public class MainActivity extends Activity {
         builder.show();
 	}
 	
-	/*
-	public ArrayList<String> readLog(int headerRowCount) {
-		ArrayList<String> arrayList = new ArrayList<String>();
-		File file = new File(Environment.getExternalStorageDirectory().toString() + "/" + mySettings.STORAGE_DIRECTORY_NAME 
-				+ "/parkingLog.csv");
-		if(null != file && file.exists()) {
-			try {
-				FileReader fr = new FileReader(file);
-				BufferedReader br = new BufferedReader(fr);
-				for(int i = 0; i < headerRowCount; i++) //skip headers
-					br.readLine();
-				
-				String line = "";
-				while((line = br.readLine()) != null) {
-					String entries[] = line.split(",");
-					arrayList.add(entries[mySettings.FLOOR_COLUMN_INDEX] + "\n" + entries[0] + "\n" + entries[1]
-							+ "\n" + entries[2]);
-				}
-				br.close();			
-			}
-			catch (Exception e) {
-				System.err.println(e.getMessage());
-			}
-		} else {
-			arrayList.add("None");
-		}
-		return arrayList;
-	}
-	*/
 	
 	public void toGraphActivity(View view) {
 		Intent intent = new Intent(MainActivity.this, GraphActivity.class);

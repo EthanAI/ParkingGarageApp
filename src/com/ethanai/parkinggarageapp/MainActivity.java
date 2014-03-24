@@ -6,9 +6,14 @@ import com.google.android.gms.ads.AdView;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,14 +28,38 @@ public class MainActivity extends Activity {
     public TextView tvFloor;
     public TextView tvGarageStatus;
     public TextView tvBTStatus;
+    public TextView tvRunStatus;
+    
+    public static String runStatus;
     
     public String garageName;
     public String garageFloor;    
+    
+    private LocalBroadcastManager lbManager;
+    public String NOTIFICATION_TAG = "notification";
+    
+	private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Log.i("MainActivity", "Recieved update");
+			// Get extra data included in the Intent
+		    String updateStatus = intent.getStringExtra("updateStatus");
+		    runStatus = updateStatus;
+		    updateTextViews();
+		}
+	};
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 	    super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        
+        Log.i("MainActivity", "Created: "
+				+ "States: Settings M/D: " + (null != MainActivity.mySettings) + " "
+				+ (null != DaemonReceiver.mySettings) + " Data: "
+				+ (null != MainActivity.recentData) + " "
+				+ (null != DaemonReceiver.recentData) + " "
+				);
         
         // Look up the AdView as a resource and load a request.
         addAds();
@@ -39,23 +68,36 @@ public class MainActivity extends Activity {
         tvFloor = (TextView) findViewById(R.id.floorField);
         tvGarageStatus = (TextView) findViewById(R.id.garage_setup_status);
         tvBTStatus = (TextView) findViewById(R.id.bt_setup_status);
+        tvRunStatus = (TextView) findViewById(R.id.run_status);
         
         //set up structure to hold recent data (not all data so we can run for unlimited time)
+        //If there are no user settings, get them from the DaemonReciever entry point
+        //If there are no RecentSensorData, get it from the DaemonReciever entyr point
+        //after this point, MainActivity fields should all point to the correct structures,
+        //Even if it wasnt the one that created them
         if(null == DaemonReceiver.mySettings)
         	mySettings = new UserSettings(); 
         else
         	mySettings = DaemonReceiver.mySettings;
-        recentData =  new RecentSensorData(getBaseContext());
+        if(null == DaemonReceiver.recentData)
+        	recentData = new RecentSensorData(getBaseContext());
+        else
+        	recentData = DaemonReceiver.recentData;
         
         if(mySettings.isFirstRun)
         	onboarding();
         
         updateTextViews();
+        
+        //subscribe to message to update our view (notifiers or sensors might change our state)
+        lbManager = LocalBroadcastManager.getInstance(getApplicationContext());
+	    lbManager.registerReceiver(mMessageReceiver, new IntentFilter(NOTIFICATION_TAG));
 	}
 	
 	@Override
 	protected void onDestroy() {
 	  super.onDestroy();
+	  lbManager.unregisterReceiver(mMessageReceiver);
 	}
 	
 	@Override
@@ -95,6 +137,9 @@ public class MainActivity extends Activity {
         
         tvGarage.setText("    " + garageName);
         tvFloor.setText("    Floor: " + garageFloor);
+        if(null == runStatus)
+        	runStatus = "Waiting for departure";
+        tvRunStatus.setText("Automation Status: " + runStatus);
 	}
 	
 	public void onboarding() {
@@ -173,8 +218,14 @@ public class MainActivity extends Activity {
 		//this.finish();
 	}
 	
-	
 	public void sendDebugLog(View view) {
+		Toast.makeText(getApplicationContext(), "Not Implemented Yet", Toast.LENGTH_SHORT).show();
+	}
+	
+	public void disableAll(View view) {
+		Toast.makeText(getApplicationContext(), "Not Implemented Yet", Toast.LENGTH_SHORT).show();
+	}
+	public void reEnable(View view) {
 		Toast.makeText(getApplicationContext(), "Not Implemented Yet", Toast.LENGTH_SHORT).show();
 	}
 	

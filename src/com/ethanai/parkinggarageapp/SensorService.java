@@ -45,8 +45,8 @@ import android.widget.Toast;
 @SuppressLint("SimpleDateFormat")
 public class SensorService extends Service implements SensorEventListener {
 	
-	private RecentSensorData recentData =  MainActivity.recentData; 
-	private UserSettings mySettings = MainActivity.mySettings;
+	public RecentSensorData recentData; // =  MainActivity.recentData; 
+	private UserSettings mySettings; // = MainActivity.mySettings;
 	
 	//for debugging
 	public boolean forceSensorStart = true;
@@ -77,7 +77,6 @@ public class SensorService extends Service implements SensorEventListener {
 
 	private final String GPS_UPDATE_TAG			= "gpsUpdate";
 	private final String NETWORK_UPDATE_TAG	= "networkUpdate";
-
 	
 	//private final String HOME_TAG			= "Home";
 	
@@ -90,7 +89,17 @@ public class SensorService extends Service implements SensorEventListener {
 	private boolean debugState = false;
 	
 	public int onStartCommand(Intent intent, int flags, int startID) {
-		Toast.makeText(this, "Sensors Started", Toast.LENGTH_SHORT).show();
+		if(null == MainActivity.recentData)
+			recentData = DaemonReceiver.recentData;
+		else
+			recentData =  MainActivity.recentData; 
+		if(null == MainActivity.mySettings)
+			mySettings = DaemonReceiver.mySettings;
+		else
+			mySettings = MainActivity.mySettings;
+		
+		Toast.makeText(this, "Sensors Started Debug: " + debugState, Toast.LENGTH_SHORT).show();
+		Log.i("SensorService", "ServiceService Started. Debug: " + debugState);
 
         //get info from the calling Activity
 		Bundle extras = intent.getExtras();
@@ -115,7 +124,8 @@ public class SensorService extends Service implements SensorEventListener {
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if(debugState) { //for the forcestart command
         	registerSensors();
-        }
+        } //otherwise wait until gps signal triggers the sensors
+        
         // disabled to see if the GPS signal will trigger the sensors
         //reviseUpdateFrequency(); //decide if we should start the sensors or not
         //registerSensors(); //temporary hard coded
@@ -136,13 +146,14 @@ public class SensorService extends Service implements SensorEventListener {
 		
 		//((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_NONE); //unregister the phone state listener
 		//unregisterReceiver(receiver);
-		
-		Toast.makeText(this, "Sensors Stopped\n" + recentData.parkedFloor, Toast.LENGTH_SHORT).show();
-		
+				
+		//timing on this needs firming up. We shouldn't be updating widgets etc if this hasnt completed
 		//possibly update using the file so we have a longer data timeframe.
 		if(orientFile != null && orientFile.exists())
 			new AnalyzeAllDataTask().execute(orientFile);
 		
+		Toast.makeText(this, "Sensors Stopped\n" + recentData.parkedFloor, Toast.LENGTH_SHORT).show();
+
 		//display result to user
 		myNotifier.cancelSensorNotification(); //turn off sensor notification
 		myNotifier.cancelGPSNotification();
@@ -150,8 +161,8 @@ public class SensorService extends Service implements SensorEventListener {
 		//myNotifier.floorNotification();
 		
 		// Tell widget to update 
-		 Intent brIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-         sendBroadcast(brIntent);
+		Intent brIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        sendBroadcast(brIntent);
          
  		//keep result somewhere
  		//storeFinalLocation();
@@ -227,7 +238,8 @@ public class SensorService extends Service implements SensorEventListener {
     	}
     	
     	if(recentData.initialLocationName != null)
-    		Log.i("sensorService", "initial location: " + recentData.initialLocationName + " current: " + recentData.newestPhoneLocation.getLocationName());
+    		Log.i("sensorService", "initial location: " + recentData.initialLocationName 
+    				+ " current: " + recentData.newestPhoneLocation.getLocationName());
     	else
     		Log.i("sensorService", "initial location null");
     	
@@ -282,7 +294,7 @@ public class SensorService extends Service implements SensorEventListener {
         	if(recentData.initialLocationName == null)
         		recentData.initialLocationName = recentData.newestPhoneLocation.getLocationName();
             //appendToFile(gpsFile, recentData.newestPhoneLocation.locationString);
-        	Log.i("SensorService", "GPS update:\tDistance: " + recentData.distanceNearestGarage);
+        	Log.i("SensorService", "GPS update:    Distance: " + recentData.distanceNearestGarage);
         	
         	//Make updates more frequent if close, less frequent if far
         	reviseUpdateFrequency();
@@ -303,8 +315,10 @@ public class SensorService extends Service implements SensorEventListener {
 	public LocationListener networkListener = new LocationListener() {
         public void onLocationChanged(Location location) {
         	//networkLocation = location;
+        	if(null == recentData)
+        		recentData = new RecentSensorData(getBaseContext());
         	recentData.addUpToLimit(location);
-        	Log.i("SensorService", "NetworkUpdate:\tDistance: " + recentData.distanceNearestGarage);
+        	Log.i("SensorService", "NetworkUpdate:  Distance: " + recentData.distanceNearestGarage);
         	reviseUpdateFrequency();
 
         	
@@ -446,7 +460,8 @@ public class SensorService extends Service implements SensorEventListener {
     
 	 // broadcast notice that this sensor has updated. Also give the updated recent data 
 	 private void notifyUpdate(String updateTag) {
-		 Log.i("sender", "Broadcasting message " + updateTag + " " + recentData.orientRecent.size() + " " + MainActivity.recentData.orientRecent.size());
+		 Log.i("SensorService", "NotifyUpdate sending message: " + updateTag + " " + recentData.orientRecent.size() + " " 
+				 + recentData.orientRecent.size());
 		 Intent brIntent = new Intent(updateTag);
 		 // Include data & label with the intent we send
 		 brIntent.putExtra("updateType", updateTag);

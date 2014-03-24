@@ -16,12 +16,12 @@
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
-		android:text="Add Preset Garage"
+		android:text="Select Preset Garages"
 		android:onClick="addGarageFromPresets" />
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
-		android:text="Deactivate Garage"
+		android:text="Remove Preset Garages"
 		android:onClick="removeGarageFromPresets" />
 	<Button 
 		android:layout_height="wrap_content"

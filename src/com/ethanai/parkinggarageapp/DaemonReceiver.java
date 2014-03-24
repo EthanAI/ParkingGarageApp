@@ -14,19 +14,31 @@ public class DaemonReceiver extends BroadcastReceiver {
 	//private ParkingNotificationManager myNotifier;
 	
 	public static UserSettings mySettings;
+	public static RecentSensorData recentData;
 
 
 	@Override
 	public void onReceive(Context context, Intent intent) { //maybe not final. create new context Context getBaseContext() and pass it
-		Log.i("BootReceiver", "Recieved something. " + intent.getAction());
+		Log.i("BootReceiver", "Recieved something. " + intent.getAction()
+				+ " States: Settings M/D: " + (null != MainActivity.mySettings) + " "
+				+ (null != DaemonReceiver.mySettings) + " Data: "
+				+ (null != MainActivity.recentData) + " "
+				+ (null != DaemonReceiver.recentData) + " "
+				);
 		
 		//get settings
 		//sometimes (often) the deamon reciever will be called while the Mainactivity is destroyed. In that case,
 		//the receiver needs to be the one to build the settings
+		//after this point, we should be certain to have usersettings and recent data
 		if(MainActivity.mySettings != null)
 			mySettings = MainActivity.mySettings;				
 		else
 			mySettings = new UserSettings(); 
+		
+		if(MainActivity.recentData != null)
+			recentData = MainActivity.recentData;				
+		else
+			recentData = new RecentSensorData(context);
 		
         //myNotifier = new ParkingNotificationManager(context, null);
 				
@@ -73,8 +85,8 @@ public class DaemonReceiver extends BroadcastReceiver {
 	    context.startService(serviceIntent);
 	    
 	    //temp for debugging. Also turn on graph activity so I can watch/confirm working
-	    Intent activityIntent = new Intent(context, GraphActivity.class);
-	    context.startService(activityIntent);
+	    //Intent activityIntent = new Intent(context, GraphActivity.class);
+	    //context.startService(activityIntent);
 	}
 	
 	public void stopSensors(Context context) {

@@ -252,7 +252,7 @@ public class UserSettings implements Serializable {
 			//SETTINGS_FILE_NAME = loadedSettings.SETTINGS_FILE_NAME;
 			//userSettingsFile = loadedSettings.userSettingsFile;
 			
-			Log.i("UserSettings", "remaining settings loaded");
+			Log.i("UserSettings", "Basic settings loaded");
 		} else {
 			resetSettings(); //deletes EVERYTHING be sure to do this before trying to load custom garages or database garages
 		}

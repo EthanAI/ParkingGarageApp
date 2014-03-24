@@ -46,11 +46,19 @@
 	
 	</LinearLayout>
      
+  	<TextView
+        android:id="@+id/run_status"
+        android:layout_width="fill_parent"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left" />
+   
     <TableLayout
         android:paddingTop="10dip"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:stretchColumns="*">
+
 	    <TableRow>
 	        <TextView
 		        android:id="@+id/garage_setup_status"
@@ -101,7 +109,22 @@
 				android:layout_width="wrap_content"
 				android:text="Debug Log"
 				android:onClick="sendDebugLog" />
-		</TableRow>    
+		</TableRow> 
+		
+		<!--   
+		<TableRow>
+		    <Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Disable"
+				android:onClick="disableall" />
+		    <Button 
+				android:layout_height="wrap_content"
+				android:layout_width="wrap_content"
+				android:text="Enable"
+				android:onClick="reenable" />
+		</TableRow>
+		-->  
 	
 		
 	</TableLayout>

@@ -9,7 +9,9 @@ import java.util.ArrayList;
 
 
 
+
 import android.util.Log;
+
 
 //import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
 import com.ethanai.parkinggarageapp.UserSettings.Floor;
@@ -24,9 +26,9 @@ public class DataAnalyzer {
 	ArrayList<Double> latArray = new ArrayList<Double>();
 	ArrayList<Double> longArray = new ArrayList<Double>();
 	
-	public UserSettings mySettings = MainActivity.mySettings;
+	public UserSettings mySettings; // = MainActivity.mySettings;
 	//public RecentSensorData recentData; //can't rely on this. sometimes we read from a file
-	public PhoneLocation newestPhoneLocation = MainActivity.recentData.newestPhoneLocation;
+	public PhoneLocation newestPhoneLocation; // = MainActivity.recentData.newestPhoneLocation;
 	
 	public boolean isFullAnalysis = false;
 	
@@ -39,6 +41,16 @@ public class DataAnalyzer {
 			latArray.add(recentData.orientRecent.get(i).phoneLocation.getLatitude());
 			longArray.add(recentData.orientRecent.get(i).phoneLocation.getLongitude());
 		}		
+		
+		if(null == MainActivity.mySettings)
+			mySettings = DaemonReceiver.mySettings;
+		else
+			mySettings = MainActivity.mySettings;
+		
+		if(null == MainActivity.recentData)
+			newestPhoneLocation = DaemonReceiver.recentData.newestPhoneLocation;
+		else
+			newestPhoneLocation = MainActivity.recentData.newestPhoneLocation;
 	}
 	
 	//for final complete analysis, incase user took a long time to park and 
@@ -46,6 +58,11 @@ public class DataAnalyzer {
 	public DataAnalyzer(File dataFile) {
 		readFile(dataFile);
 		isFullAnalysis = true;
+		
+		if(null == MainActivity.mySettings)
+			mySettings = DaemonReceiver.mySettings;
+		else
+			mySettings = MainActivity.mySettings;
 	}
 	
 	public String getCurrentFloorEstimate() {

@@ -38,8 +38,8 @@ public class GraphActivity extends Activity {
 	
 	//initialize the settings. Should only be one of this object ever. This is only for the testing Graph Activity
 	//Will be instantiated by the real running class elsewhere
-    public RecentSensorData recentData = MainActivity.recentData;
-	public UserSettings mySettings = MainActivity.mySettings; 
+    public RecentSensorData recentData; // = MainActivity.recentData;
+	public UserSettings mySettings; // = MainActivity.mySettings; 
 
     private GraphicalView mChart;
     private TimeSeries timeSeries1;
@@ -78,6 +78,16 @@ public class GraphActivity extends Activity {
 	private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
+			if(null != MainActivity.mySettings)
+				mySettings = MainActivity.mySettings;
+	        else
+				mySettings = DaemonReceiver.mySettings;
+	        
+	        if(null != MainActivity.recentData)
+	        	recentData = MainActivity.recentData;
+	        else
+	        	recentData = DaemonReceiver.recentData;
+			
 			// Get extra data included in the Intent
 		    String updateType = intent.getStringExtra("updateType");
 		    recentData = MainActivity.recentData; //broadcast reciever not getting the data from the class initializer some reason
@@ -108,7 +118,16 @@ public class GraphActivity extends Activity {
 	    super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
         
-        recentData =  new RecentSensorData(getBaseContext());
+        if(null != MainActivity.mySettings)
+			mySettings = MainActivity.mySettings;
+        else
+			mySettings = DaemonReceiver.mySettings;
+        
+        if(null != MainActivity.recentData)
+        	recentData = MainActivity.recentData;
+        else
+        	recentData = DaemonReceiver.recentData;
+
         
         //TextView tvNextFloor = (TextView) findViewById(R.id.nextFloorField);
     	//tvNextFloor.setText(Integer.toString(floorNumber));
@@ -224,16 +243,16 @@ public class GraphActivity extends Activity {
     		
     		break;
     	case ORIENT_FLAG:
-    		timeSeries1 = new TimeSeries("azi"); 
+    		//timeSeries1 = new TimeSeries("azi"); 
     		timeSeries2 = new TimeSeries("pitch"); 
     		timeSeries3 = new TimeSeries("roll"); 
     		
-        	mDataset.addSeries(timeSeries1);
+        	//mDataset.addSeries(timeSeries1);
         	mDataset.addSeries(timeSeries2);
         	mDataset.addSeries(timeSeries3);
         	
-        	seriesRenderer1 = new XYSeriesRenderer();
-        	seriesRenderer1.setColor(Color.BLACK);
+        	//seriesRenderer1 = new XYSeriesRenderer();
+        	//seriesRenderer1.setColor(Color.BLACK);
         	
         	seriesRenderer2 = new XYSeriesRenderer();
         	seriesRenderer2.setColor(Color.RED);
@@ -241,7 +260,7 @@ public class GraphActivity extends Activity {
         	seriesRenderer3 = new XYSeriesRenderer();
         	seriesRenderer3.setColor(Color.GREEN);
         	
-        	mRenderer.addSeriesRenderer(seriesRenderer1);
+        	//mRenderer.addSeriesRenderer(seriesRenderer1);
         	mRenderer.addSeriesRenderer(seriesRenderer2);
         	mRenderer.addSeriesRenderer(seriesRenderer3);
         	
@@ -303,14 +322,14 @@ public class GraphActivity extends Activity {
     	case ORIENT_FLAG:
     		Log.i("GraphingActivity", "Orient");
 
-    		timeSeries1.clear();
+    		//timeSeries1.clear();
     		timeSeries2.clear();
     		timeSeries3.clear();
     		
         	if(recentData.orientRecent.size() > mySettings.graphHistoryCount)
         		i = recentData.orientRecent.size() - mySettings.graphHistoryCount;
         	for(; i < recentData.orientRecent.size(); i++) {
-        		timeSeries1.add(i, recentData.orientRecent.get(i).azimuthInDegrees); 
+        		//timeSeries1.add(i, recentData.orientRecent.get(i).azimuthInDegrees); 
         		timeSeries2.add(i, recentData.orientRecent.get(i).pitchInDegrees);
         		timeSeries3.add(i, recentData.orientRecent.get(i).rollInDegrees);
         	}

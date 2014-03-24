@@ -12,12 +12,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 public class MyWidgetProvider extends AppWidgetProvider {
 	public static final String MY_WIDGET_FILTER_ACTION_ID = "mywidget";
 	
-	public UserSettings mySettings = MainActivity.mySettings;
+	public UserSettings mySettings; // = MainActivity.mySettings;
 
 	@Override
 	  public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -77,6 +78,13 @@ public class MyWidgetProvider extends AppWidgetProvider {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		super.onReceive(context, intent);
+		
+		if(null != MainActivity.mySettings) {
+			mySettings = MainActivity.mySettings;
+		}
+		else {
+			mySettings = DaemonReceiver.mySettings;
+		}
 
 		//update the text
 		ArrayList<String> floorHistory = getSortedRecent(readColumns(mySettings.FLOOR_COLUMN_INDEX, 1), 5);

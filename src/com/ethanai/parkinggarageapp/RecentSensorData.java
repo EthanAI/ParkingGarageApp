@@ -33,12 +33,13 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	 */
 	private static final long serialVersionUID = 5721779411217090251L;
 	
-	public UserSettings mySettings = MainActivity.mySettings;
+	public UserSettings mySettings; // = MainActivity.mySettings;
 	
-	public int historyLength = mySettings.recentDataHistoryCount;
+	public int historyLength; // = mySettings.recentDataHistoryCount;
     private final float ACCELEROMETER_NOISE = (float) 0.5;
 	public DateFormat format = new SimpleDateFormat("'Date 'yyyy-MM-dd HH:mm:ss.SSS");
     
+	public PhoneLocation initialLocation;
     public Date initialDate; //date this structure initialized. 
     public String initialLocationName; //just for testing, some use cases better off without this
 	public ArrayList<AccelerometerReading> accRecent = new ArrayList<AccelerometerReading>();
@@ -80,6 +81,19 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		initialDate = new Date();  //date this structure initialized. Caller needs to be careful so this is close to the start of sensor polling  
 		format.setTimeZone(TimeZone.getTimeZone("HST"));
 		
+		//get settings from whichever entryPoint the user came at this app (MainActivity vs DaemonReceiver)
+		if(null != MainActivity.mySettings) {
+			mySettings = MainActivity.mySettings;
+			Log.i("RecentData", "mainactivity settings");
+		}
+		else {
+			mySettings = DaemonReceiver.mySettings;
+			Log.i("RecentData", "DaemonR settings");
+		}
+
+		
+		historyLength = mySettings.recentDataHistoryCount;
+		
 		//initialize string with all gps location
 		if(null == currentGPSLocation)
 			recentLocationString = BLANK_GPS_RESULT;
@@ -98,6 +112,10 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		Location location = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
 		
 		newestPhoneLocation = new PhoneLocation(location, orientRecent);
+		initialLocation = newestPhoneLocation;
+		if(null != initialLocation) {
+			initialLocationName = initialLocation.getLocationName();
+		}
 		distanceNearestGarage = newestPhoneLocation.getDistanceNearestGarage();
 	}
 	
@@ -596,7 +614,7 @@ class PhoneLocation implements Serializable {
 	public float age = 0;
 	
 	public ArrayList<DerivedOrientation> orientRecent;
-	public UserSettings mySettings = MainActivity.mySettings;
+	public UserSettings mySettings; 
 	public DateFormat format = new SimpleDateFormat("'Date 'yyyy-MM-dd HH:mm:ss.SSS");
 	
 	PhoneLocation (Location location, ArrayList<DerivedOrientation> orientRecent) {
@@ -616,6 +634,15 @@ class PhoneLocation implements Serializable {
 		this.dateString = format.format(date);
 		
 		this.orientRecent = orientRecent;
+		
+		if(null != MainActivity.mySettings) {
+			mySettings = MainActivity.mySettings;
+			Log.i("RecentData", "mainactivity settings");
+		}
+		else {
+			mySettings = DaemonReceiver.mySettings;
+			Log.i("RecentData", "DaemonR settings");
+		}
 
 
 		if(orientRecent != null && orientRecent.size() > 0) {
@@ -678,7 +705,9 @@ class PhoneLocation implements Serializable {
 	
 	public GarageLocation getNearestGarage() {
 		GarageLocation closestGarage = null;
-		if(null != mySettings.enabledGarageLocations && mySettings.enabledGarageLocations.size() > 0) {
+		if(null == mySettings)
+			Log.i("RecentData", "No settings to find Garages with");
+		if(null != mySettings && null != mySettings.enabledGarageLocations && mySettings.enabledGarageLocations.size() > 0) {
 			closestGarage = mySettings.enabledGarageLocations.get(0); //= UserSettings.allUserLocations.get(0).location;
 			float closestDistance = distanceTo(closestGarage.phoneLocation); //closestLocation.location.distanceTo(location);
 			for(GarageLocation garageLocation : mySettings.enabledGarageLocations) {

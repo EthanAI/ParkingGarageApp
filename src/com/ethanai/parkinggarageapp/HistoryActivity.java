@@ -35,8 +35,10 @@ public class HistoryActivity extends Activity implements OnItemClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);   //get the overall layout
         
-        mySettings = MainActivity.mySettings;
-
+        if(null == MainActivity.mySettings)
+			mySettings = DaemonReceiver.mySettings;
+		else
+			mySettings = MainActivity.mySettings;
         ArrayList<String> listStrings = readLog(1);
         adapterStrings = getSortedRecent(listStrings, 10);
         

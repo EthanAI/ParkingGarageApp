@@ -54,6 +54,20 @@ public class MainActivity extends Activity {
 	    super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+      //set up structure to hold recent data (not all data so we can run for unlimited time)
+        //If there are no user settings, get them from the DaemonReciever entry point
+        //If there are no RecentSensorData, get it from the DaemonReciever entyr point
+        //after this point, MainActivity fields should all point to the correct structures,
+        //Even if it wasnt the one that created them
+        if(null == DaemonReceiver.mySettings)
+        	mySettings = new UserSettings(); 
+        else
+        	mySettings = DaemonReceiver.mySettings;
+        if(null == DaemonReceiver.recentData)
+        	recentData = new RecentSensorData(getBaseContext());
+        else
+        	recentData = DaemonReceiver.recentData;
+        
         Log.i("MainActivity", "Created: "
 				+ "States: Settings M/D: " + (null != MainActivity.mySettings) + " "
 				+ (null != DaemonReceiver.mySettings) + " Data: "
@@ -70,19 +84,7 @@ public class MainActivity extends Activity {
         tvBTStatus = (TextView) findViewById(R.id.bt_setup_status);
         tvRunStatus = (TextView) findViewById(R.id.run_status);
         
-        //set up structure to hold recent data (not all data so we can run for unlimited time)
-        //If there are no user settings, get them from the DaemonReciever entry point
-        //If there are no RecentSensorData, get it from the DaemonReciever entyr point
-        //after this point, MainActivity fields should all point to the correct structures,
-        //Even if it wasnt the one that created them
-        if(null == DaemonReceiver.mySettings)
-        	mySettings = new UserSettings(); 
-        else
-        	mySettings = DaemonReceiver.mySettings;
-        if(null == DaemonReceiver.recentData)
-        	recentData = new RecentSensorData(getBaseContext());
-        else
-        	recentData = DaemonReceiver.recentData;
+        
         
         if(mySettings.isFirstRun)
         	onboarding();

@@ -12,8 +12,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class FloorMapperActivity extends Activity {
-	public static UserSettings mySettings = MainActivity.mySettings; 
-    public static RecentSensorData recentData = MainActivity.recentData;
+	public static UserSettings mySettings; // = MainActivity.mySettings; 
+    public static RecentSensorData recentData; // = MainActivity.recentData;
 	
     public int nextFloor = 1;
     
@@ -28,6 +28,16 @@ public class FloorMapperActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_floor_mapper);
+        
+        if(null == MainActivity.mySettings)
+			mySettings = DaemonReceiver.mySettings;
+		else
+			mySettings = MainActivity.mySettings;
+		
+		if(null == MainActivity.recentData)
+			recentData = DaemonReceiver.recentData;
+		else
+			recentData = MainActivity.recentData;
         
         garageName = getIntent().getStringExtra("garageName");
         

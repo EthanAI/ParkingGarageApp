@@ -20,8 +20,10 @@ public class FloorBorderActivity extends Activity {
         Intent intent = getIntent();
         //GarageLocation garageLocation = (GarageLocation) intent.getSerializableExtra("floorBorders");
         //ArrayList<FloorBorder> listBorders = garageLocation.floorBorders;
-        @SuppressWarnings("unchecked")
-		ArrayList<Floor> listBorders = (ArrayList<Floor>) intent.getSerializableExtra("floorBorders");
+        //@SuppressWarnings("unchecked")
+		//ArrayList<Floor> listBorders = (ArrayList<Floor>) intent.getSerializableExtra("floorBorders");
+        String garageName = intent.getStringExtra("garageName");
+        ArrayList<Floor> listBorders = MainActivity.mySettings.getGarageLocation(garageName).floors;
 
         ArrayAdapter<Floor> adapter 
         	= new ArrayAdapter<Floor>(this, R.layout.floor_border_list_item, listBorders);

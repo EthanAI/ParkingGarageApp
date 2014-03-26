@@ -189,10 +189,12 @@ add location if exit car without sensors activated?
 Share parking locations?
 Master the most crowded garage
 			
+			+allow back button (adding custom garage, doesnt cancel out)
 			 
 			
   
 	Bugs:
+		Settings persistance
 		TurnCounter math needs some improving. Has trouble with back and forth
 		xGraphActivity freezes after long 15min+ time Sensors seem to be unaffected.
 			XWas a problem to appending final info to the front of the file
@@ -219,7 +221,7 @@ Master the most crowded garage
 				Limit the mag values? Recorded amounts are hundreds of times normal values
 				Accelerometer seems fine
 			Depreciated. Does not seem to occur near any of my garages
-		Fix startup bug
+		XFix startup bug
 			First connect of the day from home crashes
 		XNot saving settings to file
 			XUserSettings class has no fields when debugged. So odd. (was issues with statics not able to serialze ever)

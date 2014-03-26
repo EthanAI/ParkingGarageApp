@@ -19,6 +19,8 @@ public class UserSettings implements Serializable {
 	 */
 	private static final long serialVersionUID = -8023067763707780880L;
 	
+	public boolean isDebug = true; //for me to autoswitch on dev settings
+	
 	public ArrayList<GarageLocation> enabledGarageLocations = new ArrayList<GarageLocation>();
 	public ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
 	public ArrayList<GarageLocation> userAddedGarageLocations = new ArrayList<GarageLocation>();
@@ -36,7 +38,7 @@ public class UserSettings implements Serializable {
 	public ParkingRecord parkingRecordRecent;
 	
 
-	public int recentDataHistoryCount;
+	public int recentDataHistoryCount = 2000; //safe default if loading has trouble
 	public int graphHistoryCount;
 	public int FLOOR_COLUMN_INDEX;
 	
@@ -232,27 +234,39 @@ public class UserSettings implements Serializable {
 				Log.e("UserSettings", e.getMessage());
 			}
 						
-			//copy values into this()
-			enabledGarageLocations 	= loadedSettings.enabledGarageLocations;
-			parkingRecordRecent 	= loadedSettings.parkingRecordRecent;
+			if(null != loadedSettings) {
+				//copy values into this()
+				if(null != loadedSettings.enabledGarageLocations)
+					enabledGarageLocations 	= loadedSettings.enabledGarageLocations;
+				if(null != loadedSettings.parkingRecordRecent)
+					parkingRecordRecent 	= loadedSettings.parkingRecordRecent;
+				
+				carBTName = loadedSettings.carBTName;
+				carBTMac = loadedSettings.carBTMac;
+				
+				isFirstRun = loadedSettings.isFirstRun;
+				isBluetoothUser = loadedSettings.isBluetoothUser;
+				isGarageSelectionComplete = loadedSettings.isGarageSelectionComplete;
+				
+				if(loadedSettings.recentDataHistoryCount > 100)
+					recentDataHistoryCount 	= loadedSettings.recentDataHistoryCount;
+				else {
+					recentDataHistoryCount = 2000;
+					Log.i("UserSettings", "History Count too low. Forcefully corrected. " 
+							+ loadedSettings.recentDataHistoryCount);
+				}
+				graphHistoryCount 		= loadedSettings.graphHistoryCount;
+				FLOOR_COLUMN_INDEX 		= loadedSettings.FLOOR_COLUMN_INDEX;
+				
+				//STORAGE_DIRECTORY_NAME = loadedSettings.STORAGE_DIRECTORY_NAME;
+				//SETTINGS_FILE_NAME = loadedSettings.SETTINGS_FILE_NAME;
+				//userSettingsFile = loadedSettings.userSettingsFile;
+				
+				Log.i("UserSettings", "Basic settings loaded");
+			} else {
+				Log.e("UserSettings", "Basic settings failed to load");
+			}
 			
-			carBTName = loadedSettings.carBTName;
-			carBTMac = loadedSettings.carBTMac;
-			
-			isFirstRun = loadedSettings.isFirstRun;
-			isBluetoothUser = loadedSettings.isBluetoothUser;
-			isGarageSelectionComplete = loadedSettings.isGarageSelectionComplete;
-			
-			
-			recentDataHistoryCount 	= loadedSettings.recentDataHistoryCount;
-			graphHistoryCount 		= loadedSettings.graphHistoryCount;
-			FLOOR_COLUMN_INDEX 		= loadedSettings.FLOOR_COLUMN_INDEX;
-			
-			//STORAGE_DIRECTORY_NAME = loadedSettings.STORAGE_DIRECTORY_NAME;
-			//SETTINGS_FILE_NAME = loadedSettings.SETTINGS_FILE_NAME;
-			//userSettingsFile = loadedSettings.userSettingsFile;
-			
-			Log.i("UserSettings", "Basic settings loaded");
 		} else {
 			resetSettings(); //deletes EVERYTHING be sure to do this before trying to load custom garages or database garages
 		}
@@ -264,10 +278,14 @@ public class UserSettings implements Serializable {
 				userAddedGarageLocations = (ArrayList<GarageLocation>) is.readObject();
 				is.close();
 				
-				for(GarageLocation garageLocation : userAddedGarageLocations)
-					allGarageLocations.add(garageLocation);
-				
-				Log.i("UserSettings", "custom garages loaded " + userAddedGarageLocations.size() + " " + allGarageLocations.size());
+				if(null != userAddedGarageLocations) {
+					for(GarageLocation garageLocation : userAddedGarageLocations)
+						allGarageLocations.add(garageLocation);
+					
+					Log.i("UserSettings", "Custom garages loaded " + userAddedGarageLocations.size() + " " + allGarageLocations.size());
+				} else {
+					Log.e("UserSettings", "Custom garages failed to load");
+				}
 			} catch (Exception e) {
 				Log.e("UserSettings", e.getMessage());
 			}
@@ -280,10 +298,14 @@ public class UserSettings implements Serializable {
 				presetGarageLocations = (ArrayList<GarageLocation>) is.readObject();
 				is.close();
 				
-				for(GarageLocation garageLocation : presetGarageLocations)
-					allGarageLocations.add(garageLocation);
+				if(null != presetGarageLocations) {
+					for(GarageLocation garageLocation : presetGarageLocations)
+						allGarageLocations.add(garageLocation);
 				
-				Log.i("UserSettings", "preset garages loaded " + presetGarageLocations.size() + " " + allGarageLocations.size());
+					Log.i("UserSettings", "preset garages loaded " + presetGarageLocations.size() + " " + allGarageLocations.size());
+				} else {
+					Log.e("UserSettings", "Preset garages failed to load");
+				}
 			} catch (Exception e) {
 				Log.e("UserSettings", e.getMessage());
 			}

@@ -1,7 +1,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"    
     android:orientation="vertical" 
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
+    
+    <com.google.android.gms.ads.AdView 
+    	android:id="@+id/adView"
+    	android:gravity="center_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        ads:adUnitId="ca-app-pub-9241799307717708/1157620474"
+        ads:adSize="SMART_BANNER"/>
     
     <TextView
         android:text="Active Garage Profiles:"
@@ -16,18 +25,18 @@
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
-		android:text="Select Preset Garages"
+		android:text="Add Preset Garages"
 		android:onClick="addGarageFromPresets" />
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
-		android:text="Remove Preset Garages"
+		android:text="Remove Garages"
 		android:onClick="removeGarageFromPresets" />
 	<Button 
 		android:layout_height="wrap_content"
 		android:layout_width="wrap_content"
 		android:text="Create Custom Garage Profile"
-		android:onClick="buildGarageProfile" />
+		android:onClick="toFloorMapper" />
 	
 	<!--  
 	<Button 

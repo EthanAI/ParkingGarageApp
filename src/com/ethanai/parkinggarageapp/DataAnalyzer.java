@@ -66,6 +66,7 @@ public class DataAnalyzer {
 	}
 	
 	public String getCurrentFloorEstimate() {
+		String floorName = null;
 		Floor parkedFloor = null;
 		
 		GarageLocation garageLocation = null;
@@ -78,32 +79,49 @@ public class DataAnalyzer {
 			}
 		}
 		
-		if(null != parkedFloor) {
-			return parkedFloor.floorString;
+		if(null == newestPhoneLocation)
+			floorName = "None noGPS";
+		else if(null == garageLocation)
+			floorName = "None noGarage";
+		else if(null == parkedFloor) {
+			floorName = "None noFloorMatch";
 		} else {
-			Log.i("DataAnalyzer", "gCFE(): " + garageLocation + " " + parkedFloor);
-			return "None. getCFE()";
+			floorName = parkedFloor.floorString;
 		}
+		Log.i("DataAnalyzer", "gCFE(): " + garageLocation + " " + parkedFloor);
+		
+		return floorName;
 	}
 	
 
 	
 	public String getFloor() {
+		String floorName = null;
 		Floor parkedFloor = null;
 				
+		GarageLocation garageLocation = null;
 		if(null != newestPhoneLocation) {
 			float quarterTurnCount = getConsecutiveTurns(); //includes park turn removal/correction
 			//quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)			
 
-			GarageLocation garageLocation = mySettings.getGarageLocation(newestPhoneLocation.getLocationName());
+			garageLocation = mySettings.getGarageLocation(newestPhoneLocation.getLocationName());
 			if(null != garageLocation && null != garageLocation.floors) {
 				parkedFloor = garageLocation.getMatchingFloor(quarterTurnCount);
 			}
 		}
-		if(null != parkedFloor)
-			return parkedFloor.toString();
-		else
-			return "None\ngetFloor()";
+		
+		if(null == newestPhoneLocation)
+			floorName = "None noGPS";
+		else if(null == garageLocation)
+			floorName = "None noGarage";
+		else if(null == parkedFloor) {
+			floorName = "None noFloorMatch";
+		} else {
+			floorName = parkedFloor.floorString;
+		}
+		
+		Log.i("DataAnalyzer", "gCF: " + garageLocation + " " + parkedFloor);		
+		return floorName;
 	}
 	
 

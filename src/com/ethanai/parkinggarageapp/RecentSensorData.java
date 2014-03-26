@@ -263,8 +263,12 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		return currentGPSLocation == null ? currentNetworkLocation : currentGPSLocation; //assuming true for now
 	}
 	
-	class MagnetReading {
+	class MagnetReading implements Serializable {
 		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 2631444745613909789L;
 		public String dateString;
 		public Date date;
 		public PhoneLocation phoneLocation;
@@ -302,9 +306,13 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	 * Updated with my convention from the beginning. It's just too unintuitive to view on graph and have a raw and opposite 
 	 * convention somwehwer else. Now right = negative, left = positive
 	 */
-	class DerivedOrientation {
+	class DerivedOrientation implements Serializable {
 		//private final double MAX_ADJACENT_CHANGE = 25;
 		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1029885888804437014L;
 		public String dateString;
 		public PhoneLocation phoneLocation;
 		public String locationString;
@@ -523,7 +531,11 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		}
 	}
 	
-	class AccelerometerReading {
+	class AccelerometerReading  implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -4707553761036181912L;
 		//public Date date; //might be nice to return this someday so I can do math, but probably not in the near future
 		public String dateString;
 		public Date date;

@@ -14,6 +14,9 @@ import android.widget.Toast;
 import android.widget.TextView;
 
 import com.ethanai.parkinggarageapp.UserSettings;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.AdRequest.Builder;
 
 
 public class BluetoothSettingsActivity extends Activity {
@@ -45,6 +48,7 @@ public class BluetoothSettingsActivity extends Activity {
 		if(btAdapter != null && btAdapter.isEnabled())
 			isBluetoothOn = true;
         
+		addAds();
         updateTextViews();   
     }
     
@@ -138,6 +142,14 @@ public class BluetoothSettingsActivity extends Activity {
 			       }).create();
 			ad.show();	
 		}
+	}
+	
+	public void addAds() {
+		AdView adView = (AdView)this.findViewById(R.id.adView);
+        Builder adBuilder = new AdRequest.Builder();
+        adBuilder.addTestDevice("2EF171E12F703640E851B84E5314ED51");
+        AdRequest adRequest = adBuilder.build();
+        adView.loadAd(adRequest);
 	}
 	
 	public void finish(View view) {

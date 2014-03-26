@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -29,6 +30,7 @@ public class MainActivity extends Activity {
     public TextView tvGarageStatus;
     public TextView tvBTStatus;
     public TextView tvRunStatus;
+    public TextView tvVersionNumber;
     
     public static String runStatus;
     
@@ -54,7 +56,7 @@ public class MainActivity extends Activity {
 	    super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-      //set up structure to hold recent data (not all data so we can run for unlimited time)
+        //set up structure to hold recent data (not all data so we can run for unlimited time)
         //If there are no user settings, get them from the DaemonReciever entry point
         //If there are no RecentSensorData, get it from the DaemonReciever entyr point
         //after this point, MainActivity fields should all point to the correct structures,
@@ -78,13 +80,12 @@ public class MainActivity extends Activity {
         // Look up the AdView as a resource and load a request.
         addAds();
         
-        tvGarage = (TextView) findViewById(R.id.garageField);
-        tvFloor = (TextView) findViewById(R.id.floorField);
-        tvGarageStatus = (TextView) findViewById(R.id.garage_setup_status);
-        tvBTStatus = (TextView) findViewById(R.id.bt_setup_status);
-        tvRunStatus = (TextView) findViewById(R.id.run_status);
-        
-        
+        tvGarage 		= (TextView) findViewById(R.id.garageField);
+        tvFloor 		= (TextView) findViewById(R.id.floorField);
+        tvGarageStatus 	= (TextView) findViewById(R.id.garage_setup_status);
+        tvBTStatus 		= (TextView) findViewById(R.id.bt_setup_status);
+        tvRunStatus 	= (TextView) findViewById(R.id.run_status);
+        tvVersionNumber = (TextView) findViewById(R.id.version);
         
         if(mySettings.isFirstRun)
         	onboarding();
@@ -142,6 +143,14 @@ public class MainActivity extends Activity {
         if(null == runStatus)
         	runStatus = "Waiting for departure";
         tvRunStatus.setText("Automation Status: " + runStatus);
+        
+        try {
+			String versionName = getPackageManager()
+				    .getPackageInfo(getPackageName(), 0).versionName;
+			tvVersionNumber.setText("Version: " + versionName);
+		} catch (NameNotFoundException e) {
+			Log.e("MainActivity", e.getMessage());
+		}
 	}
 	
 	public void onboarding() {

@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
-import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 @SuppressLint("SimpleDateFormat")
 public class RecentSensorData implements Serializable { //must specify serializable so it can be passed by our intents neatly

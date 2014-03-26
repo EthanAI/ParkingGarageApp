@@ -2,8 +2,6 @@ package com.ethanai.parkinggarageapp;
 
 import java.util.ArrayList;
 
-import com.ethanai.parkinggarageapp.UserSettings.Floor;
-import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.AdRequest.Builder;
@@ -168,7 +166,7 @@ public class FloorMapperActivity extends Activity {
     		}
     		
 	    	float turnCount = dataAnalyzer.getConsecutiveTurns();
-	    	Floor newFloor = mySettings.new Floor(turnCount, floorCount, Integer.toString(floorCount));
+	    	Floor newFloor = new Floor(turnCount, floorCount, Integer.toString(floorCount));
 	    	floors.add(newFloor);
 	    	
 	    	actionHistory += "Floor Mapped: " + Integer.toString(floorCount) + "\n";
@@ -196,7 +194,7 @@ public class FloorMapperActivity extends Activity {
     	Toast.makeText(getApplicationContext(), "New Garage Profile Complete", Toast.LENGTH_SHORT).show();
     	//build garage location and add it
     	//PhoneLocation phoneLocation = recentData.newestPhoneLocation;	
-    	GarageLocation newCustomGarage = mySettings.new GarageLocation(newGarageName, newLocation, floors);
+    	GarageLocation newCustomGarage = new GarageLocation(newGarageName, newLocation, floors);
     	mySettings.userAddedGarageLocations.add(newCustomGarage);
     	mySettings.allGarageLocations.add(newCustomGarage);
     	mySettings.enabledGarageLocations.add(newCustomGarage);

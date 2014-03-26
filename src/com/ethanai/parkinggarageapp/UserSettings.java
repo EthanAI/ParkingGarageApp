@@ -12,6 +12,7 @@ import java.util.Arrays;
 import android.location.Location;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 public class UserSettings implements Serializable {
 	/**
@@ -50,7 +51,7 @@ public class UserSettings implements Serializable {
 	public String CUSTOM_GARAGE_FILE_NAME;
 	public File userSettingsFile;
 	public File userCustomGaragesFile;
-	public File presetGaragesFile;
+	//public File presetGaragesFile;
 	//public static final String GARAGE_LOG_NAME = "garageRecords.ser";
 	//public static File garageLocationFile = new File(Environment.getExternalStorageDirectory().toString() 
 	//		+ "/" + STORAGE_DIRECTORY_NAME + "/" + GARAGE_LOG_NAME);
@@ -65,12 +66,12 @@ public class UserSettings implements Serializable {
 		userCustomGaragesFile = new File(Environment.getExternalStorageDirectory().toString() 
 				+ "/" + STORAGE_DIRECTORY_NAME + "/" + CUSTOM_GARAGE_FILE_NAME);
 		
-		presetGaragesFile = new File(Environment.getExternalStorageDirectory().toString() 
-				+ "/" + DATABASE_DIRECTORY_NAME + "/" + PRESETS_FILE_NAME);
+		//presetGaragesFile = new File(Environment.getExternalStorageDirectory().toString() 
+		//		+ "/" + DATABASE_DIRECTORY_NAME + "/" + PRESETS_FILE_NAME);
 		
 		//create Directory
 		createDirectory(STORAGE_DIRECTORY_NAME);
-		createDirectory(DATABASE_DIRECTORY_NAME);
+		//createDirectory(DATABASE_DIRECTORY_NAME);
 		
 		//load settings from storage
 		loadSettings();
@@ -88,7 +89,7 @@ public class UserSettings implements Serializable {
 	*/
 	
 	//for testing
-	public void resetSettings() {
+	public void resetGeneralSettings() {
 		//copy values into this()
 		allGarageLocations	 	= new ArrayList<GarageLocation>();
 		presetGarageLocations 	= new ArrayList<GarageLocation>();
@@ -124,83 +125,26 @@ public class UserSettings implements Serializable {
 		isBluetoothUser = false;
 		isGarageSelectionComplete = false;
 		
-		//temp hardcode to add extra data
-		String name = "CCV6";
-		Location location = new Location(name);
-		location.setLatitude(21.3474357); 
-		location.setLongitude(-157.9035183); 
-		PhoneLocation phoneLocation = new PhoneLocation(location, null);
-		ArrayList<Floor> borders = new ArrayList<Floor>(
-				Arrays.asList(
-						new Floor(2, -1, "Low?"),
-						new Floor(0, 1, "1"),
-						new Floor(-2, 2, "2"),
-						new Floor(-4, 2.5f, "2B"),
-						new Floor(-6, 3, "3"),
-						new Floor(-8, 3.5f, "3B"),
-						new Floor(-10, 4, "4"),
-						new Floor(-12, 99, "High?")
-						)); 
-		//form new Location and add it
-		presetGarageLocations.add(new GarageLocation(name, phoneLocation, borders));
-		allGarageLocations.add(new GarageLocation(name, phoneLocation, borders));
-		
-		/*
-		name = "UH Lot 20";
-		location = new Location(name);
-		location.setLatitude(21.295819); 
-		location.setLongitude(-157.818232); 
-		//21.2930909	-157.8171503
-		phoneLocation = new PhoneLocation(location, null);
-		borders = new ArrayList<Floor>(
-				Arrays.asList(
-						new Floor(5, 3, "3L"),
-						new Floor(3, 2, "2L"),
-						new Floor(1, 1, "1L"),
-						new Floor(-1, 1, "1R"),
-						new Floor(-3, 2, "1R Looping?")
-						)); 
-		//form new Location and add it
-		addGarageLocation(name, phoneLocation, borders);
-		
-		name = "TestGarage";
-		location = new Location(name);
-		location.setLatitude(21.29871750); 
-		location.setLongitude(-157.82012939); 
-		phoneLocation = new PhoneLocation(location, null);
-		
-		borders = new ArrayList<Floor>(); 
-		//form new Location and add it
-		addGarageLocation(name, phoneLocation, borders);
-		
-		if(presetGaragesFile != null && presetGaragesFile.exists()) {
-			ArrayList<GarageLocation> presetGarages;
-			try {
-				ObjectInputStream is = new ObjectInputStream(new FileInputStream(presetGaragesFile));
-				presetGarages = (ArrayList<GarageLocation>) is.readObject();
-				is.close();
-				for(GarageLocation garageLocation : presetGarages) {
-					if(!allGarageLocations.contains(garageLocation)) {
-						allGarageLocations.add(garageLocation);
-					}
-				}
-			} catch (Exception e) {
-				Log.e("UserSettings", e.getMessage());
-			}
+		loadPresetGarages();
+		if(null != presetGarageLocations) {
+			for(GarageLocation garageLocation : presetGarageLocations)
+				enabledGarageLocations.add(garageLocation);
+		} else {
 		}
-		*/
 		
 		saveSettings();
-		savePresetGarages();
+		//savePresetGarages();
 	}
 	
 	//saves everything except presets. That should never be altered at runtime
 	public void saveSettings() {
 		try {
+			//save general settings
 			ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(userSettingsFile)); //overwrite old file
 			os.writeObject(this);
 			os.close();
 			
+			//save user's custom garages
 			os = new ObjectOutputStream(new FileOutputStream(userCustomGaragesFile)); //overwrite old file
 			os.writeObject(userAddedGarageLocations);
 			os.close();
@@ -210,7 +154,8 @@ public class UserSettings implements Serializable {
 		}
 	}
 	
-	public void savePresetGarages() {
+	/*
+	private void savePresetGarages() {
 		try {
 			ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(presetGaragesFile)); //overwrite old file
 			os.writeObject(enabledGarageLocations);
@@ -219,12 +164,18 @@ public class UserSettings implements Serializable {
 			Log.e("UserSettings", e.toString());
 		}
 	}
+	*/
 	
-	@SuppressWarnings("unchecked")
 	public void loadSettings() {
+		loadGeneralSettings();
+		loadPresetGarages();
+		loadCustomGarages();
+	}
+
+	//Load the general settings
+	public void loadGeneralSettings() {
 		UserSettings loadedSettings = null;
 
-		//Load the rest of the user settings
 		if(userSettingsFile != null && userSettingsFile.exists()) {
 			try {
 				ObjectInputStream is = new ObjectInputStream(new FileInputStream(userSettingsFile));
@@ -268,9 +219,12 @@ public class UserSettings implements Serializable {
 			}
 			
 		} else {
-			resetSettings(); //deletes EVERYTHING be sure to do this before trying to load custom garages or database garages
+			resetGeneralSettings(); //deletes EVERYTHING be sure to do this before trying to load custom garages or database garages
 		}
+	}
 		
+	@SuppressWarnings("unchecked")
+	public void loadCustomGarages() {
 		//load user's custom garages, add to the array of all garages
 		if(userCustomGaragesFile != null && userCustomGaragesFile.exists()) {
 			try {
@@ -290,7 +244,21 @@ public class UserSettings implements Serializable {
 				Log.e("UserSettings", e.getMessage());
 			}
 		}
+	}
+	
+	public void loadPresetGarages() {
+		presetGarageLocations = PresetGarages.getPresetGarages();
 		
+		if(null != presetGarageLocations) {
+			for(GarageLocation garageLocation : presetGarageLocations)
+				allGarageLocations.add(garageLocation);
+		
+			Log.i("UserSettings", "preset garages loaded " + presetGarageLocations.size() + " " + allGarageLocations.size());
+		} else {
+			Log.e("UserSettings", "Preset garages failed to load");
+		}
+		
+		/*//garages no longer stored in files
 		//load official database of garages, add to the array of all garages
 		if(presetGaragesFile != null && presetGaragesFile.exists()) {
 			try {
@@ -310,6 +278,7 @@ public class UserSettings implements Serializable {
 				Log.e("UserSettings", e.getMessage());
 			}
 		}
+		*/
 		
 	}
 	
@@ -413,81 +382,9 @@ public class UserSettings implements Serializable {
 	
 	
 	
-	class GarageLocation implements Serializable {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 6855129699792130834L;
-		public String name = "";
-		public PhoneLocation phoneLocation;
-		public ArrayList<Floor> floors; //structure to hold all the borders between floors for this particular garages
-		//add location address etc?
-		
-		GarageLocation(String newName, PhoneLocation newLocation, ArrayList<Floor> newBorders) {
-			name = newName;
-			phoneLocation = newLocation;
-			if(null == newBorders)
-				floors = new ArrayList<Floor>();
-			else
-				floors = newBorders;
-		}	
-		
-		GarageLocation(String newName, Location location, ArrayList<Floor> newBorders) {
-			this(newName, new PhoneLocation(location, null), newBorders);
-		}
-		
-		/*
-		public void delete() {
-			removeGarageLocation(this);
-		}
-		*/
-		
-		public Floor getMatchingFloor(float correctedTurnCount) {
-			Floor parkedFloor = null;
-			
-			//iterate through the floor borders until we find our first, minimum floor hit.
-			//maybe we could do some cool hashmap thing here?
-			if(null != floors && floors.size() > 0) {
-				float difference = Math.abs(floors.get(0).turns - correctedTurnCount);
-				parkedFloor = floors.get(0);
-				for(Floor floor : floors) {
-					if(Math.abs(floor.turns - correctedTurnCount) < difference) {
-						difference = Math.abs(floor.turns - correctedTurnCount);
-						parkedFloor = floor;
-					}
-				}
-				return parkedFloor;
-			} else {
-				return null;
-			}
-		}
-		
-		public String toString() {
-			return name + " " + phoneLocation.getLatitude() + " " + phoneLocation.getLongitude();
-		}
-	}
-	
-	class Floor implements Serializable {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -8248771055332604053L;
 
-		public float turns; //max number of quarter turns before crossing to the next floor positive is right, negative is left
-		public float floorNum; //numerical representation of a floor
-		public String floorString; //text representation of a floor
-		
-		Floor(float turnCount, float floorNum, String floorString) {
-			this.turns = turnCount;
-			this.floorNum = floorNum;
-			this.floorString = floorString;
-		}
-		
-		public String toString() {
-			return turns + ", " + floorNum + ", " + floorString;
-		}
-		
-	}
+	
+	
 	
 	class ParkingRecord implements Serializable {
 		/**
@@ -521,5 +418,81 @@ public class UserSettings implements Serializable {
 					+ sourceFileName + "\n";
 		}
 	}	
+	
+}
+
+class GarageLocation implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6855129699792130834L;
+	public String name = "";
+	public PhoneLocation phoneLocation;
+	public ArrayList<Floor> floors; //structure to hold all the borders between floors for this particular garages
+	//add location address etc?
+	
+	GarageLocation(String newName, PhoneLocation newLocation, ArrayList<Floor> newBorders) {
+		name = newName;
+		phoneLocation = newLocation;
+		if(null == newBorders)
+			floors = new ArrayList<Floor>();
+		else
+			floors = newBorders;
+	}	
+	
+	GarageLocation(String newName, Location location, ArrayList<Floor> newBorders) {
+		this(newName, new PhoneLocation(location, null), newBorders);
+	}
+	
+	/*
+	public void delete() {
+		removeGarageLocation(this);
+	}
+	*/
+	
+	public Floor getMatchingFloor(float correctedTurnCount) {
+		Floor parkedFloor = null;
+		
+		//iterate through the floor borders until we find our first, minimum floor hit.
+		//maybe we could do some cool hashmap thing here?
+		if(null != floors && floors.size() > 0) {
+			float difference = Math.abs(floors.get(0).turns - correctedTurnCount);
+			parkedFloor = floors.get(0);
+			for(Floor floor : floors) {
+				if(Math.abs(floor.turns - correctedTurnCount) < difference) {
+					difference = Math.abs(floor.turns - correctedTurnCount);
+					parkedFloor = floor;
+				}
+			}
+			return parkedFloor;
+		} else {
+			return null;
+		}
+	}
+	
+	public String toString() {
+		return name + " " + phoneLocation.getLatitude() + " " + phoneLocation.getLongitude();
+	}
+}
+
+class Floor implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8248771055332604053L;
+
+	public float turns; //max number of quarter turns before crossing to the next floor positive is right, negative is left
+	public float floorNum; //numerical representation of a floor
+	public String floorString; //text representation of a floor
+	
+	Floor(float turnCount, float floorNum, String floorString) {
+		this.turns = turnCount;
+		this.floorNum = floorNum;
+		this.floorString = floorString;
+	}
+	
+	public String toString() {
+		return turns + ", " + floorNum + ", " + floorString;
+	}
 	
 }

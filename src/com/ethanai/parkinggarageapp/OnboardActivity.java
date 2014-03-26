@@ -3,8 +3,6 @@ package com.ethanai.parkinggarageapp;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;

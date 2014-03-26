@@ -11,7 +11,6 @@ import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
 import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
-import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -430,7 +429,7 @@ public class GraphActivity extends Activity {
     	if(null != location) {
 	    	String name = "Temp";
 	    	//PhoneLocation phoneLocation = recentData.newestPhoneLocation;
-	    	GarageLocation garageLocation = mySettings.new GarageLocation(name, location, null);
+	    	GarageLocation garageLocation = new GarageLocation(name, location, null);
 	    	mySettings.allGarageLocations.add(garageLocation);
 	    	mySettings.saveSettings();
 	    	
@@ -496,7 +495,7 @@ public class GraphActivity extends Activity {
 	*/
     
     public void writePresetGarageFile(View view) {
-    	mySettings.savePresetGarages();
+    	//mySettings.savePresetGarages();
     }
     
     public void enableTurnGraph(View view) {

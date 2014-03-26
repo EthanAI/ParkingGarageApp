@@ -14,8 +14,6 @@ import android.util.Log;
 
 
 //import com.ethanai.parkinggarageapp.RecentSensorData.DerivedOrientation;
-import com.ethanai.parkinggarageapp.UserSettings.Floor;
-import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
 
 /*
  * Eventually I'd like to let the user drive in their structure to the top floor. Record the path. Use that as a pattern to match

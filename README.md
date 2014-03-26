@@ -160,7 +160,7 @@ Primary mechanics:
 		
 Steps to Beta release: 
 	-First run set up
-		-Convert to dialogs instead of activity
+		xConvert to dialogs instead of activity
 		+complete the meat behind it to save user settings
 		-ask questions to set up for auto/manual operation
 			-auto fork:
@@ -168,7 +168,7 @@ Steps to Beta release:
 				-Everytime bluetooth connects, ask 'is this your car stereo?' if bluetoothName still empty
 		-ask questions to set up for preset garages
 			-choose from list of preset garages (include database later)
-	-Design UI for post-setup app
+	xDesign UI for post-setup app
 		-Buttons
 			-[Where's My Car?] see where parked
 			-[Parking Garages] see/change which garages active
@@ -177,7 +177,7 @@ Steps to Beta release:
 				-include recent sensor data
 				-include recent app log
 				-create email
-	-Add Adsense
+	xAdd Adsense
 	-Test left and right turns at home
 	-Test manual on and off
 	-test automatic on and off
@@ -189,7 +189,7 @@ add location if exit car without sensors activated?
 Share parking locations?
 Master the most crowded garage
 			
-			+allow back button (adding custom garage, doesnt cancel out)
+			xallow back button (adding custom garage, doesnt cancel out)
 			 
 			
   
@@ -225,6 +225,12 @@ Master the most crowded garage
 			First connect of the day from home crashes
 		XNot saving settings to file
 			XUserSettings class has no fields when debugged. So odd. (was issues with statics not able to serialze ever)
+			
+			
+	UH Garage
+		3 entry points
+		left tower seems to be segregated. Two different lines spiraling up
+		right par seems connected somehow
 			
 			
         

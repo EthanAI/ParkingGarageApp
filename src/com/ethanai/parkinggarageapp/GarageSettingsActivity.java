@@ -15,7 +15,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 
 import com.ethanai.parkinggarageapp.UserSettings;
-import com.ethanai.parkinggarageapp.UserSettings.GarageLocation;
+
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.AdRequest.Builder;

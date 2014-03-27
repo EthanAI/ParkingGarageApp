@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 
 
+
 import com.ethanai.parkinggarageapp.dataStructures.Floor;
 
 import android.util.Log;
@@ -23,15 +24,18 @@ import android.util.Log;
  * For now, just let them select 'Right Turn structure' 'Left turn structure' or 'Split' and have split go to TBC screen
  */
 public class DataAnalyzer {	
-	ArrayList<Float> turnDegreesArray = new ArrayList<Float>();
-	ArrayList<Double> latArray = new ArrayList<Double>();
-	ArrayList<Double> longArray = new ArrayList<Double>();
+	ArrayList<Float> turnDegreesArray 	= new ArrayList<Float>();
+	ArrayList<Double> latArray 			= new ArrayList<Double>();
+	ArrayList<Double> longArray 		= new ArrayList<Double>();
+	
+	ArrayList<Floor> floors;
 	
 	public UserSettings mySettings; // = MainActivity.mySettings;
 	//public RecentSensorData recentData; //can't rely on this. sometimes we read from a file
 	public PhoneLocation newestPhoneLocation; // = MainActivity.recentData.newestPhoneLocation;
 	
 	public boolean isFullAnalysis = false;
+	public boolean isTestAnalysis = false;
 	
 	DataAnalyzer(RecentSensorData recentData) { 
 		for(int i = 0; i < recentData.orientRecent.size()-1; i++) {
@@ -66,9 +70,12 @@ public class DataAnalyzer {
 			mySettings = MainActivity.mySettings;
 	}
 	
-	public DataAnalyzer(File dataFile, ArrayList<Floor> floors) {
+	public DataAnalyzer(File dataFile, ArrayList<Floor> newFloors) {
 		readFile(dataFile);
 		isFullAnalysis = true;
+		isTestAnalysis = true;
+		
+		floors = newFloors;
 		
 	}
 	
@@ -100,34 +107,49 @@ public class DataAnalyzer {
 		return floorName;
 	}
 	
-
-	
 	public String getFloor() {
 		String floorName = null;
 		Floor parkedFloor = null;
 				
-		GarageLocation garageLocation = null;
-		if(null != newestPhoneLocation) {
-			float quarterTurnCount = getConsecutiveTurns(); //includes park turn removal/correction
-			//quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)			
-
-			garageLocation = mySettings.getGarageLocation(newestPhoneLocation.getLocationName());
-			if(null != garageLocation && null != garageLocation.floors) {
-				parkedFloor = garageLocation.getMatchingFloor(quarterTurnCount);
+		float quarterTurnCount = getConsecutiveTurns(); //includes park turn removal/correction
+		
+		if(isTestAnalysis) {			
+			//iterate through the floor borders until we find our first, minimum floor hit.
+			//maybe we could do some cool hashmap thing here?
+			if(null != floors && floors.size() > 0) {
+				float difference = Math.abs(floors.get(0).turns - quarterTurnCount);
+				parkedFloor = floors.get(0);
+				for(Floor floor : floors) {
+					if(Math.abs(floor.turns - quarterTurnCount) < difference) {
+						difference = Math.abs(floor.turns - quarterTurnCount);
+						parkedFloor = floor;
+					}
+				}
+				floorName = parkedFloor.floorString;
 			}
-		}
-		
-		if(null == newestPhoneLocation)
-			floorName = "None noGPS";
-		else if(null == garageLocation)
-			floorName = "None noGarage";
-		else if(null == parkedFloor) {
-			floorName = "None noFloorMatch";
 		} else {
-			floorName = parkedFloor.floorString;
+			GarageLocation garageLocation = null;
+			if(null != newestPhoneLocation) {
+				//quarterTurnCount += fidgitingCorrection(); //incase we cant get the sensors to stop immediatly upon ignition stop (likely, if not a BT car person)			
+	
+				garageLocation = mySettings.getGarageLocation(newestPhoneLocation.getLocationName());
+				if(null != garageLocation && null != garageLocation.floors) {
+					parkedFloor = garageLocation.getMatchingFloor(quarterTurnCount);
+				}
+			}
+			
+			if(null == newestPhoneLocation)
+				floorName = "None noGPS";
+			else if(null == garageLocation)
+				floorName = "None noGarage";
+			else if(null == parkedFloor) {
+				floorName = "None noFloorMatch";
+			} else {
+				floorName = parkedFloor.floorString;
+			}
+			
+			Log.i("DataAnalyzer", "gCF: " + garageLocation + " " + parkedFloor);
 		}
-		
-		Log.i("DataAnalyzer", "gCF: " + garageLocation + " " + parkedFloor);		
 		return floorName;
 	}
 	
@@ -271,19 +293,75 @@ public class DataAnalyzer {
 		
 		ArrayList<TurnCount> turnHistory = new ArrayList<TurnCount>(); //hold the detected turns
 
+		//New method with softer trigger critera:
+			//if consecutive turn, you count full 90 degree slices
+			//if non-consecutive/terminal, anything geater than 80% of 90 degrees is enough
 		//variable to we compare against to see if we've competed more than one turn of a type
-		float turnCountingCompareValue = getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size() - 1);
+		float softThreshold = 70;
+		float leftComparisonBaseDegrees = getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size() - 1);
+		float rightComparisonBaseDegrees = leftComparisonBaseDegrees;
+		//float turnCountingCompareValue = getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size() - 1);
+		String lastCompletedTurn = "none";
+		for(int i = turnDegreesArray.size() - 1; i > 0; i--) {
+			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i); //use smoothed value (kill outliers)
+			//float changeSinceLastTurnPush = floatingMeanDegrees - turnCountingCompareValue;
+			
+			//update thresholds based on direction we're turning
+				//If we are going consecutive turns, our bar will be raised by 90 degree chunks (raised elsewhere)
+				//If we might have changed directions, we want to take the we've deviated since last recorded turn
+			if(lastCompletedTurn.equalsIgnoreCase("none")) {
+				//if(floatingMeanDegrees < leftComparisonBaseDegrees)
+				//	leftComparisonBaseDegrees = floatingMeanDegrees;
+				//if(floatingMeanDegrees > leftComparisonBaseDegrees)
+				//	rightComparisonBaseDegrees = floatingMeanDegrees;
+			} else if(lastCompletedTurn.equalsIgnoreCase("left")) {
+				if(floatingMeanDegrees < rightComparisonBaseDegrees)
+					rightComparisonBaseDegrees = floatingMeanDegrees;
+			} else if(lastCompletedTurn.equalsIgnoreCase("right")) {
+				if(floatingMeanDegrees > leftComparisonBaseDegrees)
+					leftComparisonBaseDegrees = floatingMeanDegrees;
+			}
+			
+			if(leftComparisonBaseDegrees - floatingMeanDegrees > softThreshold) { 
+				//Check if this is the first one. If consecutive, count with nth value this is
+				int consecutiveCount; //count how many times in a row weve done this same turn
+				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("left"))
+					consecutiveCount = 1;
+				else 
+					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
+				
+				//store this turn record. Its direction, its nth, the sensor reading number, and gps at this time
+				turnHistory.add(new TurnCount("Left", consecutiveCount, i, latArray.get(i), longArray.get(i), turnDegreesArray.get(i) / 90));
+				//Raise the threshold to get another to a full 90 degrees above this one (only the final can be partial)
+				leftComparisonBaseDegrees += -90; //set our new threshold to the end of this turn
+				//store completed turn type so we know which turn is soft and which is hard thresholded
+				lastCompletedTurn = "left";
+			} else if (rightComparisonBaseDegrees - floatingMeanDegrees < -1*softThreshold) {
+				int consecutiveCount;
+				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("right"))
+					consecutiveCount = 1;
+				else 
+					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
+				turnHistory.add(new TurnCount("Right", consecutiveCount, i, latArray.get(i), longArray.get(i), turnDegreesArray.get(i) / 90));
+				rightComparisonBaseDegrees += 90;
+				lastCompletedTurn = "right";
+			}
+		}
+		
+		/*  old version that works, but misses something if it is even 1 degree short of 90 degrees
+				float turnCountingCompareValue = getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size() - 1);
 		for(int i = turnDegreesArray.size() - 1; i > 0; i--) {
 			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i); //use smoothed value (kill outliers)
 			float changeSinceLastTurnPush = floatingMeanDegrees - turnCountingCompareValue;
-			if(changeSinceLastTurnPush > 90) {
-				int consecutiveCount;
+			
+			if(changeSinceLastTurnPush > 90) { //should make this a softer value, but keep some memmory so we can absorb wiggles, but still add them to a commited movement
+				int consecutiveCount; //count how many times in a row weve done this same turn
 				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Right"))
 					consecutiveCount = 1;
 				else 
 					consecutiveCount = 1 + turnHistory.get(turnHistory.size() - 1).count;
 				turnHistory.add(new TurnCount("Right", consecutiveCount, i, latArray.get(i), longArray.get(i)));
-				turnCountingCompareValue += 90;
+				turnCountingCompareValue += 90; //set our new threshold to the end of this turn
 			} else if (changeSinceLastTurnPush < -90) {
 				int consecutiveCount;
 				if(turnHistory.size() == 0 || !turnHistory.get(turnHistory.size() - 1).direction.equalsIgnoreCase("Left"))
@@ -294,6 +372,7 @@ public class DataAnalyzer {
 				turnCountingCompareValue += -90;
 			}
 		}
+		 */
 		return turnHistory;
 	}
 	
@@ -303,13 +382,15 @@ public class DataAnalyzer {
 		public int index;
 		public double latitude;
 		public double longitude;
+		public float turnCount;
 		
-		TurnCount(String newDirection, int newCount, int newIndex, double newLatitude, double newLongitude) {
+		TurnCount(String newDirection, int newCount, int newIndex, double newLatitude, double newLongitude, float newTurnCount) {
 			direction = newDirection;
 			count = newCount;
 			index = newIndex;
 			latitude = newLatitude;
 			longitude = newLongitude;
+			turnCount = newTurnCount;
 		}
 	}
 

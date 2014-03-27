@@ -2,7 +2,6 @@ package com.ethanai.parkinggaragetesting;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import com.ethanai.parkinggarageapp.DataAnalyzer;
 import com.ethanai.parkinggarageapp.PresetGarages;
@@ -14,6 +13,7 @@ public class ClassTester {
 	public static void main(String[] args) {
 
 		String pathA = "C:\\Dropbox\\Computer Science\\IDE Workspaces\\Eclipse\\ParkingGarageApp\\csv\\";
+		@SuppressWarnings("unused")
 		String pathB = "C:\\Dropbox\\Computer Science\\IDE Workspaces\\Eclipse\\ParkingGarageApp\\csv\\Home Garage Park\\";
 		/*
 		String fileName[] = {
@@ -27,7 +27,11 @@ public class ClassTester {
 		homeFloors = PresetGarages.getHomeFloors();
 		
 		//test(pathB, fileName);
-		getTurnHistory(pathA, "2014-03-26 13.09 End CCV6 Fl None noGPS Orig CCV6 3f left orientationReadings");
+		//getTurnHistory(pathA, "2014-03-26 13.09 End CCV6 Fl None noGPS Orig CCV6 3f left orientationReadings");
+		//resultFromTurnCount(pathA, "2014-03-26 13.09 End CCV6 Fl None noGPS Orig CCV6 3f left orientationReadings");
+		resultFromTurnCount(pathB);
+
+		
 		//testA(pathB);
 
 	    
@@ -46,7 +50,7 @@ public class ClassTester {
 		File[] files = new File(path).listFiles();
 	    for (File file : files) {
 	        if (!file.isDirectory()) {        	
-				DataAnalyzer dataAnalyzer = new DataAnalyzer(file);
+				DataAnalyzer dataAnalyzer = new DataAnalyzer(file, homeFloors);
 				//String currentFloor = DataAnalyzer.getCurrentFloorFinal(new File(path + name + ".csv"));
 				Float turnCount = dataAnalyzer.getConsecutiveTurns();
 				System.out.print("RawTurnCount: " + turnCount);
@@ -55,7 +59,7 @@ public class ClassTester {
 				//System.out.print(" Last Remover: " + dataAnalyzer.parkTurnCorrection());
 				System.out.print(" Modified TurnCount: " + turnCount);
 				System.out.print(" Dist From Center : " + getCertainty(turnCount));
-				//System.out.print(" Floor: " + getFloorName2(turnCount));
+				System.out.print(" Floor: " + dataAnalyzer.getFloor() + " ");
 				System.out.println();
 				System.out.println(file.toString());
 				System.out.println();
@@ -68,14 +72,14 @@ public class ClassTester {
 	
 	public static void resultFromTurnCount(String path, String... fileName) {
 		for(String name : fileName) {
-			DataAnalyzer dataAnalyzer = new DataAnalyzer(new File(path + name + ".csv"));
+			DataAnalyzer dataAnalyzer = new DataAnalyzer(new File(path + name + ".csv"), homeFloors);
 			//String currentFloor = DataAnalyzer.getCurrentFloorFinal(new File(path + name + ".csv"));
 			Float turnCount = dataAnalyzer.getConsecutiveTurns();
 			System.out.print("RawTurnCount: " + turnCount);
 			turnCount += dataAnalyzer.fidgitingCorrection();
 			//turnCount += dataAnalyzer.parkTurnCorrection();
 			System.out.print(" Modified TurnCount: " + turnCount);
-			//System.out.print(" Floor: " + getFloorName2(turnCount) + " ");
+			System.out.print(" Floor: " + dataAnalyzer.getFloor() + " ");
 			System.out.print(" Dist From Center : " + getCertainty(turnCount));
 			System.out.println();
 			System.out.println(name + ".csv");
@@ -118,7 +122,7 @@ public class ClassTester {
 				System.out.println(file.getName());
 				ArrayList<TurnCount> turnHistory = dataAnalyzer.getAllTurns();
 				for(TurnCount turn : turnHistory) {
-					System.out.println(turn.direction + "\t" + turn.count + "\t" + turn.index + "\t" + turn.latitude + " " + turn.longitude);
+					System.out.println(turn.direction + "\t" + turn.count + "\t" + turn.index + "\t" + turn.latitude + " " + turn.longitude + " " + turn.turnCount);
 				}
 	        }
 	    }
@@ -136,10 +140,8 @@ public class ClassTester {
 			System.out.println(name + ".csv");
 			ArrayList<TurnCount> turnHistory = dataAnalyzer.getAllTurns();
 			for(TurnCount turn : turnHistory) {
-				System.out.println(turn.direction + "\t" + turn.count + "\t" + turn.index + "\t" + turn.latitude + " " + turn.longitude);
+				System.out.println(turn.direction + "\t" + turn.count + "\t" + turn.index + "\t" + turn.latitude + " " + turn.longitude + " " + turn.turnCount);
 			}
-
-			
 		}
 	}
 	

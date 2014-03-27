@@ -7,12 +7,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import android.location.Location;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
 
 public class UserSettings implements Serializable {
 	/**

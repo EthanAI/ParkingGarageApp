@@ -75,7 +75,7 @@
         
         <receiver
        		android:icon="@drawable/icon_notification_floor_posted_hdpi"
-       		android:label="_Parking Garage App Widget"
+       		android:label="Parking Garage App Widget"
        		android:name="MyWidgetProvider" >
 	       <intent-filter >
 	            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

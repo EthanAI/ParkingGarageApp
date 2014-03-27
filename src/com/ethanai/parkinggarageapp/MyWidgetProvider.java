@@ -46,15 +46,42 @@ public class MyWidgetProvider extends AppWidgetProvider {
 	    	remoteViews.setOnClickPendingIntent(R.id.widgetField, pendingIntent);   	
 	    	
 	    	// Set the text
-	    	if(null != mySettings.parkingRecordRecent.floorName)//floorHistory.size() > 0)
+	    	if(null != mySettings && null != mySettings.parkingRecordRecent.floorName)//floorHistory.size() > 0)
 	    		remoteViews.setTextViewText(R.id.widgetField,  mySettings.parkingRecordRecent.floorName);
 	    	else
 	    		remoteViews.setTextViewText(R.id.widgetField,  "None");
 	    	
 	        appWidgetManager.updateAppWidget(widgetId, remoteViews);
 	    }
+	    
+	    /*
+	  	// Register an onClickListener
+	  	Intent newIntent = new Intent(context, MainActivity.class);
+
+	  	newIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+	  	newIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+
+	  	PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, newIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+	  	remoteViews.setOnClickPendingIntent(R.id.widgetField, pendingIntent);
+	  	//appWidgetManager.updateAppWidget(widgetId, remoteViews);
+	  	
+	  	 
+	  	
+	  	
+	  	Intent intent = new Intent(context, GraphActivity.class);
+	  	intent.setAction(MY_WIDGET_FILTER_ACTION_ID);
+	  	
+	  	PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+	  	// Get the layout for the App Widget and attach an on-click listener to the button
+	  	RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+	  	views.setOnClickPendingIntent(R.id.widgetField, pendingIntent);
+	  	
+	  	appWidgetManager.updateAppWidget(widgetId, remoteViews);
+	  	*/
 
 	}
+	
+	
 	
 
 }

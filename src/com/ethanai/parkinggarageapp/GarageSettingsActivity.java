@@ -26,14 +26,19 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
     public static RecentSensorData recentData = MainActivity.recentData;
 	
     public ListView listView;
-    public ArrayAdapter<GarageLocation> adapter;
+    public ArrayAdapter<String> adapter;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_garagesettings);   
                      
-        adapter = new ArrayAdapter<GarageLocation>(this, R.layout.settings_list_item, mySettings.enabledGarageLocations);
+        ArrayList<String> garageNames = new ArrayList<String>();
+        for(GarageLocation garageLocation : mySettings.enabledGarageLocations)
+        	garageNames.add(garageLocation.name);
+        
+        adapter = new ArrayAdapter<String>(this, R.layout.settings_list_item, garageNames);
+        //adapter = new ArrayAdapter<GarageLocation>(this, R.layout.settings_list_item, mySettings.enabledGarageLocations);
 
         listView = (ListView) findViewById(R.id.listview); // get the field for the listview within the overall layout
         listView.setAdapter(adapter);
@@ -54,11 +59,9 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 	@Override
 	public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
 		if(mySettings.isDebug) {
-			GarageLocation garageLocation = (GarageLocation) adapterView.getItemAtPosition(position);
-			String garageName = garageLocation.name;
+			String garageName = (String) adapterView.getItemAtPosition(position);
 			
 			Intent intent = new Intent(GarageSettingsActivity.this, FloorBorderActivity.class);
-			//intent.putExtra("floorBorders", (Serializable) garageLocation.floors);
 			intent.putExtra("garageName", garageName);
 			startActivity(intent);
 		}
@@ -76,10 +79,15 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 		builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 	           @SuppressWarnings("unchecked")
 			public void onClick(DialogInterface dialog, int id) {
-	        	   GarageLocation garageLocation = (GarageLocation) adapterView.getItemAtPosition(position);
-	        	   ArrayAdapter <GarageLocation> adapter = (ArrayAdapter<GarageLocation>) adapterView.getAdapter();
-
-	        	   mySettings.enabledGarageLocations.remove(garageLocation); //remove from enabled list only
+	        	   //GarageLocation garageLocation = (GarageLocation) adapterView.getItemAtPosition(position);
+	        	   //ArrayAdapter <GarageLocation> adapter = (ArrayAdapter<GarageLocation>) adapterView.getAdapter();
+	        	   String garageName = (String) adapterView.getItemAtPosition(position);
+	        	   ArrayAdapter <String> adapter = (ArrayAdapter<String>) adapterView.getAdapter();
+	        	   GarageLocation matchingGarage = mySettings.getGarageLocation(garageName);
+	        	   
+	        	   mySettings.enabledGarageLocations.remove(matchingGarage); //remove from enabled list only
+	        	   adapter.remove(garageName);
+	        	   
 	        	   mySettings.saveSettings();
 	        	   adapter.notifyDataSetChanged();
 	        	   
@@ -138,6 +146,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 			            public void onClick(DialogInterface dialog, int id) {
 			        		for(int i : checkedNames) {
 			        			mySettings.enabledGarageLocations.add(unusedGarages.get(i));
+			        			adapter.add(unusedGarages.get(i).name);
 			                }
 		        			mySettings.saveSettings();
 			        		updateListView();
@@ -196,6 +205,7 @@ public class GarageSettingsActivity extends Activity implements OnItemClickListe
 			                   
 			                   for(GarageLocation garageLocation : toRemoveGarages) {
 			                	   mySettings.enabledGarageLocations.remove(garageLocation);
+			                	   adapter.remove(garageLocation.name);
 			                   }
 			                   mySettings.saveSettings();
 			                   updateListView();

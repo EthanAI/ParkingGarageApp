@@ -148,15 +148,19 @@ Primary mechanics:
 		
 		
 		+test at home, all directions, package release
-		+better matching structure, instead of series of comparisons, directly find closest match
+		+allow merging of existing garage profiles
+		xbetter matching structure, instead of series of comparisons, directly find closest match
 		xBetter final turn removal
-		+switch to floor centers not floor borders and match closest
+		xswitch to floor centers not floor borders and match closest
 		xmove garageLocation records to stored/loaded data
 		xadd dialog/activity for making new floor records / add garage
 			xSaves to storage (serialing is slow. Try SQLite or put in separate task)
 			xAdd floor data, need to allow add garage.
-		+make left turn count
+		xmake left turn count
 		+switch from raw count to turn history from entry point (need id entry point time)
+		
+		UH Entry detection 
+			GPS cut out seems to match pretty well with entry of garage. 
 		
 Steps to Beta release: 
 	-First run set up

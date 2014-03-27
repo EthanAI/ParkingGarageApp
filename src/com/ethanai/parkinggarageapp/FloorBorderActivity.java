@@ -2,6 +2,8 @@ package com.ethanai.parkinggarageapp;
 
 import java.util.ArrayList;
 
+import com.ethanai.parkinggarageapp.dataStructures.Floor;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;

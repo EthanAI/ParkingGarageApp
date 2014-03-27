@@ -2,6 +2,7 @@ package com.ethanai.parkinggarageapp;
 
 import java.util.ArrayList;
 
+import com.ethanai.parkinggarageapp.dataStructures.Floor;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.AdRequest.Builder;

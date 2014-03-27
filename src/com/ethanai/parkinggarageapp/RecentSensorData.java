@@ -51,7 +51,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	public ArrayList<PhoneLocation> networkRecent = new ArrayList<PhoneLocation>();
 	
 	//headers for each data type:
-    public final String orientHeader = "Time, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, raw azimuth, smoothed azimuth, pitch, roll, inclination, turn degrees, quarter turns\n";
+    public final String orientHeader = "Time, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, raw azimuth, smoothed azimuth, pitch, roll, prMag, turn degrees, quarter turns\n";
     public final String accHeader = "Time, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, Xacc, Yacc, Zacc, MagAcc, Xjerk, Yjerk, Zjerk, MagJerk\n";
     public final String magnHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, x, y, z\n";
     public final String compassHeader = "Date, Glat, long, accuracy, distance garage, garage name, bearing, age, speed, Nlat, long, accuracy, distance garage, garage name, bearing, age, speed, x, y, z, total, accuracy\n";
@@ -325,7 +325,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 		public double pitchInDegrees;
 		public double rollInDegrees;
 			//http://developer.android.com/reference/android/hardware/SensorManager.html#getInclination(float[])
-		public double inclinationInDegrees; 
+		//public double inclinationInDegrees; 
+		public double prMag;
 		
 		public double totalTurnDegrees; //naive implementation, will evolve into turn counts. 
 
@@ -380,7 +381,8 @@ public class RecentSensorData implements Serializable { //must specify serializa
 					
 				pitchInDegrees = Math.toDegrees(orientationMatrix[1]);
 				rollInDegrees = Math.toDegrees(orientationMatrix[2]);
-				inclinationInDegrees = Math.toDegrees(SensorManager.getInclination(inclinationMatrix));
+				prMag = Math.sqrt(pitchInDegrees*pitchInDegrees + rollInDegrees*rollInDegrees);
+				//inclinationInDegrees = Math.toDegrees(SensorManager.getInclination(inclinationMatrix));
 				totalTurnDegrees = updateTurnDegrees(azimuthInDegrees);
 				
 				/* this should happen in the recenData object, not in a DerivedOrientation object
@@ -457,7 +459,7 @@ public class RecentSensorData implements Serializable { //must specify serializa
 	                Double.toString(0.0) + "," +
 	                Double.toString(pitchInDegrees) + "," +
 	                Double.toString(rollInDegrees) + "," +
-	                Double.toString(inclinationInDegrees) + "," +
+	                Double.toString(prMag) + "," +
 	                Double.toString(totalTurnDegrees) + "," +
 	                Double.toString(totalTurnDegrees / 90) +
 	                "\n";

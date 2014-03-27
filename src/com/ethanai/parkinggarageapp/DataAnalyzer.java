@@ -10,6 +10,9 @@ import java.util.ArrayList;
 
 
 
+
+import com.ethanai.parkinggarageapp.dataStructures.Floor;
+
 import android.util.Log;
 
 
@@ -61,6 +64,12 @@ public class DataAnalyzer {
 			mySettings = DaemonReceiver.mySettings;
 		else
 			mySettings = MainActivity.mySettings;
+	}
+	
+	public DataAnalyzer(File dataFile, ArrayList<Floor> floors) {
+		readFile(dataFile);
+		isFullAnalysis = true;
+		
 	}
 	
 	public String getCurrentFloorEstimate() {
@@ -265,7 +274,7 @@ public class DataAnalyzer {
 		//variable to we compare against to see if we've competed more than one turn of a type
 		float turnCountingCompareValue = getFloatingAverage(turnDegreesArray, meanOffset, turnDegreesArray.size() - 1);
 		for(int i = turnDegreesArray.size() - 1; i > 0; i--) {
-			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i);
+			float floatingMeanDegrees = getFloatingAverage(turnDegreesArray, meanOffset, i); //use smoothed value (kill outliers)
 			float changeSinceLastTurnPush = floatingMeanDegrees - turnCountingCompareValue;
 			if(changeSinceLastTurnPush > 90) {
 				int consecutiveCount;

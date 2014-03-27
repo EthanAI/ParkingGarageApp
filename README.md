@@ -235,6 +235,9 @@ Master the most crowded garage
 		3 entry points
 		left tower seems to be segregated. Two different lines spiraling up
 		right par seems connected somehow
+		
+		buld complex data structures to feed to dataanalyzer
+		build complex profiles that select which sensor(s) to trust for this garage
 			
 			
         

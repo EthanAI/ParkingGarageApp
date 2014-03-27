@@ -99,7 +99,7 @@ public class TextActivity extends Activity {
         	xArray.add((float) recentData.orientRecent.get(i).azimuthInDegrees);
         	yArray.add((float) recentData.orientRecent.get(i).pitchInDegrees);
         	zArray.add((float) recentData.orientRecent.get(i).rollInDegrees);
-        	magArray.add((float) recentData.orientRecent.get(i).inclinationInDegrees);
+        	magArray.add((float) recentData.orientRecent.get(i).prMag);
         	
         	xJerkArray.add((float) recentData.orientRecent.get(i).totalTurnDegrees);
         	//yJerkArray.add(recentData.orientRecent.get(i).yDel);

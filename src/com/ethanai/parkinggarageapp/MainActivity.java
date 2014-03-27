@@ -16,6 +16,10 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.TableLayout;
+import android.widget.TableLayout.LayoutParams;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +44,13 @@ public class MainActivity extends Activity {
     private LocalBroadcastManager lbManager;
     public String NOTIFICATION_TAG = "notification";
     
+    private boolean isSensorRunning = false;
+    Button manualStartButton = null;
+    Button manualStopButton = null;
+    TableLayout tl;
+	LayoutParams lp = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+	TableRow row;
+    
 	private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -47,7 +58,11 @@ public class MainActivity extends Activity {
 			// Get extra data included in the Intent
 		    String updateStatus = intent.getStringExtra("updateStatus");
 		    runStatus = updateStatus;
-		    updateTextViews();
+		    if(mySettings.enabledGarageLocations.size() == 0)
+	        	runStatus += "\nWarning: No garages enabled";
+		    if(!mySettings.isBluetoothUser)
+		    	runStatus += "\nNo Bluetooth device set. Manually start before driving.";
+		    updateViews();
 		}
 	};
 	
@@ -80,6 +95,8 @@ public class MainActivity extends Activity {
         // Look up the AdView as a resource and load a request.
         addAds();
         
+        tl = (TableLayout) findViewById(R.id.button_table_layout);
+        
         tvGarage 		= (TextView) findViewById(R.id.garageField);
         tvFloor 		= (TextView) findViewById(R.id.floorField);
         tvGarageStatus 	= (TextView) findViewById(R.id.garage_setup_status);
@@ -87,10 +104,33 @@ public class MainActivity extends Activity {
         tvRunStatus 	= (TextView) findViewById(R.id.run_status);
         tvVersionNumber = (TextView) findViewById(R.id.version);
         
+        manualStopButton = new Button(this);
+		manualStopButton.setText("Manual Stop");
+		manualStopButton.setOnClickListener(new View.OnClickListener() {
+	        public void onClick(View view) {
+	        	Intent intent = new Intent(getApplicationContext(), SensorService.class);
+	    		stopService(intent); 
+	    		
+	    	    isSensorRunning = false;	
+	        }
+	    });
+
+		manualStartButton = new Button(this);
+		manualStartButton.setText("Manual Start");
+		manualStartButton.setOnClickListener(new View.OnClickListener() {
+	        public void onClick(View view) {
+	        	Intent serviceIntent = new Intent(MainActivity.this, SensorService.class);
+	    	    startService(serviceIntent);
+	    	    
+	    	    isSensorRunning = true;
+	        }
+	    });
+        
         if(mySettings.isFirstRun)
         	onboarding();
-        
-        updateTextViews();
+        	
+        //updateViews();
+        row = new TableRow(this);
         
         //subscribe to message to update our view (notifiers or sensors might change our state)
         lbManager = LocalBroadcastManager.getInstance(getApplicationContext());
@@ -106,9 +146,9 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		updateTextViews();
+		updateViews();
 	}
-
+	
 	public void addAds() {
 		AdView adView = (AdView)this.findViewById(R.id.adView);
         Builder adBuilder = new AdRequest.Builder();
@@ -118,7 +158,7 @@ public class MainActivity extends Activity {
 	}
 	
 	
-	public void updateTextViews() {
+	public void updateViews() {
         //ArrayList<String> listStrings = readLog(1);        
         if(null != mySettings.parkingRecordRecent) {
 	        garageName = mySettings.parkingRecordRecent.locationName;//listStrings.get(listStrings.size() - 1);
@@ -140,8 +180,25 @@ public class MainActivity extends Activity {
         
         tvGarage.setText("    " + garageName);
         tvFloor.setText("    Floor: " + garageFloor);
-        if(null == runStatus)
+        if(null == runStatus) {
         	runStatus = "Waiting for departure";
+	        if(mySettings.enabledGarageLocations.size() == 0)
+	        	runStatus += "\nWarning: No garages enabled";
+        }
+        
+        if(!mySettings.isBluetoothUser) {
+        	if(!isSensorRunning)
+        		runStatus = "Waiting for manual start";
+        	else
+        		runStatus = "Waiting for manual stop";
+	        if(mySettings.enabledGarageLocations.size() == 0)
+	        	runStatus += "\nWarning: No garages enabled";
+        } else {
+        	if(mySettings.enabledGarageLocations.size() == 0)
+	        	runStatus += "\nWarning: No garages enabled";
+        	else
+        		runStatus = "Awaiting Departure";
+        }
         tvRunStatus.setText("Automation Status: " + runStatus);
         
         try {
@@ -151,6 +208,39 @@ public class MainActivity extends Activity {
 		} catch (NameNotFoundException e) {
 			Log.e("MainActivity", e.getMessage());
 		}
+        
+        if(mySettings.isBluetoothUser) {    
+        	tl.removeView(row);
+        } else {
+           	row.removeAllViews();
+
+           	if(!isSensorRunning) {
+           		row.addView(manualStartButton);
+           	} else {
+        		row.addView(manualStopButton);
+           	}
+    		
+    		tl.removeView(row);
+        	tl.addView(row);
+
+    		/*
+        	if(isSensorRunning) {
+        		row.addView(manualStartButton);
+        		
+        		//tl.removeView(manualStopButton);
+        		//tl.removeView(manualStartButton);
+        		//tl.addView(manualStopButton, lp);
+        	} else {
+        		
+        		row.addView(manualStopButton);
+
+        		//tl.removeView(manualStopButton);
+        		//tl.removeView(manualStartButton);
+        		//tl.addView(manualStartButton, lp);
+        	}
+        	tl.addView(row);
+        	*/
+        } 
 	}
 	
 	public void onboarding() {

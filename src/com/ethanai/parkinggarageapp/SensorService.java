@@ -166,8 +166,9 @@ public class SensorService extends Service implements SensorEventListener {
          
  		//keep result somewhere
  		//storeFinalLocation();
-        mySettings.parkingRecordRecent = mySettings.new ParkingRecord(recentData.parkedDateString, 
-        		recentData.newestPhoneLocation, recentData.parkedFloor, orientFile);
+        if(orientFile != null && orientFile.exists())
+	        mySettings.parkingRecordRecent = mySettings.new ParkingRecord(recentData.parkedDateString, 
+	        		recentData.newestPhoneLocation, recentData.parkedFloor, orientFile);
         mySettings.saveSettings();
  		if(parkingLogFile != null && parkingLogFile.exists())
  			appendToFile(parkingLogFile, mySettings.parkingRecordRecent.toString());

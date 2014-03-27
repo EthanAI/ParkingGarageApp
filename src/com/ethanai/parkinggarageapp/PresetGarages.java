@@ -27,7 +27,7 @@ public class PresetGarages {
 	private static String uhWestTextData 	= "UH West Entrance,21.29612203,-157.8197402,5, 3, 3L,3, 2, 2L,1, 1, 1L,-1, 1, 1R,-3, 2, 1R Loopingq";
 	private static String uhCentralTextData = "UH Central Entrance,21.29612203,-157.8197402,5, 3, 3L,3, 2, 2L,1, 1, 1L,-1, 1, 1R,-3, 2, 1R Loopingq";
 	private static String uhEastTextData	= "UH East Entrance,21.29612203,-157.8197402,5, 3, 3L,3, 2, 2L,1, 1, 1L,-1, 1, 1R,-3, 2, 1R Loopingq";
-	private static String testTextData = "TestGarage,21.29871750,-157.82012939";
+	private static String testTextData		= "TestGarage,21.29871750,-157.82012939";
 
 	
 	public static ArrayList<GarageLocation> getPresetGarages() {		

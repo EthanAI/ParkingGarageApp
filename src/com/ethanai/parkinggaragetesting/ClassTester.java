@@ -10,10 +10,10 @@ import com.ethanai.parkinggarageapp.dataStructures.Floor;
 
 public class ClassTester {
 	static ArrayList<Floor> homeFloors;
+	@SuppressWarnings("unused")
 	public static void main(String[] args) {
 
 		String pathA = "C:\\Dropbox\\Computer Science\\IDE Workspaces\\Eclipse\\ParkingGarageApp\\csv\\";
-		@SuppressWarnings("unused")
 		String pathB = "C:\\Dropbox\\Computer Science\\IDE Workspaces\\Eclipse\\ParkingGarageApp\\csv\\Home Garage Park\\";
 		/*
 		String fileName[] = {

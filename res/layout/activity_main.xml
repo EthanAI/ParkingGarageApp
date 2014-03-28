@@ -26,15 +26,15 @@
 	        android:layout_gravity="center"
 	        android:textSize="30sp"
 	        android:background="#009900"/>
+		
 	    <TextView
 	        android:id="@+id/garageField"
 	        android:layout_width="fill_parent"
 	        android:layout_weight="1"
 	        android:layout_height="wrap_content"
 	        android:layout_gravity="center"
-	        android:textSize="40sp"
+	        android:textSize="25sp"
 	        android:background="#009900"/>
-
 	    <TextView
 	        android:id="@+id/floorField"
 	        android:layout_width="fill_parent"
@@ -43,7 +43,9 @@
 	        android:layout_gravity="center" 
 	        android:textSize="40sp"
 	        android:background="#009900"/>
-	
+	    
+	    
+
 	</LinearLayout>
      
   	<TextView

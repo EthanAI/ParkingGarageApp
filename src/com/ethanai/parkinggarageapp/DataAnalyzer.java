@@ -68,6 +68,11 @@ public class DataAnalyzer {
 			mySettings = DaemonReceiver.mySettings;
 		else
 			mySettings = MainActivity.mySettings;
+		
+		if(null == MainActivity.recentData)
+			newestPhoneLocation = DaemonReceiver.recentData.newestPhoneLocation;
+		else
+			newestPhoneLocation = MainActivity.recentData.newestPhoneLocation;
 	}
 	
 	public DataAnalyzer(File dataFile, ArrayList<Floor> newFloors) {
@@ -94,11 +99,11 @@ public class DataAnalyzer {
 		}
 		
 		if(null == newestPhoneLocation)
-			floorName = "None noGPS";
+			floorName = "None gps";
 		else if(null == garageLocation)
-			floorName = "None noGarage";
+			floorName = "None g";
 		else if(null == parkedFloor) {
-			floorName = "None noFloorMatch";
+			floorName = "None f";
 		} else {
 			floorName = parkedFloor.floorString;
 		}

@@ -98,7 +98,7 @@ public class SensorService extends Service implements SensorEventListener {
 		else
 			mySettings = MainActivity.mySettings;
 		
-		Toast.makeText(this, "Sensors Started Debug: " + debugState, Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this, "Sensors Started Debug: " + debugState, Toast.LENGTH_SHORT).show();
 		Log.i("SensorService", "ServiceService Started. Debug: " + debugState);
 
         //get info from the calling Activity
@@ -150,35 +150,16 @@ public class SensorService extends Service implements SensorEventListener {
 		//timing on this needs firming up. We shouldn't be updating widgets etc if this hasnt completed
 		//possibly update using the file so we have a longer data timeframe.
 		if(orientFile != null && orientFile.exists())
-			new AnalyzeAllDataTask().execute(orientFile);
+			new AnalyzeAllDataStoreResultTask().execute(orientFile);
 		
-		Toast.makeText(this, "Sensors Stopped\n" + recentData.parkedFloor, Toast.LENGTH_SHORT).show();
+		//Toast.makeText(this, "Sensors Stopped\n" + recentData.parkedFloor, Toast.LENGTH_SHORT).show();
 
-		//display result to user
-		myNotifier.cancelSensorNotification(); //turn off sensor notification
-		myNotifier.cancelGPSNotification();
-		//myNotifier.daemonNotification(); //turn on deamon notification //turn into a modify, not a replace?
-		//myNotifier.floorNotification();
-		
-		// Tell widget to update 
-		Intent brIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        sendBroadcast(brIntent);
-         
- 		//keep result somewhere
- 		//storeFinalLocation();
-        if(orientFile != null && orientFile.exists())
-	        mySettings.parkingRecordRecent = mySettings.new ParkingRecord(recentData.parkedDateString, 
-	        		recentData.newestPhoneLocation, recentData.parkedFloor, orientFile);
-        mySettings.saveSettings();
- 		if(parkingLogFile != null && parkingLogFile.exists())
- 			appendToFile(parkingLogFile, mySettings.parkingRecordRecent.toString());
- 		
- 		renameFiles();
+
 	}
 	
-	private class AnalyzeAllDataTask extends AsyncTask<File, Void, String> {
+	private class AnalyzeAllDataStoreResultTask extends AsyncTask<File, Void, String> {
 		  
-		public AnalyzeAllDataTask() {
+		public AnalyzeAllDataStoreResultTask() {
 			super();
 		}
   
@@ -193,6 +174,24 @@ public class SensorService extends Service implements SensorEventListener {
 	
 	    @Override
 	    protected void onPostExecute(String result) {
+			myNotifier.stopNotification();
+			myNotifier.broadcastIdle();
+			
+			// Tell widget to update 
+			Intent brIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+	        sendBroadcast(brIntent);
+	         
+	 		//keep result somewhere
+	 		//storeFinalLocation();
+	        if(orientFile != null && orientFile.exists()) 
+		        mySettings.parkingRecordRecent = mySettings.new ParkingRecord(recentData.parkedDateString, 
+		        		recentData.newestPhoneLocation, recentData.parkedFloor, orientFile);
+	        mySettings.saveSettings();
+	 		if(parkingLogFile != null && parkingLogFile.exists())
+	 			appendToFile(parkingLogFile, mySettings.parkingRecordRecent.toString());
+	 		
+	 		renameFiles();
+	   
 	    	Toast.makeText(getApplicationContext(), "Parked on:\n" + recentData.parkedFloor, Toast.LENGTH_SHORT).show();
 	    }
 	}
@@ -214,14 +213,14 @@ public class SensorService extends Service implements SensorEventListener {
         //((TelephonyManager)getSystemService(TELEPHONY_SERVICE)).listen(psListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS); //register the phone state listener
 	
         //notification 
-        myNotifier.cancelGPSNotification();
+        //myNotifier.cancelGPSNotification();
         myNotifier.sensorRunningNotification();
 	}
 	
 	public void unregisterSensors() {
 		mSensorManager.unregisterListener(this); //undo sensor listeners
 		
-        myNotifier.cancelSensorNotification();
+        //myNotifier.cancelSensorNotification();
         myNotifier.gpsRunningNotification();
 	}
 

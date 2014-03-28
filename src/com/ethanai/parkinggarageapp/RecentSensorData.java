@@ -699,21 +699,17 @@ class PhoneLocation implements Serializable {
 	}
 	
 	public String getLocationName() {
-		if(isAtGarage()) 
-			return getNearestGarage().name;
-		else
-			return "Other"; //getLocationCoordinates();
+		String garageName;
+		if(isAtGarage()) {
+			garageName = getNearestGarage().name;
+		} else {
+			garageName = "Other"; //getLocationCoordinates();
+		}
+		return garageName;
 	}
 	
 	public boolean isAtGarage() {
 		return (getDistanceNearestGarage() < MATCH_DISTANCE);
-	}
-	
-	public float getDistanceNearestGarage() {
-		if(null == getNearestGarage())
-			return 999999999; //really this should never happen...
-		else
-			return this.distanceTo(getNearestGarage().phoneLocation);
 	}
 	
 	public GarageLocation getNearestGarage() {
@@ -733,6 +729,17 @@ class PhoneLocation implements Serializable {
 		}
 		return closestGarage;
 	}
+	
+	public float getDistanceNearestGarage() {
+		GarageLocation nearestGarage = getNearestGarage();
+		
+		if(null == nearestGarage)
+			return 999999999; //really this should never happen...
+		else
+			return this.distanceTo(nearestGarage.phoneLocation);
+	}
+	
+	
 	
 	//implement replacements for Location class methods .. -_-
 	public String getProvider() {

@@ -36,7 +36,7 @@ public class MainActivity extends Activity {
     public TextView tvRunStatus;
     public TextView tvVersionNumber;
     
-    public static String runStatus;
+    public String runStatus;
     
     public String garageName;
     public String garageFloor;    
@@ -54,14 +54,11 @@ public class MainActivity extends Activity {
 	private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			Log.i("MainActivity", "Recieved update");
 			// Get extra data included in the Intent
 		    String updateStatus = intent.getStringExtra("updateStatus");
+		    Log.i("MainActivity", "Recieved update " + updateStatus);
 		    runStatus = updateStatus;
-		    if(mySettings.enabledGarageLocations.size() == 0)
-	        	runStatus += "\nWarning: No garages enabled";
-		    if(!mySettings.isBluetoothUser)
-		    	runStatus += "\nNo Bluetooth device set. Manually start before driving.";
+		    Toast.makeText(context, runStatus, Toast.LENGTH_SHORT).show();
 		    updateViews();
 		}
 	};
@@ -180,25 +177,10 @@ public class MainActivity extends Activity {
         
         tvGarage.setText("    " + garageName);
         tvFloor.setText("    Floor: " + garageFloor);
-        if(null == runStatus) {
-        	runStatus = "Waiting for departure";
-	        if(mySettings.enabledGarageLocations.size() == 0)
-	        	runStatus += "\nWarning: No garages enabled";
-        }
         
-        if(!mySettings.isBluetoothUser) {
-        	if(!isSensorRunning)
-        		runStatus = "Waiting for manual start";
-        	else
-        		runStatus = "Waiting for manual stop";
-	        if(mySettings.enabledGarageLocations.size() == 0)
-	        	runStatus += "\nWarning: No garages enabled";
-        } else {
-        	if(mySettings.enabledGarageLocations.size() == 0)
-	        	runStatus += "\nWarning: No garages enabled";
-        	else
-        		runStatus = "Awaiting Departure";
-        }
+        
+        runStatus = getRunStatus();
+        
         tvRunStatus.setText("Automation Status: " + runStatus);
         
         try {
@@ -241,6 +223,37 @@ public class MainActivity extends Activity {
         	tl.addView(row);
         	*/
         } 
+	}
+	
+	public String getRunStatus() {
+		String newRunStatus = runStatus;
+		if(null == newRunStatus) {
+			newRunStatus = "Waiting for departure";
+	        if(mySettings.enabledGarageLocations.size() == 0)
+	        	newRunStatus += "\nWarning: No garages enabled";
+        }
+        
+        if(!mySettings.isBluetoothUser) {
+        	if(!isSensorRunning)
+        		newRunStatus = "Waiting for manual start";
+        	else
+        		newRunStatus = "Waiting for manual stop";
+	        if(mySettings.enabledGarageLocations.size() == 0)
+	        	newRunStatus += "\nWarning: No garages enabled";
+        } else { //assume if bluetooth user, status has been set by the sensors via parking  notification manager
+        	//if(mySettings.enabledGarageLocations.size() == 0)
+        	//	newRunStatus += "\nWarning: No garages enabled";
+        	//else
+        	//	newRunStatus = "Awaiting Departure";
+        }
+        
+        //add additional warnings based on poor settings choices
+	    if(mySettings.enabledGarageLocations.size() == 0)
+	    	newRunStatus += "\nWarning: No garages enabled";
+	    if(!mySettings.isBluetoothUser)
+	    	newRunStatus += "\nNo Bluetooth device set. Manually start before driving.";
+	    
+	    return newRunStatus;
 	}
 	
 	public void onboarding() {

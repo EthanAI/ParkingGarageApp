@@ -57,7 +57,7 @@ public class BluetoothSettingsActivity extends Activity {
     		//tvBTOn.setText("Device Bluetooth is on");
     	}
     	else
-    		tvBTOn.setText("Please turn on device's Bluetooth before changing settings.");
+    		tvBTOn.setText("Please turn on device's Bluetooth before selecting a device");
     	
     	if(mySettings.isBluetoothUser)
         	tvEnabledStatus.setText("Automatic Start?: Yes");

@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.widget.Toast;
 
 public class DaemonReceiver extends BroadcastReceiver {	
 	//Temp hardcoding of my car's BT description to test with. Will need to be settable/changable in the future
@@ -54,14 +53,14 @@ public class DaemonReceiver extends BroadcastReceiver {
 				//}
 				
 				if(null != mySettings.carBTMac && isCarDevice(intent)) {
-					Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
+					//Toast.makeText(context, "Car Connect!", Toast.LENGTH_SHORT).show();
 					startSensors(context); 
 				} else {
 					//Toast.makeText(context, "Other BT Connection", Toast.LENGTH_SHORT).show();
 				}
 			}
 		} else if(intent.getAction() == BluetoothDevice.ACTION_ACL_DISCONNECTED) {
-			Toast.makeText(context, "BT Disconnect!", Toast.LENGTH_SHORT).show();
+			//Toast.makeText(context, "BT Disconnect!", Toast.LENGTH_SHORT).show();
 			stopSensors(context);
 		} else if (intent.getAction() == Intent.ACTION_BOOT_COMPLETED){
 			// myNotifier.daemonNotification();

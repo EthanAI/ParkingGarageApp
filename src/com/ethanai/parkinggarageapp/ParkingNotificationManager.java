@@ -36,6 +36,8 @@ public class ParkingNotificationManager {
 	
 	public void sensorRunningNotification() {
 		//update flag for display of system status
+		cancelFloorNotification();
+		cancelGPSNotification();
 		notifyMainActivity(NOTIFICATION_TAG, SENSOR_MESSAGE);
 		
 		//modify notification http://developer.android.com/training/notify-user/managing.html
@@ -65,6 +67,8 @@ public class ParkingNotificationManager {
 	}
 	
 	public void gpsRunningNotification() {
+		cancelFloorNotification();
+		cancelSensorNotification();
 		//update flag for display of system status
 		notifyMainActivity(NOTIFICATION_TAG, GPS_MESSAGE);
 				
@@ -120,6 +124,7 @@ public class ParkingNotificationManager {
 	}
 	*/
 	
+	/*
 	public void daemonNotification() {
 		//update flag for display of system status
 		notifyMainActivity(NOTIFICATION_TAG, IDLE_MESSAGE);
@@ -145,8 +150,20 @@ public class ParkingNotificationManager {
 		// Builds the notification and issues it.
 		mNotifyMgr.notify(DAEMON_NOTIFICATION_ID, mBuilder.build());
 	}
+	*/
 	
-	public void cancelNotification(int notificationLabel) {
+	public void stopNotification() {
+		cancelSensorNotification();
+		cancelGPSNotification();
+		cancelFloorNotification();
+		//notifyMainActivity(NOTIFICATION_TAG, IDLE_MESSAGE);
+	}
+	
+	public void broadcastIdle() {
+		notifyMainActivity(NOTIFICATION_TAG, IDLE_MESSAGE);
+	}
+	
+	private void cancelNotification(int notificationLabel) {
 		
 		//delete notification http://developer.android.com/reference/android/app/NotificationManager.html#cancel(int)
 		NotificationManager mNotifyMgr = 
@@ -154,17 +171,17 @@ public class ParkingNotificationManager {
 		mNotifyMgr.cancel(notificationLabel);
 	}
 	
-	public void cancelSensorNotification() {
-		notifyMainActivity(NOTIFICATION_TAG, IDLE_MESSAGE);
+	private void cancelSensorNotification() {
+		//notifyMainActivity(NOTIFICATION_TAG, IDLE_MESSAGE);
 		cancelNotification(SENSOR_NOTIFICATION_ID);
 	}
 	
-	public void cancelGPSNotification() {
-		notifyMainActivity(NOTIFICATION_TAG, IDLE_MESSAGE);
+	private void cancelGPSNotification() {
+		//notifyMainActivity(NOTIFICATION_TAG, IDLE_MESSAGE);
 		cancelNotification(GPS_NOTIFICATION_ID);
 	}
 	
-	public void cancelFloorNotification() {
+	private void cancelFloorNotification() {
 		cancelNotification(FLOOR_NOTIFICATION_ID);
 	}
 	

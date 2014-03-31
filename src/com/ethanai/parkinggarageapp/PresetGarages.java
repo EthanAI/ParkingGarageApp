@@ -7,6 +7,8 @@ import com.ethanai.parkinggarageapp.dataStructures.Floor;
 import android.location.Location;
 
 public class PresetGarages {
+	static UserSettings mySettings;
+	
 	private static ArrayList<GarageLocation> presetGarageLocations = new ArrayList<GarageLocation>();
 	
 	private static String homeTextData = "Country Club Village 6,21.3474357,-157.9035183,"
@@ -27,15 +29,23 @@ public class PresetGarages {
 	private static String uhWestTextData 	= "UHM Lot 20 West Entrance,21.29612203,-157.8197402,5, 3, 3L,3, 2, 2L,1, 1, 1L,-1, 1, 1R,-3, 2, 1R Loopingq";
 	private static String uhCentralTextData = "UHM Lot 20 Central Entrance,21.29612203,-157.8197402,5, 3, 3L,3, 2, 2L,1, 1, 1L,-1, 1, 1R,-3, 2, 1R Loopingq";
 	private static String uhEastTextData	= "UHM Lot 20 East Entrance,21.29612203,-157.8197402,5, 3, 3L,3, 2, 2L,1, 1, 1L,-1, 1, 1R,-3, 2, 1R Loopingq";
-	//private static String testTextData		= "TestGarage,21.29871750,-157.82012939";
+	private static String testTextData		= "TestGarage,21.29871750,-157.82012939";
 
 	
-	public static ArrayList<GarageLocation> getPresetGarages() {		
+	public static ArrayList<GarageLocation> getPresetGarages() {	
+		if(null == MainActivity.mySettings)
+			mySettings = DaemonReceiver.mySettings;
+		else
+			mySettings = MainActivity.mySettings;
+		
 		presetGarageLocations.add(createGarageLocation(homeTextData.split(",")));	
-		presetGarageLocations.add(createGarageLocation(uhWestTextData.split(",")));	
-		presetGarageLocations.add(createGarageLocation(uhCentralTextData.split(",")));
-		presetGarageLocations.add(createGarageLocation(uhEastTextData.split(",")));
-		//presetGarageLocations.add(createGarageLocation(testTextData.split(",")));	
+		
+		if(null != mySettings && mySettings.isDebug) {
+			presetGarageLocations.add(createGarageLocation(uhWestTextData.split(",")));	
+			presetGarageLocations.add(createGarageLocation(uhCentralTextData.split(",")));
+			presetGarageLocations.add(createGarageLocation(uhEastTextData.split(",")));
+			presetGarageLocations.add(createGarageLocation(testTextData.split(",")));	
+		}
 		
 		return presetGarageLocations;
 	}

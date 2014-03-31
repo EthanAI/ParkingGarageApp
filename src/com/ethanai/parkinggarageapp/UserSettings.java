@@ -20,7 +20,7 @@ public class UserSettings implements Serializable {
 	 */
 	private static final long serialVersionUID = -8023067763707780880L;
 	
-	public boolean isDebug = true; //for me to autoswitch on dev settings
+	public boolean isDebug = false; //for me to autoswitch on dev settings
 	
 	public ArrayList<GarageLocation> enabledGarageLocations = new ArrayList<GarageLocation>();
 	public ArrayList<GarageLocation> allGarageLocations = new ArrayList<GarageLocation>();
@@ -182,7 +182,7 @@ public class UserSettings implements Serializable {
 				loadedSettings = (UserSettings) is.readObject();
 				is.close();
 			} catch (Exception e) {
-				Log.e("UserSettings", e.getMessage());
+				Log.e("UserSettings", "Error: " + e.getMessage());
 			}
 						
 			if(null != loadedSettings) {
@@ -250,8 +250,11 @@ public class UserSettings implements Serializable {
 		presetGarageLocations = PresetGarages.getPresetGarages();
 		
 		if(null != presetGarageLocations) {
-			for(GarageLocation garageLocation : presetGarageLocations)
+			for(GarageLocation garageLocation : presetGarageLocations) {
 				allGarageLocations.add(garageLocation);
+				if(isFirstRun)
+					enabledGarageLocations.add(garageLocation);
+			}
 		
 			Log.i("UserSettings", "preset garages loaded " + presetGarageLocations.size() + " " + allGarageLocations.size());
 		} else {

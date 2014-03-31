@@ -162,16 +162,20 @@ Primary mechanics:
 		UH Entry detection 
 			GPS cut out seems to match pretty well with entry of garage. 
 		
-Steps to Beta release: 
+Steps to Product release: 
 	-First run set up
 		xConvert to dialogs instead of activity
 		+complete the meat behind it to save user settings
+		+initial questions so user forced to select garage etc
+			a 'you're good to go! message'
 		-ask questions to set up for auto/manual operation
 			-auto fork:
 				-Set bluetooth name to empty
 				-Everytime bluetooth connects, ask 'is this your car stereo?' if bluetoothName still empty
 		-ask questions to set up for preset garages
 			-choose from list of preset garages (include database later)
+	-Internal Storage
+		xhide gps data from other apps
 	xDesign UI for post-setup app
 		-Buttons
 			-[Where's My Car?] see where parked
@@ -233,7 +237,6 @@ Master the most crowded garage
 			
 	UH Garage
 		3 entry points
-		+add code to find nearest garage if there are multiple within range
 		left tower seems to be segregated. Two different lines spiraling up
 		right par seems connected somehow
 		

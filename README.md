@@ -1,4 +1,5 @@
-accelerometerApp
+Google Play Store Link:
+https://play.google.com/store/apps/details?id=com.ethanai.parkinggarageapp&hl=en
 ================
 
 App to automatically determine the floor you parked out. GPS is not helpful, so we use the sensors to judge how many times you've turned.
